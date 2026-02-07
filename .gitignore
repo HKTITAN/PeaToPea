@@ -1,0 +1,28 @@
+# Rust
+/target/
+Cargo.lock
+
+# Build
+/build/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Android
+*.apk
+*.aab
+.gradle/
+local.properties
+
+# iOS/macOS
+*.xcuserstate
+DerivedData/

@@ -1,0 +1,15 @@
+---
+description: "How to use .tasks checklists: structure, marking done, adding sub-tasks"
+globs: [".tasks/**/*.md"]
+alwaysApply: false
+---
+
+# .tasks Workflow
+
+- **Format**: .tasks files are checklists. Use `- [ ]` for unchecked and `- [x]` for done. Structure with `##` (task), `###` (subtask), `####` (sub-subtask).
+
+- **When implementing from a task file**: Open the relevant file (e.g. [.tasks/01-pea-core.md](.tasks/01-pea-core.md)). Implement unchecked items in order; mark completed items with `[x]`. Do not mark items done until the work is verified (e.g. build and tests pass).
+
+- **Adding tasks**: Add new sub-tasks only when they fit the existing hierarchy. Prefer adding under an existing `####` or `###` rather than creating new top-level sections. Keep tasks small and actionable.
+
+- **Order**: Respect the recommended order in [.tasks/README.md](.tasks/README.md). Do not start a protocol implementation (02–06) before pea-core (01) and protocol/interop (07) are in a good state.

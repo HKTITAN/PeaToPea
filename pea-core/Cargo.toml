@@ -1,0 +1,19 @@
+[package]
+name = "pea-core"
+version = "0.1.0"
+edition = "2021"
+description = "PeaPod protocol reference implementation"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+bincode = "1"
+x25519-dalek = { version = "2", features = ["static_secrets"] }
+chacha20poly1305 = "0.10"
+sha2 = "0.10"
+thiserror = "1"
+anyhow = "1"
+rand = "0.8"
+uuid = { version = "1", features = ["v4", "serde"] }
+
+[dev-dependencies]
+rand = "0.8"

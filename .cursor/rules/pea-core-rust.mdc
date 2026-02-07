@@ -1,0 +1,15 @@
+---
+description: "Conventions for pea-core Rust code: host-driven, no I/O, errors, wire format, tests"
+globs: ["pea-core/**/*.rs"]
+alwaysApply: false
+---
+
+# pea-core Rust Conventions
+
+- **Host-driven, no I/O**: pea-core is a library. It does not open sockets, read files, or call the network. The host (each protocol implementation) passes in events (e.g. request metadata, peer joined, message received) and receives actions (chunk assignments, messages to send, WAN requests). See [pea-core/src/lib.rs](pea-core/src/lib.rs) and [pea-core/src/core.rs](pea-core/src/core.rs).
+
+- **Errors**: Use `thiserror` for library error types. Use `anyhow` only where appropriate (e.g. application boundary). Do not use `unwrap()` in library code without a clear comment; prefer `?` and typed errors.
+
+- **Wire format**: Protocol message types live in [pea-core/src/protocol.rs](pea-core/src/protocol.rs). Use serde + bincode for encoding. Keep the same types and encoding across platforms for cross-platform interop (see .tasks/07).
+
+- **Tests**: Add unit tests for identity (keypair, device ID, key exchange), protocol roundtrip (serialize/deserialize), framing (encode_frame/decode_frame), and integrity (hash/verify). Add integration tests with a mock host when testing full request → chunk plan → reassembly flows.
