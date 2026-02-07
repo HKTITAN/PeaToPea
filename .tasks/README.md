@@ -26,8 +26,14 @@ Hierarchical task list for the full PeaPod project. Each file is a checklist; co
 5. **04-linux**, **06-macos**, **05-ios** — Remaining implementations.
 6. **08-documentation** — In parallel; finalize with **09-quality-and-metrics**.
 
+To see what's next: open the current task file (e.g. 01-pea-core.md) and find the first `- [ ]`.
+
 ## Checklist Convention
 
 - `- [ ]` = not done  
 - `- [x]` = done  
 - Use headers: `##` task, `###` subtask, `####` sub-subtask.
+
+## Notes and findings
+
+At the end of any task file you may add a `## Notes` section. Use it for: design decisions, bug causes, gotchas, open questions, or references. Prefer one line per item; optional date prefix. Inline notes under a specific item are also fine: `(Note: …)` on the line below the checkbox. This keeps .tasks the single source of truth for both work items and context.

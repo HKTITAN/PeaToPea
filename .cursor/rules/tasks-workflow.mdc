@@ -12,4 +12,8 @@ alwaysApply: false
 
 - **Adding tasks**: Add new sub-tasks only when they fit the existing hierarchy. Prefer adding under an existing `####` or `###` rather than creating new top-level sections. Keep tasks small and actionable.
 
+- **Adding from requirements**: When you or the user identify a new requirement or dependency, add a corresponding task or sub-task to the right .tasks file; preserve hierarchy and order.
+
+- **Findings and notes**: When you discover something worth remembering (design choice, root cause, limitation), add it under the relevant task or in a `## Notes` section at the end of the file (see .tasks/README.md).
+
 - **Order**: Respect the recommended order in [.tasks/README.md](.tasks/README.md). Do not start a protocol implementation (02–06) before pea-core (01) and protocol/interop (07) are in a good state.

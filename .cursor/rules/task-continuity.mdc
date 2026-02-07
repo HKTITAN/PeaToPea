@@ -1,0 +1,12 @@
+---
+description: "Task continuity: prefer .tasks when no goal set; add tasks from requirements; update with findings and notes"
+alwaysApply: true
+---
+
+# Task continuity and .tasks evolution
+
+- **Prefer .tasks when no specific goal is set**: When the user has not given a concrete task, suggest or continue from the next unchecked item in [.tasks/README.md](.tasks/README.md) order (00 → 01 → 07 → 02 & 03 → …). Open the relevant task file and work from the first `- [ ]` under the current section.
+
+- **Add new tasks from requirements**: When a requirement, scope change, or dependency emerges (from discussion, code review, or discovery), add it to the appropriate .tasks file: new `###` or `####` under the right `##`, or a new `##` if it's a new area. Keep the same checklist format and order.
+
+- **Update .tasks with findings and notes**: When you discover a design decision, bug cause, gotcha, or open question, record it in the relevant task file: either a short inline note under the task (e.g. `(Note: …)`) or a **Notes** section at the end of the file (see convention in .tasks/README.md). Do this as part of the same session, not later.

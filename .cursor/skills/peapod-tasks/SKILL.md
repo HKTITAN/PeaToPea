@@ -16,3 +16,5 @@ When the user asks to implement work that maps to the task breakdown:
 4. **Update checklists**: As you complete each item, change `- [ ]` to `- [x]` in the corresponding .tasks file. Only mark done when the work is implemented and verified (e.g. build/tests pass).
 
 5. **Add sub-tasks only when needed**: If you discover a necessary step not in the list, add it under the appropriate ## or ### so the hierarchy stays clear.
+
+6. **Evolve .tasks**: When new requirements emerge, add tasks to the appropriate file; when findings arise (design decisions, root causes, gotchas), add notes inline or in a `## Notes` section at the end of the file. For session behavior (e.g. continuing from the next unchecked item when no specific goal is set), follow the task-continuity rule in `.cursor/rules/task-continuity.mdc`.

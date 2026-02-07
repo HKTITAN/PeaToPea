@@ -29,6 +29,14 @@ Create feature branches from `main` (or `develop` if you use it). Keep branches 
 - **Rules**: Project conventions live in `.cursor/rules/`. They guide style, terminology, and workflow.
 - **Skills**: Use the build-test and task-driven skills when implementing; use the platform-impl skill when working on Windows/Android/Linux/iOS/macOS code.
 - **Verifier**: Before marking tasks done, invoke the verifier subagent (e.g. `/verifier`) to confirm builds and tests pass.
+- **Hooks**: Agent hooks are in [.cursor/hooks.json](.cursor/hooks.json) and [.cursor/hooks/](.cursor/hooks/). The `sessionStart` hook injects .tasks context so the agent prefers task-driven work. The `stop` hook auto-submits a "continue with next task" message so the agent keeps going without prompting you (up to 5 auto-continuations per conversation). For full autonomous flow, ensure Python 3 is available (used by `.cursor/hooks/stop.py`). See [Cursor Hooks](https://cursor.com/docs/agent/hooks).
+
+## Tasks
+
+- Work is driven by [.tasks/](.tasks/); follow the order in [.tasks/README.md](.tasks/README.md).
+- When you discover new requirements, add them to the appropriate .tasks file.
+- When you have findings or design notes, add them inline or in a `## Notes` section in the relevant task file.
+- The pre-push hook reminds you to check .tasks; Cursor rules and the peapod-tasks skill guide the agent to continue from .tasks and to update them.
 
 ## GitHub: private repo PeaToPea
 
