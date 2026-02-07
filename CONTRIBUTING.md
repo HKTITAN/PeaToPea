@@ -8,6 +8,11 @@
 
 Create feature branches from `main` (or `develop` if you use it). Keep branches short-lived and delete after merge.
 
+## Habits
+
+- **Commit often**: Small, logical commits with clear messages. Commit before switching task or at end of session.
+- **Keep .cursor useful**: When you or the agent notice a repeated pattern or a new workflow, add or update a rule, skill, or subagent so future sessions benefit. Check in .cursor changes with the rest of the code.
+
 ## Commits
 
 - Use clear, present-tense messages (e.g. "Add chunk manager to pea-core", "Fix frame decode for partial reads").

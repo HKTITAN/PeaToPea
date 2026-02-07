@@ -1,0 +1,12 @@
+---
+description: "Workflow habits: commit often, evolve .cursor (rules/skills/agents) as the project grows"
+alwaysApply: true
+---
+
+# Workflow Habits
+
+- **Commit often**: After each logical chunk of work (e.g. a task section done, a feature added, a bug fixed), commit with a clear, present-tense message. Prefer small, focused commits over large dumps. Run `cargo build -p pea-core` and `cargo test -p pea-core` before committing when touching Rust code.
+
+- **Evolve .cursor**: When you discover a recurring pattern, a mistake the agent keeps making, or a new workflow that would help, add or update something in .cursor: a rule (in `.cursor/rules/`), a skill (in `.cursor/skills/<name>/SKILL.md`), or a subagent (in `.cursor/agents/<name>.md`). Keep descriptions and globs accurate so rules/skills apply when relevant. Do this as part of normal work, not only in dedicated "documentation" sessions.
+
+- **When in doubt**: Commit at least at the end of a session or when switching to a different task file; update .cursor when you add a new kind of work (e.g. first time working on Android, add or update a rule/skill for it).
