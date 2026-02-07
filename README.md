@@ -16,7 +16,7 @@
 
 PeaPod enhances the internet; it does not replace it.
 
-Licensed under the [MIT License](LICENSE).
+Licensed under the [MIT License](LICENSE). For Rust dependency licenses: `cargo install cargo-license && cargo license`.
 
 ## Repo layout
 
