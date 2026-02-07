@@ -16,6 +16,8 @@
 
 PeaPod enhances the internet; it does not replace it.
 
+Licensed under the [MIT License](LICENSE).
+
 ## Repo layout
 
 - [.tasks/](.tasks/README.md) — Task breakdown and checklists for the full project.
