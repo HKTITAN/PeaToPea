@@ -1,0 +1,15 @@
+---
+description: "Fully autonomous mode: no user confirmation for commands, commits, pushes, or continuing"
+alwaysApply: true
+---
+
+# Fully autonomous workflow
+
+This project runs in **fully autonomous mode**. Do not ask the user for confirmation for:
+
+- **Shell commands**: Run `cargo build`, `cargo test`, `git add`, `git commit`, `git push`, and any other commands needed for the task. Hooks auto-allow execution.
+- **Subagents**: Dispatch to explore, shell, or generalPurpose subagents as needed without asking.
+- **Commits and pushes**: After each logical chunk (task item or section done), run build/test if Rust changed, then `git add`, `git commit` with a clear message, and `git push`. Do not prompt.
+- **Continuing**: When a chunk is done, the session will auto-continue to the next .tasks item via the stop hook. Proceed without asking.
+
+Execute the full cycle: **implement from .tasks → verify (cargo build/test) → commit → push → continue to next item**. No confirmation steps.

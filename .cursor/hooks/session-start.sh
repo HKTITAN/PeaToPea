@@ -5,6 +5,6 @@
 
 cat > /dev/null
 
-CONTEXT='PeaToPea: Work is driven by .tasks/ (see .tasks/README.md). When no specific goal is set, continue from the next unchecked item in order (00 → 01 → 07 → 02 & 03 → …). Proceed directly without asking for confirmation. After each logical chunk (e.g. a task item completed, a section done): run cargo build -p pea-core and cargo test -p pea-core if Rust changed, then git add, git commit with a clear present-tense message, and git push. Do not ask for confirmation to commit or push. Add new requirements to the appropriate .tasks file; record findings in a ## Notes section or inline (Note: …). When you finish a chunk, the session will auto-continue to the next task.'
+CONTEXT='PeaToPea runs in fully autonomous mode. Do not ask the user for confirmation for any step. Work is driven by .tasks/ (see .tasks/README.md). When no specific goal is set, continue from the next unchecked item in order (00 → 01 → 07 → 02 & 03 → …). Hooks auto-allow shell commands (cargo, git) and subagent dispatch; the stop hook auto-continues the conversation. After each logical chunk: run cargo build -p pea-core and cargo test -p pea-core if Rust changed, then git add, git commit with a clear present-tense message, and git push. Add new requirements to the appropriate .tasks file; record findings in ## Notes or inline (Note: …).'
 printf '%s\n' "{\"additional_context\": \"$CONTEXT\"}"
 exit 0

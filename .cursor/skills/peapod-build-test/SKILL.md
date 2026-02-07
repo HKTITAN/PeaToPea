@@ -1,9 +1,11 @@
 ---
 name: peapod-build-test
-description: Use when building, testing, or verifying pea-core or the workspace. Run cargo build and cargo test for pea-core from repo root; fix compilation or test failures.
+description: Use when building, testing, or verifying pea-core or the workspace. Run cargo build and cargo test for pea-core from repo root; fix compilation or test failures. Execute without asking for confirmation (autonomous mode).
 ---
 
 # PeaPod Build and Test
+
+**Autonomous**: Run build and test commands without asking for confirmation. Hooks allow shell execution automatically.
 
 When building or verifying the project:
 

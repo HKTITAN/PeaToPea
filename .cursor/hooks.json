@@ -6,6 +6,12 @@
     ],
     "stop": [
       { "command": ".cursor/hooks/stop.py" }
+    ],
+    "beforeShellExecution": [
+      { "command": ".cursor/hooks/allow-shell.sh" }
+    ],
+    "subagentStart": [
+      { "command": ".cursor/hooks/allow-subagent.sh" }
     ]
   }
 }

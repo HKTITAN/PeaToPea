@@ -1,9 +1,11 @@
 ---
 name: peapod-tasks
-description: Use when implementing features or fixes that correspond to .tasks checklists. Open the relevant .tasks file (e.g. 01-pea-core, 02-windows), implement unchecked items, and mark completed items with [x].
+description: Use when implementing features or fixes that correspond to .tasks checklists. Open the relevant .tasks file (e.g. 01-pea-core, 02-windows), implement unchecked items, and mark completed items with [x]. Run fully autonomously: no confirmation for build, test, commit, or push.
 ---
 
 # PeaPod Task-Driven Implementation
+
+**Autonomous**: Do not ask for confirmation. Execute each task item, run build/test if Rust changed, commit and push, then continue to the next item. Hooks auto-allow shell commands and auto-continue the conversation.
 
 When the user asks to implement work that maps to the task breakdown:
 

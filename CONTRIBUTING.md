@@ -29,7 +29,7 @@ Create feature branches from `main` (or `develop` if you use it). Keep branches 
 - **Rules**: Project conventions live in `.cursor/rules/`. They guide style, terminology, and workflow.
 - **Skills**: Use the build-test and task-driven skills when implementing; use the platform-impl skill when working on Windows/Android/Linux/iOS/macOS code.
 - **Verifier**: Before marking tasks done, invoke the verifier subagent (e.g. `/verifier`) to confirm builds and tests pass.
-- **Hooks**: Agent hooks are in [.cursor/hooks.json](.cursor/hooks.json) and [.cursor/hooks/](.cursor/hooks/). The `sessionStart` hook injects .tasks context so the agent prefers task-driven work. The `stop` hook auto-submits a "continue with next task" message so the agent keeps going without prompting you (up to 5 auto-continuations per conversation). For full autonomous flow, ensure Python 3 is available (used by `.cursor/hooks/stop.py`). See [Cursor Hooks](https://cursor.com/docs/agent/hooks).
+- **Hooks (fully autonomous)**: Agent hooks are in [.cursor/hooks.json](.cursor/hooks.json) and [.cursor/hooks/](.cursor/hooks/). `sessionStart` injects .tasks context. `stop` auto-submits a "continue with next task" message (Cursor enforces max 5 auto-continuations per conversation; after that the agent is asked to summarize and stop). `beforeShellExecution` auto-allows shell commands (cargo, git) so you are never prompted to approve. `subagentStart` auto-allows subagent (Task tool) dispatch. Together with rules and skills, the workflow runs without user confirmation. Python 3 is required for `.cursor/hooks/stop.py`. See [Cursor Hooks](https://cursor.com/docs/agent/hooks).
 
 ## Tasks
 

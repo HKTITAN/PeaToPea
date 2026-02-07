@@ -8,6 +8,8 @@ alwaysApply: false
 
 - **Format**: .tasks files are checklists. Use `- [ ]` for unchecked and `- [x]` for done. Structure with `##` (task), `###` (subtask), `####` (sub-subtask).
 
+- **Autonomous**: Execute without asking for confirmation. Run build/test, commit, push, and continue to the next item. Hooks allow commands and auto-continue.
+
 - **When implementing from a task file**: Open the relevant file (e.g. [.tasks/01-pea-core.md](.tasks/01-pea-core.md)). Implement unchecked items in order; mark completed items with `[x]`. Do not mark items done until the work is verified (e.g. build and tests pass).
 
 - **Adding tasks**: Add new sub-tasks only when they fit the existing hierarchy. Prefer adding under an existing `####` or `###` rather than creating new top-level sections. Keep tasks small and actionable.

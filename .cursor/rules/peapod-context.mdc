@@ -11,7 +11,8 @@ alwaysApply: true
   - `pea-core/` — Protocol reference implementation (Rust library). Host-driven: no I/O; host passes events and receives actions.
   - `pea-windows/`, `pea-linux/`, `pea-android/`, `pea-ios/`, `pea-macos/` — Protocol implementations per OS (traffic interception, discovery, local transport; each uses pea-core).
 
-- **Task breakdown**: Checklists live in [.tasks/](.tasks/README.md). Follow task order: 00 (setup) → 01 (pea-core) → 07 (protocol/interop) → 02–06 (implementations). Do not skip core before platform work.
+- **Task breakdown**: Checklists live in [.tasks/](.tasks/README.md). Follow task order: 00 (setup) → 01 (pea-core) → 07 (protocol/interop) → 02–06 (implementations). Do not skip core before platform work. Workflow is fully autonomous: execute and commit/push without asking.
+
 
 - **Terminology**
   - Use "protocol implementation" for OS-specific code (e.g. "Windows protocol implementation").

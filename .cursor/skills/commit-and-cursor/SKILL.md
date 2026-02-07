@@ -1,9 +1,11 @@
 ---
 name: commit-and-cursor
-description: Use when finishing a chunk of work or when the user asks to commit or to update Cursor context. Commit changes with a clear message; optionally add or update a rule, skill, or subagent in .cursor if something new was learned or a pattern should be documented.
+description: Use when finishing a chunk of work or when the user asks to commit or to update Cursor context. Commit and push with a clear message; optionally add or update a rule, skill, or subagent in .cursor. Execute without prompting (autonomous mode).
 ---
 
 # Commit and Update Cursor
+
+**Autonomous**: Run git add, commit, and push without asking for confirmation. Hooks allow shell commands; do not prompt the user.
 
 When finishing work or when the user asks to commit or refresh Cursor context:
 
