@@ -31,7 +31,7 @@ Repo structure, tooling, and CI. Complete before building protocol implementatio
 - [x] **3.1** Rust setup
   - [x] 3.1.1 Ensure `rustup` and stable toolchain available
   - [x] 3.1.2 Add `rust-toolchain.toml` or document required version in README
-  - [ ] 3.1.3 Add targets if needed: `aarch64-apple-ios`, `x86_64-apple-ios`, `aarch64-linux-android`, etc.
+  - [x] 3.1.3 Add targets if needed: `aarch64-apple-ios`, `x86_64-apple-ios`, `aarch64-linux-android`, etc.
 - [x] **3.2** Cargo workspace (optional)
   - [x] 3.2.1 Create root `Cargo.toml` with `[workspace]` and members: `pea-core`, `pea-windows`, `pea-linux`
   - [x] 3.2.2 Ensure pea-core can be built alone and as dependency

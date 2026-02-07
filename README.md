@@ -32,6 +32,19 @@ cargo build -p pea-core
 cargo test -p pea-core
 ```
 
+Optional targets for platform implementations (add when working on that platform):
+
+```bash
+# Android (pea-android)
+rustup target add aarch64-linux-android armv7-linux-androideabi i686-linux-android x86_64-linux-android
+
+# iOS (pea-ios)
+rustup target add aarch64-apple-ios x86_64-apple-ios
+
+# macOS (pea-macos)
+rustup target add aarch64-apple-darwin x86_64-apple-darwin
+```
+
 ## Documentation
 
 - **Project and task breakdown**: [.tasks/](.tasks/README.md) — Checklists and recommended order for building PeaPod.
