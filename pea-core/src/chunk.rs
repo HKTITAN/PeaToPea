@@ -2,7 +2,6 @@
 
 use std::collections::HashMap;
 
-use crate::identity::DeviceId;
 use crate::integrity;
 use crate::protocol::Message;
 
@@ -19,7 +18,11 @@ pub struct ChunkId {
 
 /// Split a transfer into chunks by fixed size. HTTP range semantics: each chunk = one range (start, end).
 pub fn split_into_chunks(transfer_id: [u8; 16], total_len: u64, chunk_size: u64) -> Vec<ChunkId> {
-    let size = if chunk_size == 0 { DEFAULT_CHUNK_SIZE } else { chunk_size };
+    let size = if chunk_size == 0 {
+        DEFAULT_CHUNK_SIZE
+    } else {
+        chunk_size
+    };
     let mut out = Vec::new();
     let mut start = 0u64;
     while start < total_len {
@@ -60,7 +63,9 @@ impl TransferState {
     }
 
     pub fn is_complete(&self) -> bool {
-        self.chunk_ids.iter().all(|id| self.received.contains_key(id))
+        self.chunk_ids
+            .iter()
+            .all(|id| self.received.contains_key(id))
     }
 
     /// Reassemble chunks in order into a single byte stream. Call only when `is_complete()`.
@@ -143,6 +148,37 @@ mod tests {
     }
 
     #[test]
+    fn split_exact_multiple() {
+        let id = [1u8; 16];
+        let chunks = split_into_chunks(id, 90, 30);
+        assert_eq!(chunks.len(), 3);
+        assert_eq!(chunks[2].end, 90);
+    }
+
+    #[test]
+    fn split_single_chunk() {
+        let id = [1u8; 16];
+        let chunks = split_into_chunks(id, 10, 100);
+        assert_eq!(chunks.len(), 1);
+        assert_eq!(chunks[0].start, 0);
+        assert_eq!(chunks[0].end, 10);
+    }
+
+    #[test]
+    fn split_zero_length() {
+        let id = [1u8; 16];
+        let chunks = split_into_chunks(id, 0, 30);
+        assert!(chunks.is_empty());
+    }
+
+    #[test]
+    fn split_zero_chunk_size_uses_default() {
+        let id = [1u8; 16];
+        let chunks = split_into_chunks(id, DEFAULT_CHUNK_SIZE * 2, 0);
+        assert_eq!(chunks.len(), 2);
+    }
+
+    #[test]
     fn transfer_state_reassemble() {
         let id = [2u8; 16];
         let chunks = split_into_chunks(id, 100, 30);
@@ -151,7 +187,8 @@ mod tests {
         for c in &chunks {
             let payload: Vec<u8> = (c.start..c.end).map(|i| i as u8).collect();
             let hash = integrity::hash_chunk(&payload);
-            let r = on_chunk_data_received(&mut state, c.transfer_id, c.start, c.end, hash, payload);
+            let r =
+                on_chunk_data_received(&mut state, c.transfer_id, c.start, c.end, hash, payload);
             match r {
                 ChunkReceiveResult::InProgress => {}
                 ChunkReceiveResult::Complete(bytes) => {
@@ -164,5 +201,47 @@ mod tests {
             }
         }
         assert!(state.is_complete());
+    }
+
+    #[test]
+    fn duplicate_chunk_is_idempotent() {
+        let id = [3u8; 16];
+        let chunks = split_into_chunks(id, 50, 50);
+        let mut state = TransferState::new(id, 50, chunks.clone());
+        let payload: Vec<u8> = (0..50).map(|i| i as u8).collect();
+        let hash = integrity::hash_chunk(&payload);
+
+        let r = on_chunk_data_received(&mut state, id, 0, 50, hash, payload.clone());
+        assert!(matches!(r, ChunkReceiveResult::Complete(_)));
+
+        // Receiving the same chunk again should still report complete
+        let r2 = on_chunk_data_received(&mut state, id, 0, 50, hash, payload);
+        assert!(matches!(r2, ChunkReceiveResult::Complete(_)));
+    }
+
+    #[test]
+    fn integrity_failure_rejects_bad_hash() {
+        let id = [4u8; 16];
+        let chunks = split_into_chunks(id, 50, 50);
+        let mut state = TransferState::new(id, 50, chunks);
+        let payload = vec![0u8; 50];
+        let bad_hash = [0u8; 32];
+
+        let r = on_chunk_data_received(&mut state, id, 0, 50, bad_hash, payload);
+        assert!(matches!(r, ChunkReceiveResult::IntegrityFailed));
+        assert!(!state.is_complete());
+    }
+
+    #[test]
+    fn wrong_transfer_id_fails() {
+        let id = [5u8; 16];
+        let chunks = split_into_chunks(id, 50, 50);
+        let mut state = TransferState::new(id, 50, chunks);
+        let payload = vec![0u8; 50];
+        let hash = integrity::hash_chunk(&payload);
+        let wrong_id = [99u8; 16];
+
+        let r = on_chunk_data_received(&mut state, wrong_id, 0, 50, hash, payload);
+        assert!(matches!(r, ChunkReceiveResult::IntegrityFailed));
     }
 }

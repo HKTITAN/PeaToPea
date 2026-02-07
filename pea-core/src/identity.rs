@@ -2,13 +2,12 @@
 
 use chacha20poly1305::aead::{Aead, KeyInit};
 use rand::rngs::OsRng;
-use rand::RngCore;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use x25519_dalek::{PublicKey as X25519PublicKey, StaticSecret};
 
 /// Device public key (32 bytes, X25519). Serializable for beacon and handshake.
-#[derive(Clone, Eq, PartialEq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub struct PublicKey(#[serde(with = "bytes_32")] [u8; 32]);
 
 mod bytes_32 {
@@ -27,10 +26,15 @@ impl PublicKey {
     pub fn as_bytes(&self) -> &[u8; 32] {
         &self.0
     }
+
+    /// Create a `PublicKey` from raw bytes.
+    pub fn from_bytes(bytes: [u8; 32]) -> Self {
+        PublicKey(bytes)
+    }
 }
 
 /// Device ID: deterministic hash of public key. Used in discovery and peer list.
-#[derive(Clone, Copy, Eq, PartialEq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub struct DeviceId(#[serde(with = "bytes_16")] [u8; 16]);
 
 mod bytes_16 {
@@ -73,7 +77,7 @@ impl DeviceId {
 impl Keypair {
     /// Generate a new random keypair and derive device ID from public key.
     pub fn generate() -> Self {
-        let secret = StaticSecret::random_from_rng(OsRng::default());
+        let secret = StaticSecret::random_from_rng(OsRng);
         let public_x = X25519PublicKey::from(&secret);
         let public = PublicKey(public_x.to_bytes());
         let device_id = DeviceId::from_public_key(public.as_bytes());
@@ -109,24 +113,36 @@ pub fn derive_session_key(shared_secret: &[u8; 32]) -> [u8; 32] {
 }
 
 /// Wire encryption: ChaCha20-Poly1305. Nonce: 96-bit counter per direction; never reuse.
-pub fn encrypt_wire(key: &[u8; 32], nonce: u64, plaintext: &[u8]) -> Result<Vec<u8>, WireCryptoError> {
+pub fn encrypt_wire(
+    key: &[u8; 32],
+    nonce: u64,
+    plaintext: &[u8],
+) -> Result<Vec<u8>, WireCryptoError> {
     let cipher = chacha20poly1305::ChaCha20Poly1305::new_from_slice(key)
         .map_err(|_| WireCryptoError::Key)?;
     let mut nonce_bytes = [0u8; 12];
     nonce_bytes[4..12].copy_from_slice(&nonce.to_le_bytes());
-    let nonce_arr = chacha20poly1305::aead::Nonce::from_slice(&nonce_bytes);
+    let nonce_arr = chacha20poly1305::aead::Nonce::<chacha20poly1305::ChaCha20Poly1305>::from_slice(
+        &nonce_bytes,
+    );
     cipher
         .encrypt(nonce_arr, plaintext)
         .map_err(|_| WireCryptoError::Encrypt)
 }
 
 /// Wire decryption.
-pub fn decrypt_wire(key: &[u8; 32], nonce: u64, ciphertext: &[u8]) -> Result<Vec<u8>, WireCryptoError> {
+pub fn decrypt_wire(
+    key: &[u8; 32],
+    nonce: u64,
+    ciphertext: &[u8],
+) -> Result<Vec<u8>, WireCryptoError> {
     let cipher = chacha20poly1305::ChaCha20Poly1305::new_from_slice(key)
         .map_err(|_| WireCryptoError::Key)?;
     let mut nonce_bytes = [0u8; 12];
     nonce_bytes[4..12].copy_from_slice(&nonce.to_le_bytes());
-    let nonce_arr = chacha20poly1305::aead::Nonce::from_slice(&nonce_bytes);
+    let nonce_arr = chacha20poly1305::aead::Nonce::<chacha20poly1305::ChaCha20Poly1305>::from_slice(
+        &nonce_bytes,
+    );
     cipher
         .decrypt(nonce_arr, ciphertext)
         .map_err(|_| WireCryptoError::Decrypt)
@@ -164,6 +180,7 @@ mod tests {
 
     #[test]
     fn encrypt_decrypt_roundtrip() {
+        use rand::RngCore;
         let mut key = [0u8; 32];
         rand::thread_rng().fill_bytes(&mut key);
         let plain = b"hello peapod";
@@ -172,4 +189,3 @@ mod tests {
         assert_eq!(dec.as_slice(), plain);
     }
 }
-

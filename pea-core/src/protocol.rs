@@ -25,17 +25,11 @@ pub enum Message {
         listen_port: u16,
     },
     /// Request to join pod or confirm membership.
-    Join {
-        device_id: DeviceId,
-    },
+    Join { device_id: DeviceId },
     /// Graceful leave.
-    Leave {
-        device_id: DeviceId,
-    },
+    Leave { device_id: DeviceId },
     /// Liveness heartbeat.
-    Heartbeat {
-        device_id: DeviceId,
-    },
+    Heartbeat { device_id: DeviceId },
     /// Request a chunk by transfer ID and range.
     ChunkRequest {
         transfer_id: [u8; 16],
