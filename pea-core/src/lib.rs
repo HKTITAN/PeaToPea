@@ -18,14 +18,14 @@ pub mod identity;
 pub mod protocol;
 pub mod wire;
 
+pub use chunk::ChunkId;
+pub use core::{Action, ChunkError, MessageError, OutboundAction, PeaPodCore};
 pub use identity::{DeviceId, Keypair, PublicKey};
 pub use protocol::{Message, PROTOCOL_VERSION};
 pub use wire::{decode_frame, encode_frame, FrameDecodeError, FrameEncodeError};
-pub use core::{Action, ChunkError, MessageError, OutboundAction, PeaPodCore};
-pub use chunk::ChunkId;
 
 // Stub modules for chunk manager, scheduler, integrity (full impl later).
 pub mod chunk;
-pub mod scheduler;
-pub mod integrity;
 pub mod core;
+pub mod integrity;
+pub mod scheduler;

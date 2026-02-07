@@ -109,9 +109,12 @@ pub fn derive_session_key(shared_secret: &[u8; 32]) -> [u8; 32] {
 }
 
 /// Wire encryption: ChaCha20-Poly1305. Nonce: 96-bit counter per direction; never reuse.
-pub fn encrypt_wire(key: &[u8; 32], nonce: u64, plaintext: &[u8]) -> Result<Vec<u8>, WireCryptoError> {
-    let cipher = ChaCha20Poly1305::new_from_slice(key)
-        .map_err(|_| WireCryptoError::Key)?;
+pub fn encrypt_wire(
+    key: &[u8; 32],
+    nonce: u64,
+    plaintext: &[u8],
+) -> Result<Vec<u8>, WireCryptoError> {
+    let cipher = ChaCha20Poly1305::new_from_slice(key).map_err(|_| WireCryptoError::Key)?;
     let mut nonce_bytes = [0u8; 12];
     nonce_bytes[4..12].copy_from_slice(&nonce.to_le_bytes());
     let nonce_arr = chacha20poly1305::Nonce::from_slice(&nonce_bytes);
@@ -121,9 +124,12 @@ pub fn encrypt_wire(key: &[u8; 32], nonce: u64, plaintext: &[u8]) -> Result<Vec<
 }
 
 /// Wire decryption.
-pub fn decrypt_wire(key: &[u8; 32], nonce: u64, ciphertext: &[u8]) -> Result<Vec<u8>, WireCryptoError> {
-    let cipher = ChaCha20Poly1305::new_from_slice(key)
-        .map_err(|_| WireCryptoError::Key)?;
+pub fn decrypt_wire(
+    key: &[u8; 32],
+    nonce: u64,
+    ciphertext: &[u8],
+) -> Result<Vec<u8>, WireCryptoError> {
+    let cipher = ChaCha20Poly1305::new_from_slice(key).map_err(|_| WireCryptoError::Key)?;
     let mut nonce_bytes = [0u8; 12];
     nonce_bytes[4..12].copy_from_slice(&nonce.to_le_bytes());
     let nonce_arr = chacha20poly1305::Nonce::from_slice(&nonce_bytes);
@@ -173,4 +179,3 @@ mod tests {
         assert_eq!(dec.as_slice(), plain);
     }
 }
-

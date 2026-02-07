@@ -66,14 +66,14 @@ pub fn assign_chunks_with_metrics(
 ) -> Vec<(ChunkId, DeviceId)> {
     let eligible: Vec<DeviceId> = peers
         .iter()
-        .filter(|p| {
-            metrics
-                .get(p)
-                .is_none_or(|m| m.failures < max_failures)
-        })
+        .filter(|p| metrics.get(p).is_none_or(|m| m.failures < max_failures))
         .copied()
         .collect();
-    let effective = if eligible.is_empty() { peers } else { &eligible };
+    let effective = if eligible.is_empty() {
+        peers
+    } else {
+        &eligible
+    };
     assign_chunks_to_peers(chunk_ids, effective)
 }
 
@@ -113,8 +113,16 @@ mod tests {
     fn assign_to_single_peer() {
         let kp = Keypair::generate();
         let chunks = vec![
-            ChunkId { transfer_id: [0; 16], start: 0, end: 100 },
-            ChunkId { transfer_id: [0; 16], start: 100, end: 200 },
+            ChunkId {
+                transfer_id: [0; 16],
+                start: 0,
+                end: 100,
+            },
+            ChunkId {
+                transfer_id: [0; 16],
+                start: 100,
+                end: 200,
+            },
         ];
         let peers = vec![kp.device_id()];
         let out = assign_chunks_to_peers(&chunks, &peers);
@@ -127,9 +135,21 @@ mod tests {
         let a = Keypair::generate();
         let b = Keypair::generate();
         let chunks = vec![
-            ChunkId { transfer_id: [0; 16], start: 0, end: 100 },
-            ChunkId { transfer_id: [0; 16], start: 100, end: 200 },
-            ChunkId { transfer_id: [0; 16], start: 200, end: 300 },
+            ChunkId {
+                transfer_id: [0; 16],
+                start: 0,
+                end: 100,
+            },
+            ChunkId {
+                transfer_id: [0; 16],
+                start: 100,
+                end: 200,
+            },
+            ChunkId {
+                transfer_id: [0; 16],
+                start: 200,
+                end: 300,
+            },
         ];
         let peers = vec![a.device_id(), b.device_id()];
         let out = assign_chunks_to_peers(&chunks, &peers);
@@ -140,9 +160,11 @@ mod tests {
 
     #[test]
     fn assign_no_peers_returns_empty() {
-        let chunks = vec![
-            ChunkId { transfer_id: [0; 16], start: 0, end: 100 },
-        ];
+        let chunks = vec![ChunkId {
+            transfer_id: [0; 16],
+            start: 0,
+            end: 100,
+        }];
         let out = assign_chunks_to_peers(&chunks, &[]);
         assert!(out.is_empty());
     }
@@ -152,8 +174,16 @@ mod tests {
         let a = Keypair::generate();
         let b = Keypair::generate();
         let chunks = vec![
-            ChunkId { transfer_id: [0; 16], start: 0, end: 100 },
-            ChunkId { transfer_id: [0; 16], start: 100, end: 200 },
+            ChunkId {
+                transfer_id: [0; 16],
+                start: 0,
+                end: 100,
+            },
+            ChunkId {
+                transfer_id: [0; 16],
+                start: 100,
+                end: 200,
+            },
         ];
         let peers = vec![a.device_id(), b.device_id()];
         let assignment = assign_chunks_to_peers(&chunks, &peers);
@@ -168,9 +198,21 @@ mod tests {
         let a = Keypair::generate();
         let b = Keypair::generate();
         let chunks = vec![
-            ChunkId { transfer_id: [0; 16], start: 0, end: 100 },
-            ChunkId { transfer_id: [0; 16], start: 100, end: 200 },
-            ChunkId { transfer_id: [0; 16], start: 200, end: 300 },
+            ChunkId {
+                transfer_id: [0; 16],
+                start: 0,
+                end: 100,
+            },
+            ChunkId {
+                transfer_id: [0; 16],
+                start: 100,
+                end: 200,
+            },
+            ChunkId {
+                transfer_id: [0; 16],
+                start: 200,
+                end: 300,
+            },
         ];
         let peers = vec![a.device_id(), b.device_id()];
 
@@ -191,9 +233,11 @@ mod tests {
     #[test]
     fn assign_with_metrics_fallback_all_excluded() {
         let a = Keypair::generate();
-        let chunks = vec![
-            ChunkId { transfer_id: [0; 16], start: 0, end: 100 },
-        ];
+        let chunks = vec![ChunkId {
+            transfer_id: [0; 16],
+            start: 0,
+            end: 100,
+        }];
         let peers = vec![a.device_id()];
 
         let mut metrics = HashMap::new();

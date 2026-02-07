@@ -96,7 +96,9 @@ impl PeaPodCore {
             return false;
         }
         // Must have a non-zero range to split into chunks.
-        let total = range.map(|(s, e)| e.saturating_sub(s).saturating_add(1)).unwrap_or(0);
+        let total = range
+            .map(|(s, e)| e.saturating_sub(s).saturating_add(1))
+            .unwrap_or(0);
         if total == 0 {
             return false;
         }
@@ -106,15 +108,13 @@ impl PeaPodCore {
     }
 
     /// On incoming request (URL, optional range). Returns Accelerate with plan or Fallback.
-    pub fn on_incoming_request(
-        &mut self,
-        url: &str,
-        range: Option<(u64, u64)>,
-    ) -> Action {
+    pub fn on_incoming_request(&mut self, url: &str, range: Option<(u64, u64)>) -> Action {
         if !Self::is_eligible(url, range, false) {
             return Action::Fallback;
         }
-        let total_length = range.map(|(s, e)| e.saturating_sub(s).saturating_add(1)).unwrap_or(0);
+        let total_length = range
+            .map(|(s, e)| e.saturating_sub(s).saturating_add(1))
+            .unwrap_or(0);
         if self.peers.is_empty() {
             return Action::Fallback;
         }
@@ -144,11 +144,7 @@ impl PeaPodCore {
     }
 
     /// On incoming upload request: split outbound data into chunks for peers.
-    pub fn on_upload_request(
-        &mut self,
-        url: &str,
-        data_len: u64,
-    ) -> Action {
+    pub fn on_upload_request(&mut self, url: &str, data_len: u64) -> Action {
         if !Self::is_eligible(url, Some((0, data_len.saturating_sub(1))), false) {
             return Action::Fallback;
         }
@@ -190,9 +186,16 @@ impl PeaPodCore {
         payload: Vec<u8>,
     ) -> Result<Option<Vec<u8>>, ChunkError> {
         // Find which peer sent this chunk (for metrics).
-        let chunk_id = ChunkId { transfer_id, start, end };
+        let chunk_id = ChunkId {
+            transfer_id,
+            start,
+            end,
+        };
         let sender = self.active_transfer.as_ref().and_then(|a| {
-            a.assignment.iter().find(|(c, _)| *c == chunk_id).map(|(_, p)| *p)
+            a.assignment
+                .iter()
+                .find(|(c, _)| *c == chunk_id)
+                .map(|(_, p)| *p)
         });
 
         let active = match &mut self.active_transfer {
@@ -200,7 +203,14 @@ impl PeaPodCore {
             _ => return Err(ChunkError::UnknownTransfer),
         };
         active.request_ticks.remove(&chunk_id);
-        match chunk::on_chunk_data_received(&mut active.state, transfer_id, start, end, hash, payload) {
+        match chunk::on_chunk_data_received(
+            &mut active.state,
+            transfer_id,
+            start,
+            end,
+            hash,
+            payload,
+        ) {
             chunk::ChunkReceiveResult::Complete(bytes) => {
                 if let Some(peer) = sender {
                     self.peer_metrics.entry(peer).or_default().record_success();
@@ -263,13 +273,17 @@ impl PeaPodCore {
             bytes.to_vec()
         };
 
-        let (msg, _consumed) = wire::decode_frame(&plaintext)
-            .map_err(|_| MessageError::DecodeFailed)?;
+        let (msg, _consumed) =
+            wire::decode_frame(&plaintext).map_err(|_| MessageError::DecodeFailed)?;
 
         let mut actions = Vec::new();
 
         match msg {
-            Message::Beacon { device_id, public_key, .. } => {
+            Message::Beacon {
+                device_id,
+                public_key,
+                ..
+            } => {
                 self.on_peer_joined(device_id, &public_key);
                 let resp = Message::DiscoveryResponse {
                     protocol_version: crate::protocol::PROTOCOL_VERSION,
@@ -281,7 +295,11 @@ impl PeaPodCore {
                     actions.push(OutboundAction::SendMessage(peer_id, frame));
                 }
             }
-            Message::DiscoveryResponse { device_id, public_key, .. } => {
+            Message::DiscoveryResponse {
+                device_id,
+                public_key,
+                ..
+            } => {
                 self.on_peer_joined(device_id, &public_key);
             }
             Message::Join { device_id } => {
@@ -296,11 +314,19 @@ impl PeaPodCore {
             Message::Heartbeat { device_id } => {
                 self.on_heartbeat_received(device_id);
             }
-            Message::ChunkRequest { transfer_id, start, end } => {
+            Message::ChunkRequest {
+                transfer_id,
+                start,
+                end,
+            } => {
                 // Peer is requesting a chunk from us. If we have the data in our active
                 // transfer state, send ChunkData back.
                 if let Some(active) = &self.active_transfer {
-                    let chunk_id = ChunkId { transfer_id, start, end };
+                    let chunk_id = ChunkId {
+                        transfer_id,
+                        start,
+                        end,
+                    };
                     if active.state.is_received(&chunk_id) {
                         // We have this chunk; the data was already verified and stored.
                         // In a full impl, we'd read the payload from state. For now, respond with NACK
@@ -308,14 +334,24 @@ impl PeaPodCore {
                     }
                 }
             }
-            Message::ChunkData { transfer_id, start, end, hash, payload } => {
+            Message::ChunkData {
+                transfer_id,
+                start,
+                end,
+                hash,
+                payload,
+            } => {
                 match self.on_chunk_received(transfer_id, start, end, hash, payload) {
                     Ok(Some(bytes)) => {
                         actions.push(OutboundAction::TransferComplete(transfer_id, bytes));
                     }
                     Ok(None) => {} // Still in progress.
                     Err(ChunkError::IntegrityFailed) => {
-                        let nack = Message::Nack { transfer_id, start, end };
+                        let nack = Message::Nack {
+                            transfer_id,
+                            start,
+                            end,
+                        };
                         if let Ok(frame) = wire::encode_frame(&nack) {
                             actions.push(OutboundAction::SendMessage(peer_id, frame));
                         }
@@ -323,15 +359,26 @@ impl PeaPodCore {
                     Err(_) => {}
                 }
             }
-            Message::Nack { transfer_id, start, end } => {
+            Message::Nack {
+                transfer_id,
+                start,
+                end,
+            } => {
                 // Peer reported failure for a chunk; reassign.
-                let chunk_id = ChunkId { transfer_id, start, end };
+                let chunk_id = ChunkId {
+                    transfer_id,
+                    start,
+                    end,
+                };
                 if let Some(active) = &mut self.active_transfer {
                     active.state.mark_failed(chunk_id);
                     active.request_ticks.remove(&chunk_id);
                 }
                 // Record failure for the peer.
-                self.peer_metrics.entry(peer_id).or_default().record_failure();
+                self.peer_metrics
+                    .entry(peer_id)
+                    .or_default()
+                    .record_failure();
             }
         }
 
@@ -363,7 +410,9 @@ impl PeaPodCore {
                 .iter()
                 .filter(|(_, &t)| self.tick_count.saturating_sub(t) > self.chunk_timeout_ticks)
                 .filter_map(|(&chunk_id, _)| {
-                    active.assignment.iter()
+                    active
+                        .assignment
+                        .iter()
                         .find(|(c, _)| *c == chunk_id)
                         .map(|(_, peer)| (chunk_id, *peer))
                 })
@@ -402,11 +451,8 @@ impl PeaPodCore {
         let remaining: Vec<DeviceId> = std::iter::once(self.keypair.device_id())
             .chain(self.peers.iter().copied())
             .collect();
-        let new_assignments = scheduler::reassign_after_peer_left(
-            &active.assignment,
-            peer_left,
-            &remaining,
-        );
+        let new_assignments =
+            scheduler::reassign_after_peer_left(&active.assignment, peer_left, &remaining);
         active.assignment.retain(|(_, p)| *p != peer_left);
         let mut actions = Vec::new();
         for (chunk_id, new_peer) in new_assignments {
@@ -498,13 +544,8 @@ mod tests {
         for &chunk_id in &chunk_ids {
             let payload: Vec<u8> = (chunk_id.start..chunk_id.end).map(|j| j as u8).collect();
             let hash = integrity::hash_chunk(&payload);
-            let r = core.on_chunk_received(
-                transfer_id,
-                chunk_id.start,
-                chunk_id.end,
-                hash,
-                payload,
-            );
+            let r =
+                core.on_chunk_received(transfer_id, chunk_id.start, chunk_id.end, hash, payload);
             if let Ok(Some(bytes)) = r {
                 assert_eq!(bytes.len(), 100);
                 for (j, &b) in bytes.iter().enumerate() {
@@ -543,11 +584,31 @@ mod tests {
 
     #[test]
     fn eligibility_checks() {
-        assert!(PeaPodCore::is_eligible("http://example.com/file", Some((0, 99)), false));
-        assert!(PeaPodCore::is_eligible("https://example.com/file", Some((0, 99)), false));
-        assert!(!PeaPodCore::is_eligible("ftp://example.com/file", Some((0, 99)), false));
-        assert!(!PeaPodCore::is_eligible("http://example.com/file", None, false));
-        assert!(!PeaPodCore::is_eligible("http://example.com/file", Some((0, 99)), true));
+        assert!(PeaPodCore::is_eligible(
+            "http://example.com/file",
+            Some((0, 99)),
+            false
+        ));
+        assert!(PeaPodCore::is_eligible(
+            "https://example.com/file",
+            Some((0, 99)),
+            false
+        ));
+        assert!(!PeaPodCore::is_eligible(
+            "ftp://example.com/file",
+            Some((0, 99)),
+            false
+        ));
+        assert!(!PeaPodCore::is_eligible(
+            "http://example.com/file",
+            None,
+            false
+        ));
+        assert!(!PeaPodCore::is_eligible(
+            "http://example.com/file",
+            Some((0, 99)),
+            true
+        ));
     }
 
     #[test]
@@ -558,12 +619,15 @@ mod tests {
         core.on_peer_joined(peer_a.device_id(), peer_a.public_key());
         core.on_peer_joined(peer_b.device_id(), peer_b.public_key());
 
-        let action = core.on_incoming_request("http://example.com/file", Some((0, 999)));
+        // Use enough data to produce multiple chunks so peer_a is guaranteed at least one.
+        let total = crate::chunk::DEFAULT_CHUNK_SIZE * 6;
+        let action = core.on_incoming_request("http://example.com/file", Some((0, total - 1)));
         assert!(matches!(action, Action::Accelerate { .. }));
 
         let actions = core.on_peer_left(peer_a.device_id());
-        // Should produce messages reassigning chunks from peer_a.
-        assert!(!actions.is_empty() || true); // may be empty if no chunks were assigned to peer_a
+        // With 6 chunks across 3 workers (round-robin), peer_a gets chunks 1, 4 (indices 1, 4).
+        // After leaving, those chunks are reassigned, producing outbound messages.
+        assert!(!actions.is_empty());
     }
 
     #[test]
@@ -657,7 +721,9 @@ mod tests {
         let mut core = PeaPodCore::new();
         let peer = Keypair::generate();
         core.on_peer_joined(peer.device_id(), peer.public_key());
-        let hb = Message::Heartbeat { device_id: peer.device_id() };
+        let hb = Message::Heartbeat {
+            device_id: peer.device_id(),
+        };
         let frame = wire::encode_frame(&hb).unwrap();
         let actions = core.on_message_received(peer.device_id(), &frame).unwrap();
         assert!(actions.is_empty());
@@ -668,7 +734,9 @@ mod tests {
         let mut core = PeaPodCore::new();
         let peer = Keypair::generate();
         core.on_peer_joined(peer.device_id(), peer.public_key());
-        let leave = Message::Leave { device_id: peer.device_id() };
+        let leave = Message::Leave {
+            device_id: peer.device_id(),
+        };
         let frame = wire::encode_frame(&leave).unwrap();
         let _actions = core.on_message_received(peer.device_id(), &frame).unwrap();
         // Peer should be removed; new request should fallback.
@@ -697,10 +765,12 @@ mod tests {
             core.tick();
         }
 
-        // The chunk timeout should have recorded a failure metric.
-        let has_failure = core.peer_metrics().values().any(|m| m.failures > 0);
-        // It may or may not have failures depending on assignment; just verify no crash.
-        assert!(has_failure || true);
+        // The chunk timeout should have recorded a failure for one of the workers.
+        let total_failures: u64 = core.peer_metrics().values().map(|m| m.failures).sum();
+        assert!(
+            total_failures > 0,
+            "Expected at least one failure after timeout"
+        );
     }
 
     #[test]
@@ -762,6 +832,8 @@ mod tests {
         let frame = wire::encode_frame(&msg).unwrap();
         let actions = core.on_message_received(peer.device_id(), &frame).unwrap();
         // Should contain a NACK response.
-        assert!(actions.iter().any(|a| matches!(a, OutboundAction::SendMessage(_, _))));
+        assert!(actions
+            .iter()
+            .any(|a| matches!(a, OutboundAction::SendMessage(_, _))));
     }
 }

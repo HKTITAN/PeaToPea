@@ -18,7 +18,11 @@ pub struct ChunkId {
 
 /// Split a transfer into chunks by fixed size. HTTP range semantics: each chunk = one range (start, end).
 pub fn split_into_chunks(transfer_id: [u8; 16], total_len: u64, chunk_size: u64) -> Vec<ChunkId> {
-    let size = if chunk_size == 0 { DEFAULT_CHUNK_SIZE } else { chunk_size };
+    let size = if chunk_size == 0 {
+        DEFAULT_CHUNK_SIZE
+    } else {
+        chunk_size
+    };
     let mut out = Vec::new();
     let mut start = 0u64;
     while start < total_len {
@@ -73,7 +77,9 @@ impl TransferState {
     }
 
     pub fn is_complete(&self) -> bool {
-        self.chunk_ids.iter().all(|id| self.received.contains_key(id))
+        self.chunk_ids
+            .iter()
+            .all(|id| self.received.contains_key(id))
     }
 
     pub fn is_received(&self, chunk_id: &ChunkId) -> bool {
@@ -205,7 +211,8 @@ mod tests {
         for c in &chunks {
             let payload: Vec<u8> = (c.start..c.end).map(|i| i as u8).collect();
             let hash = integrity::hash_chunk(&payload);
-            let r = on_chunk_data_received(&mut state, c.transfer_id, c.start, c.end, hash, payload);
+            let r =
+                on_chunk_data_received(&mut state, c.transfer_id, c.start, c.end, hash, payload);
             match r {
                 ChunkReceiveResult::InProgress => {}
                 ChunkReceiveResult::Complete(bytes) => {
