@@ -2,7 +2,6 @@
 
 use std::collections::HashMap;
 
-use crate::identity::DeviceId;
 use crate::integrity;
 use crate::protocol::Message;
 
