@@ -100,20 +100,20 @@ Reference implementation of the PeaPod protocol: shared protocol logic, crypto, 
 
 ## 6. Integrity verification
 
-- [ ] **6.1** Per-chunk hash
-  - [ ] 6.1.1 Choose hash: SHA-256 or BLAKE2; implement hash(chunk_bytes) -> digest
-  - [ ] 6.1.2 Include hash in chunk request (requester may not have it yet; or hash comes with chunk data)
-  - [ ] 6.1.3 On chunk data received: compute hash of payload, compare to expected; reject if mismatch
-  - [ ] 6.1.4 On mismatch: mark chunk failed, trigger NACK/redistribute so scheduler reassigns
-- [ ] **6.2** Malicious peer handling
-  - [ ] 6.2.1 On integrity failure: record peer; optionally isolate (stop assigning to that peer) or retry once
-  - [ ] 6.2.2 Document behavior: isolate after N failures (configurable)
+- [x] **6.1** Per-chunk hash
+  - [x] 6.1.1 Choose hash: SHA-256 or BLAKE2; implement hash(chunk_bytes) -> digest
+  - [x] 6.1.2 Include hash in chunk request (requester may not have it yet; or hash comes with chunk data)
+  - [x] 6.1.3 On chunk data received: compute hash of payload, compare to expected; reject if mismatch
+  - [x] 6.1.4 On mismatch: mark chunk failed, trigger NACK/redistribute so scheduler reassigns
+- [x] **6.2** Malicious peer handling
+  - [x] 6.2.1 On integrity failure: record peer; optionally isolate (stop assigning to that peer) or retry once
+  - [x] 6.2.2 Document behavior: isolate after N failures (configurable)
 
 ## 7. Failure recovery
 
-- [ ] **7.1** Timeouts
-  - [ ] 7.1.1 Define timeout for chunk request (e.g. 30s); configurable
-  - [ ] 7.1.2 On timeout: mark chunk as not received; reassign to another peer or retry
+- [x] **7.1** Timeouts
+  - [x] 7.1.1 Define timeout for chunk request (e.g. 30s); configurable
+  - [x] 7.1.2 On timeout: mark chunk as not received; reassign to another peer or retry
   - [x] 7.1.3 Define timeout for heartbeat (e.g. peer considered dead after 3 missed)
 - [x] **7.2** Heartbeat
   - [x] 7.2.1 Core produces "send heartbeat" events at interval (host sends over transport)
@@ -131,21 +131,21 @@ Reference implementation of the PeaPod protocol: shared protocol logic, crypto, 
   - [x] 8.1.2 Method: `on_incoming_request(metadata)` -> Action (e.g. StartTransfer { chunks, assignments } or Fallback)
   - [x] 8.1.3 Method: `on_peer_joined(peer_id, public_key)` -> optional session setup / welcome
   - [x] 8.1.4 Method: `on_peer_left(peer_id)` -> internal redistribution; output messages to send if any
-  - [ ] 8.1.5 Method: `on_message_received(peer_id, bytes)` -> decrypt, parse, update state; return optional response messages and/or chunk requests for WAN
+  - [x] 8.1.5 Method: `on_message_received(peer_id, bytes)` -> decrypt, parse, update state; return optional response messages and/or chunk requests for WAN
   - [x] 8.1.6 Method: `on_chunk_received(peer_id, chunk_id, data)` -> verify, store; return optional reassembled stream segment for host to pass to app
   - [x] 8.1.7 Method: `tick()` or `poll_events()` -> heartbeat timers, timeouts; return list of outbound messages and WAN chunk requests
-- [ ] **8.2** Host responsibilities (document only)
+- [x] **8.2** Host responsibilities (document only)
   - [x] 8.2.1 Document: host performs actual I/O (sockets, discovery, proxy/VPN); core is pure logic + crypto
   - [x] 8.2.2 Document: host passes in parsed request metadata (URL, range, method); host executes WAN requests and injects chunk data into core
   - [x] 8.2.3 Document: host sends core-generated messages to peers over local transport
 
 ## 9. Traffic eligibility (logic in core)
 
-- [ ] **9.1** Eligibility rules
-  - [ ] 9.1.1 Support HTTP range-based downloads: core accepts range (start, end) and splits into chunks
+- [x] **9.1** Eligibility rules
+  - [x] 9.1.1 Support HTTP range-based downloads: core accepts range (start, end) and splits into chunks
   - [ ] 9.1.2 Support chunked uploads: core splits outbound body into chunks for peers
-  - [ ] 9.1.3 Mark or reject flows that must not be accelerated (e.g. DRM, encrypted streaming); host can pass "ineligible" and core returns Fallback
-  - [ ] 9.1.4 Document: host decides eligibility when possible; core may reject if it cannot handle (e.g. unknown protocol)
+  - [x] 9.1.3 Mark or reject flows that must not be accelerated (e.g. DRM, encrypted streaming); host can pass "ineligible" and core returns Fallback
+  - [x] 9.1.4 Document: host decides eligibility when possible; core may reject if it cannot handle (e.g. unknown protocol)
 
 ## 10. Unit and integration tests
 
@@ -156,22 +156,22 @@ Reference implementation of the PeaPod protocol: shared protocol logic, crypto, 
 - [x] **10.2** Protocol
   - [x] 10.2.1 Test serialize/deserialize for each message type (roundtrip)
   - [x] 10.2.2 Test framing encode/decode with partial reads
-- [ ] **10.3** Chunk manager
-  - [ ] 10.3.1 Test split transfer into chunks (various sizes and chunk sizes)
-  - [ ] 10.3.2 Test reassembly order and completeness
-  - [ ] 10.3.3 Test duplicate chunk handling (idempotent or reject)
-- [ ] **10.4** Scheduler
-  - [ ] 10.4.1 Test assignment with 1, 2, N peers
-  - [ ] 10.4.2 Test reassignment when one peer "leaves"
-  - [ ] 10.4.3 Test no assignment when zero peers (fallback)
-- [ ] **10.5** Integrity
-  - [ ] 10.5.1 Test valid chunk passes verification
-  - [ ] 10.5.2 Test tampered chunk fails verification and triggers reassign
-- [ ] **10.6** Integration (mock host)
-  - [ ] 10.6.1 Mock host: inject request, no peers -> Fallback
-  - [ ] 10.6.2 Mock host: inject request, one peer -> chunk assignments and mock chunk data -> reassembled output
-  - [ ] 10.6.3 Mock host: peer leaves mid-transfer -> redistribution and completion
-  - [ ] 10.6.4 Mock host: heartbeat timeout -> peer marked dead, chunks redistributed
+- [x] **10.3** Chunk manager
+  - [x] 10.3.1 Test split transfer into chunks (various sizes and chunk sizes)
+  - [x] 10.3.2 Test reassembly order and completeness
+  - [x] 10.3.3 Test duplicate chunk handling (idempotent or reject)
+- [x] **10.4** Scheduler
+  - [x] 10.4.1 Test assignment with 1, 2, N peers
+  - [x] 10.4.2 Test reassignment when one peer "leaves"
+  - [x] 10.4.3 Test no assignment when zero peers (fallback)
+- [x] **10.5** Integrity
+  - [x] 10.5.1 Test valid chunk passes verification
+  - [x] 10.5.2 Test tampered chunk fails verification and triggers reassign
+- [x] **10.6** Integration (mock host)
+  - [x] 10.6.1 Mock host: inject request, no peers -> Fallback
+  - [x] 10.6.2 Mock host: inject request, one peer -> chunk assignments and mock chunk data -> reassembled output
+  - [x] 10.6.3 Mock host: peer leaves mid-transfer -> redistribution and completion
+  - [x] 10.6.4 Mock host: heartbeat timeout -> peer marked dead, chunks redistributed
   - [x] 10.6.5 Integration test: request with range, receive chunks, verify reassembled output
 
 ## 11. No platform-specific I/O
