@@ -30,6 +30,11 @@ jobs:
       - name: Clippy
         run: cargo clippy -p pea-core -- -D warnings
 
+      - name: Cargo audit
+        run: |
+          cargo install cargo-audit --locked
+          cargo audit
+
       - name: Build pea-linux
         run: cargo build -p pea-linux --verbose
 

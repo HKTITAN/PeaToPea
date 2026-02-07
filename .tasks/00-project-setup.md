@@ -75,9 +75,9 @@ Repo structure, tooling, and CI. Complete before building protocol implementatio
 
 ## 7. Protocol versioning (placeholder)
 
-- [ ] **7.1** Define version scheme
-  - [ ] 7.1.1 Document protocol version number (e.g. 1) in repo or pea-core
-  - [ ] 7.1.2 Reserve field in wire format for version (implementation in 01-pea-core / 07)
+- [x] **7.1** Define version scheme
+  - [x] 7.1.1 Document protocol version number (e.g. 1) in repo or pea-core (Note: `pea_core::protocol::PROTOCOL_VERSION` = 1)
+  - [x] 7.1.2 Reserve field in wire format for version (implementation in 01-pea-core / 07)
 
 ## 8. Dependency and license audit
 
@@ -85,5 +85,5 @@ Repo structure, tooling, and CI. Complete before building protocol implementatio
   - [x] 8.1.1 Choose license for project (e.g. MIT, Apache-2.0) and add LICENSE file
   - [x] 8.1.2 Document third-party licenses for Rust crates (cargo license or similar)
 - [ ] **8.2** Security
-  - [ ] 8.2.1 Add `cargo audit` to CI (optional) for Rust
-  - [ ] 8.2.2 Document process for dependency updates
+  - [x] 8.2.1 Add `cargo audit` to CI (optional) for Rust
+  - [x] 8.2.2 Document process for dependency updates

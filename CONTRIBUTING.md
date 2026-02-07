@@ -18,6 +18,11 @@ Create feature branches from `main` (or `develop` if you use it). Keep branches 
 - Use clear, present-tense messages (e.g. "Add chunk manager to pea-core", "Fix frame decode for partial reads").
 - Reference .tasks or issues when applicable (e.g. "Complete 01-pea-core section 4.2").
 
+## Dependency updates
+
+- **Rust**: Bump versions in `Cargo.toml` as needed; run `cargo update` and `cargo build -p pea-core && cargo test -p pea-core`. CI runs `cargo audit` to flag known vulnerabilities; fix or document any findings before merging.
+- **Other**: Document platform-specific dependency update steps in the relevant .tasks file (e.g. Android NDK, Xcode).
+
 ## Before pushing
 
 1. Run `cargo build -p pea-core` and `cargo test -p pea-core` from the repo root.

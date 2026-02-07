@@ -4,61 +4,61 @@ Reference implementation of the PeaPod protocol: shared protocol logic, crypto, 
 
 ## 1. Crate bootstrap
 
-- [ ] **1.1** Create crate
-  - [ ] 1.1.1 Run `cargo init --lib` in `pea-core/` (or add as workspace member)
-  - [ ] 1.1.2 Set crate name in `Cargo.toml` (e.g. `pea-core` or `pea_protocol`)
-  - [ ] 1.1.3 Set edition = "2021" (or current stable)
-- [ ] **1.2** Dependencies
-  - [ ] 1.2.1 Add `serde` and `serde_json` or `bincode` for serialization
-  - [ ] 1.2.2 Add crypto: e.g. `x25519-dalek`, `chacha20poly1305` or `aes-gcm`
-  - [ ] 1.2.3 Add hashing: e.g. `sha2` or `blake2`
-  - [ ] 1.2.4 Add `thiserror` and/or `anyhow` for errors
-  - [ ] 1.2.5 Add `uuid` or similar for chunk/transfer IDs if needed
-  - [ ] 1.2.6 Add `rand` for key generation and nonces
-  - [ ] 1.2.7 Add `tracing` or `log` for diagnostics (optional, no I/O in core)
+- [x] **1.1** Create crate
+  - [x] 1.1.1 Run `cargo init --lib` in `pea-core/` (or add as workspace member)
+  - [x] 1.1.2 Set crate name in `Cargo.toml` (e.g. `pea-core` or `pea_protocol`)
+  - [x] 1.1.3 Set edition = "2021" (or current stable)
+- [x] **1.2** Dependencies
+  - [x] 1.2.1 Add `serde` and `serde_json` or `bincode` for serialization
+  - [x] 1.2.2 Add crypto: e.g. `x25519-dalek`, `chacha20poly1305` or `aes-gcm`
+  - [x] 1.2.3 Add hashing: e.g. `sha2` or `blake2`
+  - [x] 1.2.4 Add `thiserror` and/or `anyhow` for errors
+  - [x] 1.2.5 Add `uuid` or similar for chunk/transfer IDs if needed
+  - [x] 1.2.6 Add `rand` for key generation and nonces
+  - [x] 1.2.7 Add `tracing` or `log` for diagnostics (optional, no I/O in core)
 
 ## 2. Identity and crypto module
 
-- [ ] **2.1** Device identity
-  - [ ] 2.1.1 Define type for device keypair (e.g. X25519)
-  - [ ] 2.1.2 Implement keypair generation (random)
-  - [ ] 2.1.3 Define device ID as deterministic hash of public key (e.g. SHA-256 truncated or BLAKE2)
-  - [ ] 2.1.4 Expose public key and device ID types (serializable for wire)
-  - [ ] 2.1.5 Implement serialization of public key and device ID for discovery/beacon
-- [ ] **2.2** Session keys for pod
-  - [ ] 2.2.1 Define session key type (symmetric: e.g. 256-bit)
-  - [ ] 2.2.2 Implement key exchange: two devices derive shared secret from keypairs
-  - [ ] 2.2.3 Derive session encryption key from shared secret (KDF: e.g. HKDF or simple hash)
-  - [ ] 2.2.4 Document or implement "pod session": N devices share same session key or pairwise (decide spec)
-- [ ] **2.3** Encryption of wire messages
-  - [ ] 2.3.1 Choose AEAD: ChaCha20-Poly1305 or AES-GCM
-  - [ ] 2.3.2 Implement encrypt(plaintext, key, nonce) -> ciphertext
-  - [ ] 2.3.3 Implement decrypt(ciphertext, key, nonce) -> Result<plaintext>
-  - [ ] 2.3.4 Define nonce format (e.g. 96-bit counter or random per message; document reuse rules)
-- [ ] **2.4** No plaintext inspection
-  - [ ] 2.4.1 Ensure core never requires plaintext of user data for eligibility; only metadata (e.g. URL, range) if at all
-  - [ ] 2.4.2 Chunk hashes are over plaintext before encrypting; verify after decrypting
+- [x] **2.1** Device identity
+  - [x] 2.1.1 Define type for device keypair (e.g. X25519)
+  - [x] 2.1.2 Implement keypair generation (random)
+  - [x] 2.1.3 Define device ID as deterministic hash of public key (e.g. SHA-256 truncated or BLAKE2)
+  - [x] 2.1.4 Expose public key and device ID types (serializable for wire)
+  - [x] 2.1.5 Implement serialization of public key and device ID for discovery/beacon
+- [x] **2.2** Session keys for pod
+  - [x] 2.2.1 Define session key type (symmetric: e.g. 256-bit)
+  - [x] 2.2.2 Implement key exchange: two devices derive shared secret from keypairs
+  - [x] 2.2.3 Derive session encryption key from shared secret (KDF: e.g. HKDF or simple hash)
+  - [x] 2.2.4 Document or implement "pod session": N devices share same session key or pairwise (decide spec)
+- [x] **2.3** Encryption of wire messages
+  - [x] 2.3.1 Choose AEAD: ChaCha20-Poly1305 or AES-GCM
+  - [x] 2.3.2 Implement encrypt(plaintext, key, nonce) -> ciphertext
+  - [x] 2.3.3 Implement decrypt(ciphertext, key, nonce) -> Result<plaintext>
+  - [x] 2.3.4 Define nonce format (e.g. 96-bit counter or random per message; document reuse rules)
+- [x] **2.4** No plaintext inspection
+  - [x] 2.4.1 Ensure core never requires plaintext of user data for eligibility; only metadata (e.g. URL, range) if at all
+  - [x] 2.4.2 Chunk hashes are over plaintext before encrypting; verify after decrypting
 
 ## 3. Protocol and wire format
 
-- [ ] **3.1** Message types (define enum or struct per type)
-  - [ ] 3.1.1 Discovery beacon (advertise presence; include device ID, public key, protocol version)
-  - [ ] 3.1.2 Discovery response (ack; include own device ID, public key)
-  - [ ] 3.1.3 Join (request to join pod or confirm membership)
-  - [ ] 3.1.4 Leave (graceful leave)
-  - [ ] 3.1.5 Heartbeat (liveness; optional payload)
-  - [ ] 3.1.6 Chunk request (request a chunk by ID or range)
-  - [ ] 3.1.7 Chunk data (payload: chunk bytes or encrypted chunk + hash)
-  - [ ] 3.1.8 NACK / redistribute (chunk failed or peer left; trigger reassignment)
-- [ ] **3.2** Serialization
-  - [ ] 3.2.1 Implement Serialize/Deserialize for all message types (serde)
-  - [ ] 3.2.2 Choose wire encoding: bincode or custom binary; document in 07-protocol-and-interop
-  - [ ] 3.2.3 Add protocol version field to beacon and handshake messages
-  - [ ] 3.2.4 Ensure wire format is stable (no breaking changes without version bump)
-- [ ] **3.3** Framing
-  - [ ] 3.3.1 Define frame format if needed (length-prefix or delimiter)
-  - [ ] 3.3.2 Implement encode frame (message -> bytes)
-  - [ ] 3.3.3 Implement decode frame (bytes -> message) with error handling for partial reads
+- [x] **3.1** Message types (define enum or struct per type)
+  - [x] 3.1.1 Discovery beacon (advertise presence; include device ID, public key, protocol version)
+  - [x] 3.1.2 Discovery response (ack; include own device ID, public key)
+  - [x] 3.1.3 Join (request to join pod or confirm membership)
+  - [x] 3.1.4 Leave (graceful leave)
+  - [x] 3.1.5 Heartbeat (liveness; optional payload)
+  - [x] 3.1.6 Chunk request (request a chunk by ID or range)
+  - [x] 3.1.7 Chunk data (payload: chunk bytes or encrypted chunk + hash)
+  - [x] 3.1.8 NACK / redistribute (chunk failed or peer left; trigger reassignment)
+- [x] **3.2** Serialization
+  - [x] 3.2.1 Implement Serialize/Deserialize for all message types (serde)
+  - [x] 3.2.2 Choose wire encoding: bincode or custom binary; document in 07-protocol-and-interop
+  - [x] 3.2.3 Add protocol version field to beacon and handshake messages
+  - [x] 3.2.4 Ensure wire format is stable (no breaking changes without version bump)
+- [x] **3.3** Framing
+  - [x] 3.3.1 Define frame format if needed (length-prefix or delimiter)
+  - [x] 3.3.2 Implement encode frame (message -> bytes)
+  - [x] 3.3.3 Implement decode frame (bytes -> message) with error handling for partial reads
 
 ## 4. Chunk manager
 
@@ -135,9 +135,9 @@ Reference implementation of the PeaPod protocol: shared protocol logic, crypto, 
   - [x] 8.1.6 Method: `on_chunk_received(peer_id, chunk_id, data)` -> verify, store; return optional reassembled stream segment for host to pass to app
   - [x] 8.1.7 Method: `tick()` or `poll_events()` -> heartbeat timers, timeouts; return list of outbound messages and WAN chunk requests
 - [ ] **8.2** Host responsibilities (document only)
-  - [ ] 8.2.1 Document: host performs actual I/O (sockets, discovery, proxy/VPN); core is pure logic + crypto
-  - [ ] 8.2.2 Document: host passes in parsed request metadata (URL, range, method); host executes WAN requests and injects chunk data into core
-  - [ ] 8.2.3 Document: host sends core-generated messages to peers over local transport
+  - [x] 8.2.1 Document: host performs actual I/O (sockets, discovery, proxy/VPN); core is pure logic + crypto
+  - [x] 8.2.2 Document: host passes in parsed request metadata (URL, range, method); host executes WAN requests and injects chunk data into core
+  - [x] 8.2.3 Document: host sends core-generated messages to peers over local transport
 
 ## 9. Traffic eligibility (logic in core)
 
@@ -149,13 +149,13 @@ Reference implementation of the PeaPod protocol: shared protocol logic, crypto, 
 
 ## 10. Unit and integration tests
 
-- [ ] **10.1** Identity and crypto
-  - [ ] 10.1.1 Test keypair generation and device ID derivation
-  - [ ] 10.1.2 Test key exchange: two keypairs produce same shared secret
-  - [ ] 10.1.3 Test encrypt/decrypt roundtrip
-- [ ] **10.2** Protocol
-  - [ ] 10.2.1 Test serialize/deserialize for each message type (roundtrip)
-  - [ ] 10.2.2 Test framing encode/decode with partial reads
+- [x] **10.1** Identity and crypto
+  - [x] 10.1.1 Test keypair generation and device ID derivation
+  - [x] 10.1.2 Test key exchange: two keypairs produce same shared secret
+  - [x] 10.1.3 Test encrypt/decrypt roundtrip
+- [x] **10.2** Protocol
+  - [x] 10.2.1 Test serialize/deserialize for each message type (roundtrip)
+  - [x] 10.2.2 Test framing encode/decode with partial reads
 - [ ] **10.3** Chunk manager
   - [ ] 10.3.1 Test split transfer into chunks (various sizes and chunk sizes)
   - [ ] 10.3.2 Test reassembly order and completeness
