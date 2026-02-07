@@ -1,6 +1,6 @@
 //! Chunk manager: split transfer into chunks, track state, reassemble.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use crate::integrity;
 use crate::protocol::Message;
@@ -40,6 +40,8 @@ pub struct TransferState {
     chunk_ids: Vec<ChunkId>,
     /// Chunk payloads received and verified (ChunkId -> payload).
     received: HashMap<ChunkId, Vec<u8>>,
+    /// Chunks currently in flight (requested but not yet received).
+    in_flight: HashSet<ChunkId>,
 }
 
 impl TransferState {
@@ -49,17 +51,33 @@ impl TransferState {
             total_length,
             chunk_ids,
             received: HashMap::new(),
+            in_flight: HashSet::new(),
         }
+    }
+
+    /// Mark chunk as in flight (requested).
+    pub fn mark_in_flight(&mut self, chunk_id: ChunkId) {
+        self.in_flight.insert(chunk_id);
     }
 
     /// Record that a chunk was received and verified. Returns true if transfer is now complete.
     pub fn mark_received(&mut self, chunk_id: ChunkId, payload: Vec<u8>) -> bool {
+        self.in_flight.remove(&chunk_id);
         self.received.insert(chunk_id, payload);
         self.is_complete()
     }
 
+    /// Mark a chunk as failed (remove from in-flight so it can be reassigned).
+    pub fn mark_failed(&mut self, chunk_id: ChunkId) {
+        self.in_flight.remove(&chunk_id);
+    }
+
     pub fn is_complete(&self) -> bool {
         self.chunk_ids.iter().all(|id| self.received.contains_key(id))
+    }
+
+    pub fn is_received(&self, chunk_id: &ChunkId) -> bool {
+        self.received.contains_key(chunk_id)
     }
 
     /// Reassemble chunks in order into a single byte stream. Call only when `is_complete()`.
@@ -75,6 +93,11 @@ impl TransferState {
 
     pub fn chunk_ids(&self) -> &[ChunkId] {
         &self.chunk_ids
+    }
+
+    /// Get chunks that are in flight.
+    pub fn in_flight(&self) -> &HashSet<ChunkId> {
+        &self.in_flight
     }
 }
 
@@ -115,6 +138,7 @@ pub fn on_chunk_data_received(
         end,
     };
     if !integrity::verify_chunk(&payload, &hash) {
+        state.mark_failed(chunk_id);
         return ChunkReceiveResult::IntegrityFailed;
     }
     let complete = state.mark_received(chunk_id, payload);
@@ -142,6 +166,37 @@ mod tests {
     }
 
     #[test]
+    fn split_chunks_exact() {
+        let id = [1u8; 16];
+        let chunks = split_into_chunks(id, 90, 30);
+        assert_eq!(chunks.len(), 3);
+        assert_eq!(chunks[2].end, 90);
+    }
+
+    #[test]
+    fn split_chunks_single() {
+        let id = [1u8; 16];
+        let chunks = split_into_chunks(id, 10, 100);
+        assert_eq!(chunks.len(), 1);
+        assert_eq!(chunks[0].start, 0);
+        assert_eq!(chunks[0].end, 10);
+    }
+
+    #[test]
+    fn split_chunks_zero_length() {
+        let id = [1u8; 16];
+        let chunks = split_into_chunks(id, 0, 30);
+        assert!(chunks.is_empty());
+    }
+
+    #[test]
+    fn split_chunks_default_size() {
+        let id = [1u8; 16];
+        let chunks = split_into_chunks(id, DEFAULT_CHUNK_SIZE * 3, 0);
+        assert_eq!(chunks.len(), 3);
+    }
+
+    #[test]
     fn transfer_state_reassemble() {
         let id = [2u8; 16];
         let chunks = split_into_chunks(id, 100, 30);
@@ -163,5 +218,44 @@ mod tests {
             }
         }
         assert!(state.is_complete());
+    }
+
+    #[test]
+    fn duplicate_chunk_idempotent() {
+        let id = [3u8; 16];
+        let chunks = split_into_chunks(id, 60, 30);
+        let mut state = TransferState::new(id, 60, chunks.clone());
+        let payload: Vec<u8> = (0..30).collect();
+        let hash = integrity::hash_chunk(&payload);
+        // Receive same chunk twice.
+        let r1 = on_chunk_data_received(&mut state, id, 0, 30, hash, payload.clone());
+        assert!(matches!(r1, ChunkReceiveResult::InProgress));
+        let r2 = on_chunk_data_received(&mut state, id, 0, 30, hash, payload);
+        assert!(matches!(r2, ChunkReceiveResult::InProgress));
+    }
+
+    #[test]
+    fn integrity_failure_rejects_tampered() {
+        let id = [4u8; 16];
+        let chunks = split_into_chunks(id, 30, 30);
+        let mut state = TransferState::new(id, 30, chunks);
+        let payload = vec![1u8; 30];
+        let bad_hash = [0u8; 32];
+        let r = on_chunk_data_received(&mut state, id, 0, 30, bad_hash, payload);
+        assert!(matches!(r, ChunkReceiveResult::IntegrityFailed));
+        assert!(!state.is_complete());
+    }
+
+    #[test]
+    fn in_flight_tracking() {
+        let id = [5u8; 16];
+        let chunks = split_into_chunks(id, 60, 30);
+        let mut state = TransferState::new(id, 60, chunks.clone());
+        state.mark_in_flight(chunks[0]);
+        assert!(state.in_flight().contains(&chunks[0]));
+        let payload: Vec<u8> = (0..30).collect();
+        let _hash = integrity::hash_chunk(&payload);
+        state.mark_received(chunks[0], payload);
+        assert!(!state.in_flight().contains(&chunks[0]));
     }
 }

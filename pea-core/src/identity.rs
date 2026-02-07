@@ -73,7 +73,7 @@ impl DeviceId {
 impl Keypair {
     /// Generate a new random keypair and derive device ID from public key.
     pub fn generate() -> Self {
-        let secret = StaticSecret::random_from_rng(OsRng::default());
+        let secret = StaticSecret::random_from_rng(OsRng);
         let public_x = X25519PublicKey::from(&secret);
         let public = PublicKey(public_x.to_bytes());
         let device_id = DeviceId::from_public_key(public.as_bytes());
