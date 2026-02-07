@@ -61,8 +61,8 @@ Repo structure, tooling, and CI. Complete before building protocol implementatio
 - [x] **6.1** Core and Windows/Linux CI
   - [x] 6.1.1 Add CI config (e.g. GitHub Actions) to build `pea-core` on push/PR
   - [x] 6.1.2 Run `cargo test` for pea-core
-  - [ ] 6.1.3 Build pea-windows on Windows runner (optional)
-  - [ ] 6.1.4 Build pea-linux on Linux runner (optional)
+  - [x] 6.1.3 Build pea-windows on Windows runner (optional)
+  - [x] 6.1.4 Build pea-linux on Linux runner (optional)
 - [ ] **6.2** Android CI
   - [ ] 6.2.1 Add job to build pea-android (debug APK)
   - [ ] 6.2.2 Build Rust core for Android targets in CI
