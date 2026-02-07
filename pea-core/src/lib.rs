@@ -21,8 +21,11 @@ pub mod wire;
 pub use identity::{DeviceId, Keypair, PublicKey};
 pub use protocol::{Message, PROTOCOL_VERSION};
 pub use wire::{decode_frame, encode_frame, FrameDecodeError, FrameEncodeError};
-pub use core::{Action, ChunkError, OutboundAction, PeaPodCore};
+pub use core::{Action, ActiveUpload, ChunkError, MessageError, OutboundAction, PeaPodCore,
+    RequestMetadata, UploadAction, is_eligible, DEFAULT_CHUNK_TIMEOUT_TICKS};
 pub use chunk::ChunkId;
+pub use integrity::{PeerTrustTracker, DEFAULT_MAX_INTEGRITY_FAILURES};
+pub use scheduler::{PeerMetrics, PeerMetricsTracker, SLOW_PEER_FAILURE_THRESHOLD};
 
 // Stub modules for chunk manager, scheduler, integrity (full impl later).
 pub mod chunk;

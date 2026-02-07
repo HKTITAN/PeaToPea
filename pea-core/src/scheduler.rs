@@ -1,9 +1,12 @@
-//! Distributed scheduler: assign chunks to peers; reassign when peer leaves.
+//! Distributed scheduler: assign chunks to peers; reassign when peer leaves; per-peer metrics.
 
 use std::collections::HashMap;
 
 use crate::chunk::ChunkId;
 use crate::identity::DeviceId;
+
+/// Default failure threshold before reducing allocation to a slow peer.
+pub const SLOW_PEER_FAILURE_THRESHOLD: u32 = 3;
 
 /// Assign each chunk to a peer (round-robin over peers). Returns (ChunkId, DeviceId) for each chunk.
 /// If peers is empty, returns empty. Does not include "self" in assignment; host treats missing peer as self.
@@ -46,6 +49,58 @@ pub fn reassign_after_peer_left(
 /// Build assignment map: ChunkId -> DeviceId for quick lookup (e.g. which peer to ask for a chunk).
 pub fn assignment_map(assignment: &[(ChunkId, DeviceId)]) -> HashMap<ChunkId, DeviceId> {
     assignment.iter().map(|(c, p)| (*c, *p)).collect()
+}
+
+/// Per-peer metrics for tracking performance and failures.
+#[derive(Debug, Clone, Default)]
+pub struct PeerMetrics {
+    pub failures: u32,
+    pub chunks_completed: u32,
+    pub last_failure_tick: Option<u64>,
+}
+
+/// Tracks per-peer metrics across a session.
+pub struct PeerMetricsTracker {
+    metrics: HashMap<DeviceId, PeerMetrics>,
+}
+
+impl PeerMetricsTracker {
+    pub fn new() -> Self {
+        Self {
+            metrics: HashMap::new(),
+        }
+    }
+
+    /// Record a successful chunk completion for a peer.
+    pub fn record_success(&mut self, peer_id: DeviceId) {
+        self.metrics.entry(peer_id).or_default().chunks_completed += 1;
+    }
+
+    /// Record a failure for a peer at the given tick.
+    pub fn record_failure(&mut self, peer_id: DeviceId, tick: u64) {
+        let m = self.metrics.entry(peer_id).or_default();
+        m.failures += 1;
+        m.last_failure_tick = Some(tick);
+    }
+
+    /// Returns true if the peer's failures >= threshold, indicating allocation should be reduced.
+    pub fn should_reduce_allocation(&self, peer_id: &DeviceId, threshold: u32) -> bool {
+        self.metrics
+            .get(peer_id)
+            .map(|m| m.failures >= threshold)
+            .unwrap_or(false)
+    }
+
+    /// Get the metrics for a peer.
+    pub fn get_metrics(&self, peer_id: &DeviceId) -> Option<&PeerMetrics> {
+        self.metrics.get(peer_id)
+    }
+}
+
+impl Default for PeerMetricsTracker {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 #[cfg(test)]
@@ -96,5 +151,48 @@ mod tests {
         let new_assignments = reassign_after_peer_left(&assignment, a.device_id(), &remaining);
         assert_eq!(new_assignments.len(), 1);
         assert_eq!(new_assignments[0].1, b.device_id());
+    }
+
+    #[test]
+    fn peer_metrics_record_success() {
+        let mut tracker = PeerMetricsTracker::new();
+        let peer = Keypair::generate().device_id();
+        tracker.record_success(peer);
+        tracker.record_success(peer);
+        let m = tracker.get_metrics(&peer).unwrap();
+        assert_eq!(m.chunks_completed, 2);
+        assert_eq!(m.failures, 0);
+        assert!(m.last_failure_tick.is_none());
+    }
+
+    #[test]
+    fn peer_metrics_record_failure() {
+        let mut tracker = PeerMetricsTracker::new();
+        let peer = Keypair::generate().device_id();
+        tracker.record_failure(peer, 10);
+        tracker.record_failure(peer, 20);
+        let m = tracker.get_metrics(&peer).unwrap();
+        assert_eq!(m.failures, 2);
+        assert_eq!(m.last_failure_tick, Some(20));
+    }
+
+    #[test]
+    fn should_reduce_allocation_threshold() {
+        let mut tracker = PeerMetricsTracker::new();
+        let peer = Keypair::generate().device_id();
+        assert!(!tracker.should_reduce_allocation(&peer, SLOW_PEER_FAILURE_THRESHOLD));
+        tracker.record_failure(peer, 1);
+        tracker.record_failure(peer, 2);
+        assert!(!tracker.should_reduce_allocation(&peer, SLOW_PEER_FAILURE_THRESHOLD));
+        tracker.record_failure(peer, 3);
+        assert!(tracker.should_reduce_allocation(&peer, SLOW_PEER_FAILURE_THRESHOLD));
+    }
+
+    #[test]
+    fn unknown_peer_metrics() {
+        let tracker = PeerMetricsTracker::new();
+        let peer = Keypair::generate().device_id();
+        assert!(tracker.get_metrics(&peer).is_none());
+        assert!(!tracker.should_reduce_allocation(&peer, 3));
     }
 }
