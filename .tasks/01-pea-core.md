@@ -62,37 +62,37 @@ Reference implementation of the PeaPod protocol: shared protocol logic, crypto, 
 
 ## 4. Chunk manager
 
-- [ ] **4.1** Chunk model
-  - [ ] 4.1.1 Define chunk ID type (e.g. transfer_id + range or index)
-  - [ ] 4.1.2 Define chunk size policy: configurable constant or adaptive (start with constant)
-  - [ ] 4.1.3 Implement "split transfer into chunks": input (url, total length or range), output list of chunk IDs / ranges
-  - [ ] 4.1.4 Support HTTP range semantics: each chunk = one range request (start, end)
-- [ ] **4.2** Chunk state per transfer
-  - [ ] 4.2.1 Track which chunks are assigned to which peer
-  - [ ] 4.2.2 Track which chunks are received and verified
-  - [ ] 4.2.3 Track which chunks are in flight (requested but not yet received)
-  - [ ] 4.2.4 Detect when all chunks for a transfer are complete
-- [ ] **4.3** Request and receive
-  - [ ] 4.3.1 Implement "request chunk from peer" (output: message to send to peer)
-  - [ ] 4.3.2 Implement "on chunk data received": verify integrity, store, update state
-  - [ ] 4.3.3 Prevent duplicate downloads: do not assign same chunk to two peers (or allow and dedupe; decide)
-  - [ ] 4.3.4 Implement "reassemble chunks in order" -> single byte stream for host to feed to app
+- [x] **4.1** Chunk model
+  - [x] 4.1.1 Define chunk ID type (e.g. transfer_id + range or index)
+  - [x] 4.1.2 Define chunk size policy: configurable constant or adaptive (start with constant)
+  - [x] 4.1.3 Implement "split transfer into chunks": input (url, total length or range), output list of chunk IDs / ranges
+  - [x] 4.1.4 Support HTTP range semantics: each chunk = one range request (start, end)
+- [x] **4.2** Chunk state per transfer
+  - [x] 4.2.1 Track which chunks are assigned to which peer
+  - [x] 4.2.2 Track which chunks are received and verified
+  - [x] 4.2.3 Track which chunks are in flight (requested but not yet received)
+  - [x] 4.2.4 Detect when all chunks for a transfer are complete
+- [x] **4.3** Request and receive
+  - [x] 4.3.1 Implement "request chunk from peer" (output: message to send to peer)
+  - [x] 4.3.2 Implement "on chunk data received": verify integrity, store, update state
+  - [x] 4.3.3 Prevent duplicate downloads: do not assign same chunk to two peers (or allow and dedupe; decide)
+  - [x] 4.3.4 Implement "reassemble chunks in order" -> single byte stream for host to feed to app
 - [ ] **4.4** Upload path
-  - [ ] 4.4.1 Define "split outbound data into chunks" for uploads
+  - [x] 4.4.1 Define "split outbound data into chunks" for uploads
   - [ ] 4.4.2 Assign upload chunks to peers; each peer uploads its portion via own WAN
   - [ ] 4.4.3 Track completion and integrity for upload chunks; coordinate server-side compatibility (e.g. multipart or range put if supported)
 
 ## 5. Distributed scheduler
 
-- [ ] **5.1** Inputs
-  - [ ] 5.1.1 Peer list: set of device IDs (or peer handles) currently in pod
+- [x] **5.1** Inputs
+  - [x] 5.1.1 Peer list: set of device IDs (or peer handles) currently in pod
   - [ ] 5.1.2 Per-peer metrics: bandwidth (optional), latency (optional), stability (e.g. recent failures)
-  - [ ] 5.1.3 Current transfer: list of chunks and current assignment
-- [ ] **5.2** Assignment logic
-  - [ ] 5.2.1 Implement assign chunks to peers (e.g. round-robin or by bandwidth weight)
-  - [ ] 5.2.2 Implement reassignment when a peer leaves: move its chunks to remaining peers
+  - [x] 5.1.3 Current transfer: list of chunks and current assignment
+- [x] **5.2** Assignment logic
+  - [x] 5.2.1 Implement assign chunks to peers (e.g. round-robin or by bandwidth weight)
+  - [x] 5.2.2 Implement reassignment when a peer leaves: move its chunks to remaining peers
   - [ ] 5.2.3 Implement "reduce allocation to slow peer": decrease weight or exclude if repeated failure
-  - [ ] 5.2.4 Output: for each chunk, which peer should fetch/upload it
+  - [x] 5.2.4 Output: for each chunk, which peer should fetch/upload it
 - [ ] **5.3** Eligibility and fallback
   - [ ] 5.3.1 Define "eligible flow": e.g. HTTP/HTTPS with range support; no DRM/encrypted streaming
   - [ ] 5.3.2 Core exposes "is_eligible(metadata)" or host decides and only sends eligible flows to core
@@ -114,26 +114,26 @@ Reference implementation of the PeaPod protocol: shared protocol logic, crypto, 
 - [ ] **7.1** Timeouts
   - [ ] 7.1.1 Define timeout for chunk request (e.g. 30s); configurable
   - [ ] 7.1.2 On timeout: mark chunk as not received; reassign to another peer or retry
-  - [ ] 7.1.3 Define timeout for heartbeat (e.g. peer considered dead after 3 missed)
-- [ ] **7.2** Heartbeat
-  - [ ] 7.2.1 Core produces "send heartbeat" events at interval (host sends over transport)
-  - [ ] 7.2.2 Core consumes "heartbeat received" from host; update last-seen per peer
-  - [ ] 7.2.3 When peer exceeds heartbeat timeout: emit "peer left" internally; scheduler redistributes its chunks
-- [ ] **7.3** Redistribution
-  - [ ] 7.3.1 When peer leaves (leave message or heartbeat timeout): get list of chunks assigned to that peer
-  - [ ] 7.3.2 Reassign those chunks to remaining peers via scheduler
-  - [ ] 7.3.3 Emit chunk request messages for newly assigned chunks
+  - [x] 7.1.3 Define timeout for heartbeat (e.g. peer considered dead after 3 missed)
+- [x] **7.2** Heartbeat
+  - [x] 7.2.1 Core produces "send heartbeat" events at interval (host sends over transport)
+  - [x] 7.2.2 Core consumes "heartbeat received" from host; update last-seen per peer
+  - [x] 7.2.3 When peer exceeds heartbeat timeout: emit "peer left" internally; scheduler redistributes its chunks
+- [x] **7.3** Redistribution
+  - [x] 7.3.1 When peer leaves (leave message or heartbeat timeout): get list of chunks assigned to that peer
+  - [x] 7.3.2 Reassign those chunks to remaining peers via scheduler
+  - [x] 7.3.3 Emit chunk request messages for newly assigned chunks
 
 ## 8. Host-driven API
 
-- [ ] **8.1** Core API surface
-  - [ ] 8.1.1 Define main entry type (e.g. `PeaPodCore` or `Coordinator`) that holds state
-  - [ ] 8.1.2 Method: `on_incoming_request(metadata)` -> Action (e.g. StartTransfer { chunks, assignments } or Fallback)
-  - [ ] 8.1.3 Method: `on_peer_joined(peer_id, public_key)` -> optional session setup / welcome
-  - [ ] 8.1.4 Method: `on_peer_left(peer_id)` -> internal redistribution; output messages to send if any
+- [x] **8.1** Core API surface
+  - [x] 8.1.1 Define main entry type (e.g. `PeaPodCore` or `Coordinator`) that holds state
+  - [x] 8.1.2 Method: `on_incoming_request(metadata)` -> Action (e.g. StartTransfer { chunks, assignments } or Fallback)
+  - [x] 8.1.3 Method: `on_peer_joined(peer_id, public_key)` -> optional session setup / welcome
+  - [x] 8.1.4 Method: `on_peer_left(peer_id)` -> internal redistribution; output messages to send if any
   - [ ] 8.1.5 Method: `on_message_received(peer_id, bytes)` -> decrypt, parse, update state; return optional response messages and/or chunk requests for WAN
-  - [ ] 8.1.6 Method: `on_chunk_received(peer_id, chunk_id, data)` -> verify, store; return optional reassembled stream segment for host to pass to app
-  - [ ] 8.1.7 Method: `tick()` or `poll_events()` -> heartbeat timers, timeouts; return list of outbound messages and WAN chunk requests
+  - [x] 8.1.6 Method: `on_chunk_received(peer_id, chunk_id, data)` -> verify, store; return optional reassembled stream segment for host to pass to app
+  - [x] 8.1.7 Method: `tick()` or `poll_events()` -> heartbeat timers, timeouts; return list of outbound messages and WAN chunk requests
 - [ ] **8.2** Host responsibilities (document only)
   - [ ] 8.2.1 Document: host performs actual I/O (sockets, discovery, proxy/VPN); core is pure logic + crypto
   - [ ] 8.2.2 Document: host passes in parsed request metadata (URL, range, method); host executes WAN requests and injects chunk data into core
@@ -172,6 +172,7 @@ Reference implementation of the PeaPod protocol: shared protocol logic, crypto, 
   - [ ] 10.6.2 Mock host: inject request, one peer -> chunk assignments and mock chunk data -> reassembled output
   - [ ] 10.6.3 Mock host: peer leaves mid-transfer -> redistribution and completion
   - [ ] 10.6.4 Mock host: heartbeat timeout -> peer marked dead, chunks redistributed
+  - [x] 10.6.5 Integration test: request with range, receive chunks, verify reassembled output
 
 ## 11. No platform-specific I/O
 
