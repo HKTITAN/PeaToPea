@@ -139,6 +139,10 @@ class PeaPodVpnService : VpnService() {
             this, 0, Intent(this, PeaPodVpnService::class.java).setAction(ACTION_DISCONNECT),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
+        val pendingSettings = PendingIntent.getActivity(
+            this, 0, Intent(this, SettingsActivity::class.java),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
         val contentText = if (peerCount <= 0) getString(R.string.peapod_active)
         else getString(R.string.peapod_pod_devices, peerCount)
         return NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
@@ -146,6 +150,7 @@ class PeaPodVpnService : VpnService() {
             .setContentText(contentText)
             .setSmallIcon(android.R.drawable.ic_lock_lock)
             .setContentIntent(pendingOpen)
+            .addAction(android.R.drawable.ic_menu_preferences, getString(R.string.settings), pendingSettings)
             .addAction(android.R.drawable.ic_menu_close_clear_cancel, getString(R.string.disconnect), pendingDisconnect)
             .setOngoing(true)
             .build()

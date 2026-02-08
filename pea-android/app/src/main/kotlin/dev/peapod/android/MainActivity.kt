@@ -30,6 +30,7 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         binding.buttonEnable.setOnClickListener { onEnableClicked() }
+        binding.buttonSettings.setOnClickListener { startActivity(Intent(this, SettingsActivity::class.java)) }
         binding.status.text = ""
         binding.podStatus.text = ""
     }

@@ -8,4 +8,8 @@
     <string name="status_consent_denied">VPN consent denied</string>
     <string name="peapod_off">PeaPod is off</string>
     <string name="no_peers_nearby">No peers nearby when enabled</string>
+    <string name="settings">Settings</string>
+    <string name="settings_title">Settings</string>
+    <string name="settings_battery_saver">Battery saver (reduce participation when low battery)</string>
+    <string name="settings_start_on_boot">Start PeaPod when device boots</string>
 </resources>

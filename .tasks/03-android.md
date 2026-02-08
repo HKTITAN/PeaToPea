@@ -91,9 +91,9 @@ Implementation of the PeaPod protocol for Android: Kotlin app with VPNService to
   - [x] 6.1.1 Single main screen: large toggle "Enable PeaPod" (starts VPN and discovery) (MainActivity button; VPN consent then startForegroundService)
   - [x] 6.1.2 Display "Pod: N devices" and list of peer device IDs (anonymized or short hash) (Pod: N device(s) in pod_status TextView from PeaPodVpnService.peerCountForUi; peer list deferred to settings or later)
   - [x] 6.1.3 When disabled: show "PeaPod is off" and optional "No peers nearby when enabled" (updatePodStatus in onResume; peapod_off and no_peers_nearby strings)
-- [ ] **6.2** Settings
-  - [ ] 6.2.1 Settings screen or fragment: battery saver option (reduce participation when low battery), optional "Start on boot"
-  - [ ] 6.2.2 Link from Android Settings: add optional Settings panel or "Open in PeaPod" from notification
+- [x] **6.2** Settings
+  - [x] 6.2.1 Settings screen or fragment: battery saver option (reduce participation when low battery), optional "Start on boot" (SettingsActivity with switches; PeaPodPreferences; BootReceiver for start on boot)
+  - [x] 6.2.2 Link from Android Settings: add optional Settings panel or "Open in PeaPod" from notification (Settings action in notification opens SettingsActivity; main screen Settings button)
 - [ ] **6.3** First-run and permissions
   - [ ] 6.3.1 On first launch: explain PeaPod and request VPN permission (system dialog when user enables)
   - [ ] 6.3.2 Request local network permission (Android 12+) before starting discovery
