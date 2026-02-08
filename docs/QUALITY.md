@@ -29,9 +29,13 @@ This page summarizes PRD success metrics, edge-case handling, and risk mitigatio
 
 Defined in 09; to be measured and documented for release:
 
-- Throughput improvement and time-to-download (e.g. 1.5–2× with 2 devices).
-- Pod formation time (target &lt; 5 s).
-- Zero application breakage (ineligible → fallback).
-- Minimal idle battery (mobile); low-power behavior implemented on Android.
+- **Throughput / time-to-download:** Target: measurable improvement with 2+ devices (e.g. 1.5–2× with 2 devices on same LAN). Test: large HTTP range download with PeaPod on vs off.
+- **Pod formation time:** Target &lt; 5 s from enable on two devices to both showing 1 peer. To be measured on Windows+Android and other pairs.
+- **Zero application breakage:** Ineligible flows must fall back to the normal path; no modification of response that could break apps. Goal: browse major sites, stream video (non-DRM), download files—no breakage. Implementations only accelerate eligible (e.g. HTTP GET with Range) and forward the rest.
+- **Minimal idle battery (mobile):** Low-power behavior implemented on Android (03); measure and document idle drain. iOS when implemented (05).
 
-Tests and CI: pea-core unit and integration tests; per-platform build in CI; interop and manual pod tests before release.
+## Testing and CI
+
+- **pea-core:** Unit tests in identity, wire, protocol, chunk, scheduler, integrity, core (run: `cargo test -p pea-core`). CI runs build, test, fmt, clippy, audit on every push/PR.
+- **Per-platform builds (CI):** pea-core (Linux); pea-windows (Windows); pea-linux (Linux); pea-android (Android NDK + Gradle assembleDebug); pea-ios and pea-macos (Swift build on macOS runner).
+- **Interop / manual:** Cross-platform pod tests and full multi-device runs are manual or run in release process; document results before release (09 §6.3, §7).

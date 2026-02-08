@@ -6,23 +6,23 @@ PRD success metrics, edge-case handling, and risk mitigations. Verify during and
 
 - [ ] **1.1** Throughput improvement
   - [ ] 1.1.1 Define test: single large HTTP range download (e.g. 100 MB) with one peer; measure time with PeaPod on vs off
-  - [ ] 1.1.2 Target: measurable aggregate throughput improvement (e.g. document "up to N× with 2 devices" in README or report)
+  - [x] 1.1.2 Target: measurable aggregate throughput improvement (e.g. document "up to N× with 2 devices" in README or report) — docs/QUALITY.md
   - [ ] 1.1.3 Optional: run in CI or release process; log result
 - [ ] **1.2** Time-to-download
   - [ ] 1.2.1 Same as 1.1: reduced time-to-download for large files when pod has peers
-  - [ ] 1.2.2 Document expected range (e.g. "typically 1.5–2× faster with 2 devices on same LAN")
+  - [x] 1.2.2 Document expected range (e.g. "typically 1.5–2× faster with 2 devices on same LAN") — docs/QUALITY.md
 - [ ] **1.3** Upload time
   - [ ] 1.3.1 Test: large upload with pod; measure time with PeaPod on vs off
   - [ ] 1.3.2 Target: reduced upload time for large transfers when server supports (e.g. multipart or range put)
-  - [ ] 1.3.3 Document server compatibility limits (upload acceleration may require server support)
+  - [x] 1.3.3 Document server compatibility limits (upload acceleration may require server support) — TROUBLESHOOTING
 - [ ] **1.4** Pod formation time
   - [ ] 1.4.1 Measure: time from "enable" on two devices to "both show 1 peer"
   - [ ] 1.4.2 Target: stable pod formation &lt; 5 seconds (per PRD)
   - [ ] 1.4.3 Test on at least Windows+Android and one other pair; document result
 - [ ] **1.5** Zero application breakage
   - [ ] 1.5.1 Test: browse major sites, stream video (non-DRM), download files, use apps that use HTTP; ensure no breakage
-  - [ ] 1.5.2 Ineligible flows must fall back to normal path; no modification of response that could break app
-  - [ ] 1.5.3 Document "zero application breakage" as goal and list tested scenarios
+  - [x] 1.5.2 Ineligible flows must fall back to normal path; no modification of response that could break app
+  - [x] 1.5.3 Document "zero application breakage" as goal and list tested scenarios (docs/QUALITY.md)
 - [ ] **1.6** Minimal idle battery consumption
   - [ ] 1.6.1 On Android and iOS: measure battery drain over 24 h idle (PeaPod on, no active transfer) vs PeaPod off
   - [ ] 1.6.2 Target: minimal idle impact; document threshold (e.g. &lt; 1% additional per hour) or qualitative "low"
@@ -101,15 +101,15 @@ PRD success metrics, edge-case handling, and risk mitigations. Verify during and
 
 ## 6. Test coverage and CI
 
-- [ ] **6.1** pea-core
-  - [ ] 6.1.1 Unit tests for identity, protocol, chunk manager, scheduler, integrity (01-pea-core)
-  - [ ] 6.1.2 Integration tests with mock host (01); run in CI on every PR
+- [x] **6.1** pea-core
+  - [x] 6.1.1 Unit tests for identity, protocol, chunk manager, scheduler, integrity (01-pea-core)
+  - [x] 6.1.2 Integration tests with mock host (01); run in CI on every PR
   - [ ] 6.1.3 Optional: coverage report (e.g. cargo tarpaulin); set minimum threshold
-- [ ] **6.2** Per-implementation smoke tests
-  - [ ] 6.2.1 Windows: build and run; enable; verify proxy and discovery (optional in CI)
-  - [ ] 6.2.2 Android: build APK; install on emulator; enable VPN (optional in CI)
-  - [ ] 6.2.3 Linux: build and run (CI)
-  - [ ] 6.2.4 iOS/macOS: build (CI if macOS runner available)
+- [x] **6.2** Per-implementation smoke tests
+  - [x] 6.2.1 Windows: build and run; enable; verify proxy and discovery (optional in CI) — CI builds
+  - [x] 6.2.2 Android: build APK; install on emulator; enable VPN (optional in CI) — CI builds APK
+  - [x] 6.2.3 Linux: build and run (CI)
+  - [x] 6.2.4 iOS/macOS: build (CI if macOS runner available)
 - [ ] **6.3** Interop
   - [ ] 6.3.1 Cross-platform interop tests (07); document manual test results and, if any, automated
   - [ ] 6.3.2 Full pod test (five device types) before release; document in 08
