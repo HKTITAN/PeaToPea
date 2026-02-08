@@ -79,9 +79,9 @@ Implementation of the PeaPod protocol for Linux: daemon that runs as system or u
   - [x] 7.1.1 Write systemd user unit file (e.g. `~/.config/systemd/user/peapod.service`)
   - [x] 7.1.2 ExecStart = path to pea-linux binary and args (e.g. --proxy-port 3128)
   - [x] 7.1.3 Restart=on-failure; document how to enable: `systemctl --user enable peapod`
-- [ ] **7.2** System service (optional)
-  - [ ] 7.2.1 Write system unit for installation under /usr/local or /opt
-  - [ ] 7.2.2 Run as dedicated user (e.g. peapod) for security
+- [x] **7.2** System service (optional)
+  - [x] 7.2.1 Write system unit for installation under /usr/local or /opt
+  - [x] 7.2.2 Run as dedicated user (e.g. peapod) for security
 - [ ] **7.3** Installer or package
   - [ ] 7.3.1 Place unit file in package so package install can enable user service (or document manual copy)
 

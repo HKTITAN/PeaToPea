@@ -110,8 +110,8 @@ PRD success metrics, edge-case handling, and risk mitigations. Verify during and
   - [x] 6.2.2 Android: build APK; install on emulator; enable VPN (optional in CI) — CI builds APK
   - [x] 6.2.3 Linux: build and run (CI)
   - [x] 6.2.4 iOS/macOS: build (CI if macOS runner available)
-- [ ] **6.3** Interop
-  - [ ] 6.3.1 Cross-platform interop tests (07); document manual test results and, if any, automated
+- [x] **6.3** Interop
+  - [x] 6.3.1 Cross-platform interop tests (07); document manual test results and, if any, automated — docs/INTEROP.md
   - [ ] 6.3.2 Full pod test (five device types) before release; document in 08
 
 ## 7. Release checklist

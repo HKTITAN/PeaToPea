@@ -1,0 +1,24 @@
+# Optional system-wide unit. Install binary to /usr/local/bin or /opt; create user peapod.
+# Copy to /etc/systemd/system/peapod.service then:
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable peapod
+#   sudo systemctl start peapod
+
+[Unit]
+Description=PeaPod Linux daemon (proxy, discovery, local transport)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=peapod
+Group=peapod
+ExecStart=/usr/local/bin/pea-linux
+Restart=on-failure
+RestartSec=5
+# Optional: restrict to network and minimal capabilities
+# CapabilityBoundingSet=
+# NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

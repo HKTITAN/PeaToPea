@@ -83,6 +83,18 @@ To run pea-linux as a user service (starts on login, restarts on failure):
 
 The unit file is in `pea-linux/misc/peapod.service` in the repo.
 
+### System service (optional)
+
+For a system-wide install (e.g. under `/usr/local` or `/opt`), run as a dedicated user for security:
+
+1. Create a `peapod` user: `sudo useradd -r -s /bin/false peapod`
+2. Install the binary to `/usr/local/bin/pea-linux` (or `/opt/peapod/bin/pea-linux`).
+3. Copy the system unit: `sudo cp pea-linux/misc/peapod-system.service /etc/systemd/system/peapod.service`
+4. Edit `ExecStart` if the binary is not in `/usr/local/bin`.
+5. `sudo systemctl daemon-reload`, `sudo systemctl enable peapod`, `sudo systemctl start peapod`.
+
+The unit file is `pea-linux/misc/peapod-system.service` (User=peapod, Group=peapod).
+
 ## Edge cases
 
 - **No peers:** The proxy runs normally; traffic is forwarded to the origin without acceleration. No extra configuration needed.
