@@ -23,7 +23,8 @@ Licensed under the [MIT License](LICENSE). For Rust dependency licenses: `cargo 
 - [.tasks/](.tasks/README.md) — Task breakdown and checklists for the full project.
 - `pea-core/` — PeaPod protocol reference implementation (Rust library).
 - `pea-windows/`, `pea-linux/` — Stub binaries for Windows and Linux implementations (in progress).
-- `pea-android/`, `pea-ios/`, `pea-macos/` — Placeholders for mobile and macOS implementations.
+- `pea-android/` — Android app (Gradle/Kotlin); min SDK 24, target SDK 34. See [pea-android/README.md](pea-android/README.md).
+- `pea-ios/`, `pea-macos/` — Placeholders for iOS and macOS implementations.
 
 ## Build and test
 
