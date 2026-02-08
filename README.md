@@ -71,5 +71,5 @@ rustup target add aarch64-apple-darwin x86_64-apple-darwin
 - **Contributing**: [CONTRIBUTING.md](CONTRIBUTING.md) — Branching, commits, and how to push to the PeaToPea repo.
 - **Changelog**: [CHANGELOG.md](CHANGELOG.md) — Version history and protocol changes.
 - **Release checklist**: [docs/RELEASE.md](docs/RELEASE.md) — Pre-release and release steps.
-- **Scripts**: [scripts/](scripts/) — `interop-two-linux.sh` (Linux smoke test), `build-pea-core-apple.sh` (build pea-core for iOS/macOS on macOS).
+- **Scripts**: [scripts/](scripts/) — `interop-two-linux.sh` (Linux smoke test), `build-pea-core-apple.sh` (build pea-core for iOS/macOS), C header via `cbindgen pea-core -o pea_core.h`. See [scripts/README.md](scripts/README.md).
 - **Cursor**: Rules, skills, and subagents in [.cursor/](.cursor/) for consistent AI-assisted development (rules in `.cursor/rules/`, skills in `.cursor/skills/`, agents in `.cursor/agents/`).
