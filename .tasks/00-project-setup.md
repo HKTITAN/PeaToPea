@@ -42,9 +42,9 @@ Repo structure, tooling, and CI. Complete before building protocol implementatio
   - [x] 4.1.1 Install Android Studio or SDK + NDK (documented in pea-android/README.md)
   - [x] 4.1.2 Document minimum SDK version (e.g. 24) and target SDK (24 / 34 in pea-android)
   - [x] 4.1.3 Add `pea-android/` as Android project (Gradle/Kotlin)
-- [ ] **4.2** NDK for Rust
-  - [ ] 4.2.1 Install NDK and document path
-  - [ ] 4.2.2 Add build config to link Rust static lib into Android app
+- [x] **4.2** NDK for Rust
+  - [x] 4.2.1 Install NDK and document path (pea-android/README.md: sdkmanager, ndk.dir)
+  - [x] 4.2.2 Add build config to link Rust static lib into Android app (CMake + Gradle, rust-out/<abi>/libpea_core.a)
 
 ## 5. iOS/macOS toolchain
 

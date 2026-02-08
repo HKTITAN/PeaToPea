@@ -4,6 +4,10 @@ version = "0.1.0"
 edition = "2021"
 description = "PeaPod protocol reference implementation"
 
+[lib]
+# rlib for Rust deps; staticlib for linking from Android (NDK) and other C/C++ hosts
+crate-type = ["rlib", "staticlib"]
+
 [dependencies]
 serde = { version = "1", features = ["derive"] }
 bincode = "1"

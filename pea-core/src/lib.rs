@@ -18,6 +18,9 @@ pub mod identity;
 pub mod protocol;
 pub mod wire;
 
+/// C ABI for staticlib linking (Android NDK, etc.).
+pub mod ffi;
+
 pub use identity::{DeviceId, Keypair, PublicKey};
 pub use protocol::{Message, PROTOCOL_VERSION};
 pub use wire::{decode_frame, encode_frame, FrameDecodeError, FrameEncodeError};

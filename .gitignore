@@ -22,6 +22,7 @@ Thumbs.db
 *.aab
 .gradle/
 local.properties
+pea-android/rust-out/
 
 # iOS/macOS
 *.xcuserstate
