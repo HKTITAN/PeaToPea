@@ -2,6 +2,8 @@
 
 Single wire format, discovery spec, and versioning so every implementation can join the same pod. Implement in pea-core and reference from all protocol implementation tasks.
 
+**Spec:** See [docs/PROTOCOL.md](../docs/PROTOCOL.md) for the full wire format, discovery, handshake, and versioning.
+
 ## 1. Wire format specification
 
 - [x] **1.1** Document wire format

@@ -27,11 +27,13 @@ Licensed under the [MIT License](LICENSE). For Rust dependency licenses: `cargo 
 ## Repo layout
 
 - [.tasks/](.tasks/README.md) — Task breakdown and checklists for the full project.
-- `pea-core/` — PeaPod protocol reference implementation (Rust library).
-- `pea-windows/`, `pea-linux/` — Stub binaries for Windows and Linux implementations (in progress).
-- `pea-android/` — Android app (Gradle/Kotlin); min SDK 24, target SDK 34. See [pea-android/README.md](pea-android/README.md).
-- `pea-ios/` — Swift Package placeholder for iOS (Xcode 15+, [pea-ios/README.md](pea-ios/README.md)).
-- `pea-macos/` — Swift Package placeholder for macOS (Xcode 15+, [pea-macos/README.md](pea-macos/README.md)).
+- `pea-core/` — PeaPod protocol reference implementation (Rust library). Wire format and discovery are specified in [docs/PROTOCOL.md](docs/PROTOCOL.md).
+- **Implementations (per OS):**
+  - [pea-windows/](pea-windows/README.md) — Windows: proxy, discovery, transport, tray. Build/run: see [pea-windows/README.md](pea-windows/README.md).
+  - [pea-android/](pea-android/README.md) — Android app (Gradle/Kotlin, VPNService). Build/run: see [pea-android/README.md](pea-android/README.md).
+  - [pea-linux/](pea-linux/README.md) — Linux daemon: proxy, discovery, transport, systemd. Build/run: see [pea-linux/README.md](pea-linux/README.md).
+  - [pea-ios/](pea-ios/README.md) — iOS (Swift, Network Extension). Placeholder; see [pea-ios/README.md](pea-ios/README.md).
+  - [pea-macos/](pea-macos/README.md) — macOS (Swift, menu bar, Network Extension). Placeholder; see [pea-macos/README.md](pea-macos/README.md).
 
 ## Build and test
 
@@ -41,6 +43,8 @@ From the repo root (requires [Rust](https://rustup.rs)):
 cargo build -p pea-core
 cargo test -p pea-core
 ```
+
+**Build and run per platform:** See each implementation’s README for prerequisites and steps: [Windows](pea-windows/README.md), [Android](pea-android/README.md), [Linux](pea-linux/README.md), [iOS](pea-ios/README.md), [macOS](pea-macos/README.md).
 
 Optional targets for platform implementations (add when working on that platform):
 

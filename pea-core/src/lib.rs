@@ -1,6 +1,8 @@
 //! PeaPod protocol reference implementation.
 //! Host-driven: no I/O; host passes events and receives actions.
 //!
+//! Wire format and discovery are specified in **PROTOCOL.md** in the repo (`docs/PROTOCOL.md`).
+//!
 //! ## Host responsibilities
 //!
 //! - **I/O**: The host performs all actual I/O: sockets, discovery (e.g. UDP multicast),

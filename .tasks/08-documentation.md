@@ -4,62 +4,62 @@ Architecture, PeaPod protocol spec, and per-platform build/run instructions for 
 
 ## 1. Root and overview
 
-- [ ] **1.1** Root README
-  - [ ] 1.1.1 Project name (PeaPod) and one-line description
-  - [ ] 1.1.2 Link to root README and to .tasks/README.md
-  - [ ] 1.1.3 High-level architecture: shared protocol core + implementations per OS; link to architecture doc
-  - [ ] 1.1.4 List implementations: Windows, Android, Linux, iOS, macOS; link to each implementation's build/run section
-  - [ ] 1.1.5 License and contribution (optional)
-- [ ] **1.2** CONTRIBUTING (optional)
-  - [ ] 1.2.1 How to build pea-core and run tests
-  - [ ] 1.2.2 Branching and PR process (if applicable)
-  - [ ] 1.2.3 Link to .tasks for task breakdown
+- [x] **1.1** Root README
+  - [x] 1.1.1 Project name (PeaPod) and one-line description
+  - [x] 1.1.2 Link to root README and to .tasks/README.md
+  - [x] 1.1.3 High-level architecture: shared protocol core + implementations per OS; link to architecture doc
+  - [x] 1.1.4 List implementations: Windows, Android, Linux, iOS, macOS; link to each implementation's build/run section
+  - [x] 1.1.5 License and contribution (optional)
+- [x] **1.2** CONTRIBUTING (optional)
+  - [x] 1.2.1 How to build pea-core and run tests
+  - [x] 1.2.2 Branching and PR process (if applicable)
+  - [x] 1.2.3 Link to .tasks for task breakdown
 
 ## 2. Architecture document
 
-- [ ] **2.1** Architecture overview
-  - [ ] 2.1.1 Diagram: App → PeaPod layer (intercept, scheduler, chunk manager, local transport, integrity) → platform (Win/Android/Linux/iOS/macOS)
-  - [ ] 2.1.2 Explain: "above IP, below apps"; traffic intercepted and accelerated when eligible; no server changes
-  - [ ] 2.1.3 List core components: Discovery, Identity & Encryption, Distributed Scheduler, Chunk Manager, Local Transport, Integrity Verification, Failure Recovery (per PRD)
-- [ ] **2.2** Data flow
-  - [ ] 2.2.1 Download path: app request → intercept → core (chunk plan) → WAN (self) + peers (local) → chunks → core (reassemble) → app
-  - [ ] 2.2.2 Upload path: app upload → intercept → core (split) → assign to self + peers → peers upload via WAN → core (verify) → complete
-  - [ ] 2.2.3 Discovery: beacon → peer list → core; local transport: TCP between peers, encrypted
-- [ ] **2.3** Host-driven core
-  - [ ] 2.3.1 Explain: core has no I/O; host (each implementation) does sockets, discovery, proxy/VPN; host calls core with events and receives actions
+- [x] **2.1** Architecture overview
+  - [x] 2.1.1 Diagram: App → PeaPod layer (intercept, scheduler, chunk manager, local transport, integrity) → platform (Win/Android/Linux/iOS/macOS)
+  - [x] 2.1.2 Explain: "above IP, below apps"; traffic intercepted and accelerated when eligible; no server changes
+  - [x] 2.1.3 List core components: Discovery, Identity & Encryption, Distributed Scheduler, Chunk Manager, Local Transport, Integrity Verification, Failure Recovery (per PRD)
+- [x] **2.2** Data flow
+  - [x] 2.2.1 Download path: app request → intercept → core (chunk plan) → WAN (self) + peers (local) → chunks → core (reassemble) → app
+  - [x] 2.2.2 Upload path: app upload → intercept → core (split) → assign to self + peers → peers upload via WAN → core (verify) → complete
+  - [x] 2.2.3 Discovery: beacon → peer list → core; local transport: TCP between peers, encrypted
+- [x] **2.3** Host-driven core
+  - [x] 2.3.1 Explain: core has no I/O; host (each implementation) does sockets, discovery, proxy/VPN; host calls core with events and receives actions
   - [ ] 2.3.2 Link to pea-core API (or list main entry points)
 
 ## 3. Protocol specification
 
-- [ ] **3.1** Create PROTOCOL.md (or docs/PROTOCOL.md)
-  - [ ] 3.1.1 Wire encoding: bincode or custom; endianness; version field
-  - [ ] 3.1.2 Message types and fields (beacon, response, join, leave, heartbeat, chunk request, chunk data, NACK)
-  - [ ] 3.1.3 Framing: length-prefix or delimiter; max message size if any
-  - [ ] 3.1.4 Discovery: multicast group and port (or broadcast); beacon format and interval
-  - [ ] 3.1.5 Local transport: TCP; handshake (version, device_id, public_key); session key derivation; AEAD for all subsequent messages
-  - [ ] 3.1.6 Chunk message format: chunk_id, range, hash, payload
-  - [ ] 3.1.7 Versioning: major/minor; compatibility and rejection rules
-- [ ] **3.2** Reference from 07 and 01
-  - [ ] 3.2.1 In 07-protocol-and-interop: "See PROTOCOL.md"
-  - [ ] 3.2.2 In pea-core README: "Wire format is specified in PROTOCOL.md"
+- [x] **3.1** Create PROTOCOL.md (or docs/PROTOCOL.md)
+  - [x] 3.1.1 Wire encoding: bincode or custom; endianness; version field
+  - [x] 3.1.2 Message types and fields (beacon, response, join, leave, heartbeat, chunk request, chunk data, NACK)
+  - [x] 3.1.3 Framing: length-prefix or delimiter; max message size if any
+  - [x] 3.1.4 Discovery: multicast group and port (or broadcast); beacon format and interval
+  - [x] 3.1.5 Local transport: TCP; handshake (version, device_id, public_key); session key derivation; AEAD for all subsequent messages
+  - [x] 3.1.6 Chunk message format: chunk_id, range, hash, payload
+  - [x] 3.1.7 Versioning: major/minor; compatibility and rejection rules
+- [x] **3.2** Reference from 07 and 01
+  - [x] 3.2.1 In 07-protocol-and-interop: "See PROTOCOL.md"
+  - [x] 3.2.2 In pea-core README: "Wire format is specified in PROTOCOL.md"
 
 ## 4. Build and run per platform
 
-- [ ] **4.1** Windows
-  - [ ] 4.1.1 Prerequisites: Rust, Windows 10/11; optional WinDivert if using that path
-  - [ ] 4.1.2 Build: `cargo build --release` in pea-windows (or from root workspace)
-  - [ ] 4.1.3 Run: `pea-windows.exe` or via installer; enable from tray
-  - [ ] 4.1.4 Config: system proxy set when enabled; optional config file path if added
-- [ ] **4.2** Android
-  - [ ] 4.2.1 Prerequisites: Android Studio, NDK, Rust targets for Android
-  - [ ] 4.2.2 Build: open pea-android in Android Studio; build project (Rust lib built via gradle NDK or external script)
-  - [ ] 4.2.3 Run: install debug APK on device/emulator; enable PeaPod in app; grant VPN and local network
-  - [ ] 4.2.4 Permissions: list required permissions and what they're for
-- [ ] **4.3** Linux
-  - [ ] 4.3.1 Prerequisites: Rust, systemd (user or system)
-  - [ ] 4.3.2 Build: `cargo build --release` in pea-linux
-  - [ ] 4.3.3 Run: `./pea-linux` or `systemctl --user start peapod`; set HTTP_PROXY/HTTPS_PROXY if using proxy
-  - [ ] 4.3.4 Config: path to config file (e.g. ~/.config/peapod/config.toml); ports and options
+- [x] **4.1** Windows
+  - [x] 4.1.1 Prerequisites: Rust, Windows 10/11; optional WinDivert if using that path
+  - [x] 4.1.2 Build: `cargo build --release` in pea-windows (or from root workspace)
+  - [x] 4.1.3 Run: `pea-windows.exe` or via installer; enable from tray
+  - [x] 4.1.4 Config: system proxy set when enabled; optional config file path if added
+- [x] **4.2** Android
+  - [x] 4.2.1 Prerequisites: Android Studio, NDK, Rust targets for Android
+  - [x] 4.2.2 Build: open pea-android in Android Studio; build project (Rust lib built via gradle NDK or external script)
+  - [x] 4.2.3 Run: install debug APK on device/emulator; enable PeaPod in app; grant VPN and local network
+  - [x] 4.2.4 Permissions: list required permissions and what they're for
+- [x] **4.3** Linux
+  - [x] 4.3.1 Prerequisites: Rust, systemd (user or system)
+  - [x] 4.3.2 Build: `cargo build --release` in pea-linux
+  - [x] 4.3.3 Run: `./pea-linux` or `systemctl --user start peapod`; set HTTP_PROXY/HTTPS_PROXY if using proxy
+  - [x] 4.3.4 Config: path to config file (e.g. ~/.config/peapod/config.toml); ports and options
   - [ ] 4.3.5 Packaging: link to .deb or Flatpak if available
 - [ ] **4.4** iOS
   - [ ] 4.4.1 Prerequisites: Xcode, Apple Developer account, Rust toolchain for iOS
