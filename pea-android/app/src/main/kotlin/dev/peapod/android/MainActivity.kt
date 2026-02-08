@@ -31,6 +31,26 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
         binding.buttonEnable.setOnClickListener { onEnableClicked() }
         binding.status.text = ""
+        binding.podStatus.text = ""
+    }
+
+    override fun onResume() {
+        super.onResume()
+        updatePodStatus()
+    }
+
+    private fun updatePodStatus() {
+        if (PeaPodVpnService.vpnActive) {
+            binding.status.text = getString(R.string.peapod_active)
+            binding.podStatus.text = if (PeaPodVpnService.peerCountForUi <= 0) {
+                getString(R.string.no_peers_nearby)
+            } else {
+                getString(R.string.peapod_pod_devices, PeaPodVpnService.peerCountForUi)
+            }
+        } else {
+            binding.status.text = getString(R.string.peapod_off)
+            binding.podStatus.text = getString(R.string.no_peers_nearby)
+        }
     }
 
     private fun onEnableClicked() {
@@ -49,6 +69,6 @@ class MainActivity : AppCompatActivity() {
         } else {
             startService(intent)
         }
-        binding.status.text = getString(R.string.peapod_active)
+        updatePodStatus()
     }
 }

@@ -25,6 +25,10 @@ class PeaPodVpnService : VpnService() {
         const val NOTIFICATION_CHANNEL_ID = "peapod_vpn"
         const val NOTIFICATION_ID = 1
         const val ACTION_DISCONNECT = "dev.peapod.android.DISCONNECT"
+        /** For UI: true when VPN is active and in foreground. */
+        @Volatile var vpnActive = false
+        /** For UI: current peer count when VPN active (updated with notification). */
+        @Volatile var peerCountForUi = 0
     }
 
     private var tunnelFd: ParcelFileDescriptor? = null
@@ -59,7 +63,10 @@ class PeaPodVpnService : VpnService() {
         coreHandle = PeaCore.nativeCreate()
         LocalProxy.start(coreHandle, this)
         Discovery.onPeerCountChanged = {
-            Handler(Looper.getMainLooper()).post { updateNotification(Discovery.peerCount()) }
+            Handler(Looper.getMainLooper()).post {
+                peerCountForUi = Discovery.peerCount()
+                updateNotification(peerCountForUi)
+            }
         }
         Discovery.onPeerDiscovered = { deviceId, publicKey, addr, port ->
             Transport.connectTo(deviceId, publicKey, addr, port)
@@ -67,7 +74,9 @@ class PeaPodVpnService : VpnService() {
         Discovery.start(coreHandle, Discovery.LOCAL_TRANSPORT_PORT)
         Transport.start(coreHandle)
         startTunnelReadLoop()
-        startForeground(NOTIFICATION_ID, buildNotification(Discovery.peerCount()))
+        vpnActive = true
+        peerCountForUi = Discovery.peerCount()
+        startForeground(NOTIFICATION_ID, buildNotification(peerCountForUi))
         return START_STICKY
     }
 
@@ -105,6 +114,8 @@ class PeaPodVpnService : VpnService() {
         }
         tunnelFd?.close()
         tunnelFd = null
+        vpnActive = false
+        peerCountForUi = 0
         stopForeground(STOP_FOREGROUND_REMOVE)
     }
 

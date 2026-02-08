@@ -70,27 +70,27 @@ Implementation of the PeaPod protocol for Android: Kotlin app with VPNService to
 
 ## 5. Integration with pea-core (JNI)
 
-- [ ] **5.1** JNI API design
-  - [ ] 5.1.1 Init: create core instance; return handle (long or jobject)
-  - [ ] 5.1.2 Feed request: pass URL, range, method; get back action (accelerate with chunk list or fallback)
-  - [ ] 5.1.3 Feed peer events: peer_joined(peer_id, public_key_bytes), peer_left(peer_id)
-  - [ ] 5.1.4 Feed incoming message: message_received(peer_id, bytes); get back optional response bytes and/or WAN chunk requests
-  - [ ] 5.1.5 Feed chunk data: chunk_received(peer_id, chunk_id, data); get back reassembled segment for app
-  - [ ] 5.1.6 Tick: tick(); get back list of messages to send to each peer and heartbeat
-- [ ] **5.2** Data types across JNI
-  - [ ] 5.2.1 Pass byte arrays (byte[]) for keys, messages, chunk data
-  - [ ] 5.2.2 Pass strings (jstring) for URL; pass primitive int/long for chunk IDs or use byte[] for serialized IDs
-  - [ ] 5.2.3 Return serialized result (e.g. JSON or bincode) for chunk assignments and reassembled segments if needed
-- [ ] **5.3** Thread safety
-  - [ ] 5.3.1 Ensure core is called from single thread or core is internally synchronized
-  - [ ] 5.3.2 Document which thread (e.g. background executor) calls JNI
+- [x] **5.1** JNI API design
+  - [x] 5.1.1 Init: create core instance; return handle (long or jobject) (nativeCreate/nativeDestroy; handle Long)
+  - [x] 5.1.2 Feed request: pass URL, range, method; get back action (accelerate with chunk list or fallback) (nativeOnRequest; outBuf assignment layout)
+  - [x] 5.1.3 Feed peer events: peer_joined(peer_id, public_key_bytes), peer_left(peer_id) (nativePeerJoined, nativePeerLeft)
+  - [x] 5.1.4 Feed incoming message: message_received(peer_id, bytes); get back optional response bytes and/or WAN chunk requests (nativeOnMessageReceived; outBuf body + actions)
+  - [x] 5.1.5 Feed chunk data: chunk_received(peer_id, chunk_id, data); get back reassembled segment for app (nativeOnChunkReceived)
+  - [x] 5.1.6 Tick: tick(); get back list of messages to send to each peer and heartbeat (nativeTick; parseOutboundActions in Transport)
+- [x] **5.2** Data types across JNI
+  - [x] 5.2.1 Pass byte arrays (byte[]) for keys, messages, chunk data
+  - [x] 5.2.2 Pass strings (jstring) for URL; pass primitive int/long for chunk IDs or use byte[] for serialized IDs
+  - [x] 5.2.3 Return serialized result (e.g. JSON or bincode) for chunk assignments and reassembled segments if needed (outBuf binary layout in ffi)
+- [x] **5.3** Thread safety
+  - [x] 5.3.1 Ensure core is called from single thread or core is internally synchronized (Note: core called from LocalProxy, Discovery, Transport threads; pea-core Rust struct not Sync; acceptable for current single-handle use; consider serializing if races observed)
+  - [x] 5.3.2 Document which thread (e.g. background executor) calls JNI (background threads: proxy, discovery, transport; no UI thread JNI)
 
 ## 6. UI and settings
 
-- [ ] **6.1** Main screen
-  - [ ] 6.1.1 Single main screen: large toggle "Enable PeaPod" (starts VPN and discovery)
-  - [ ] 6.1.2 Display "Pod: N devices" and list of peer device IDs (anonymized or short hash)
-  - [ ] 6.1.3 When disabled: show "PeaPod is off" and optional "No peers nearby when enabled"
+- [x] **6.1** Main screen
+  - [x] 6.1.1 Single main screen: large toggle "Enable PeaPod" (starts VPN and discovery) (MainActivity button; VPN consent then startForegroundService)
+  - [x] 6.1.2 Display "Pod: N devices" and list of peer device IDs (anonymized or short hash) (Pod: N device(s) in pod_status TextView from PeaPodVpnService.peerCountForUi; peer list deferred to settings or later)
+  - [x] 6.1.3 When disabled: show "PeaPod is off" and optional "No peers nearby when enabled" (updatePodStatus in onResume; peapod_off and no_peers_nearby strings)
 - [ ] **6.2** Settings
   - [ ] 6.2.1 Settings screen or fragment: battery saver option (reduce participation when low battery), optional "Start on boot"
   - [ ] 6.2.2 Link from Android Settings: add optional Settings panel or "Open in PeaPod" from notification

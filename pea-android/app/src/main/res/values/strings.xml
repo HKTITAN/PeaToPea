@@ -6,4 +6,6 @@
     <string name="peapod_pod_devices">Pod: %1$d device(s)</string>
     <string name="disconnect">Disconnect</string>
     <string name="status_consent_denied">VPN consent denied</string>
+    <string name="peapod_off">PeaPod is off</string>
+    <string name="no_peers_nearby">No peers nearby when enabled</string>
 </resources>
