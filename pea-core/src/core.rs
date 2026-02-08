@@ -8,6 +8,7 @@ use crate::identity::{DeviceId, Keypair, PublicKey};
 use crate::protocol::Message;
 use crate::scheduler;
 use crate::wire;
+use crate::wire::FrameDecodeError;
 
 const HEARTBEAT_TIMEOUT_TICKS: u64 = 5;
 
@@ -238,6 +239,102 @@ impl PeaPodCore {
     pub fn current_assignment(&self) -> Option<Vec<(ChunkId, DeviceId)>> {
         self.active_transfer.as_ref().map(|a| a.assignment.clone())
     }
+
+    /// Process a received message (host decrypts and passes frame bytes). Returns outbound actions (e.g. SendMessage).
+    pub fn on_message_received(
+        &mut self,
+        peer_id: DeviceId,
+        frame_bytes: &[u8],
+    ) -> Result<Vec<OutboundAction>, OnMessageError> {
+        let (msg, _) = wire::decode_frame(frame_bytes).map_err(OnMessageError::Decode)?;
+        let mut actions = Vec::new();
+        match msg {
+            Message::Heartbeat { .. } => {
+                self.on_heartbeat_received(peer_id);
+            }
+            Message::Leave { device_id } => {
+                if device_id == peer_id {
+                    actions.extend(self.on_peer_left(peer_id));
+                }
+            }
+            Message::ChunkData {
+                transfer_id,
+                start,
+                end,
+                hash,
+                payload,
+            } => {
+                match self.on_chunk_received(transfer_id, start, end, hash, payload) {
+                    Ok(_) => {}
+                    Err(ChunkError::IntegrityFailed) => {
+                        let chunk_id = ChunkId {
+                            transfer_id,
+                            start,
+                            end,
+                        };
+                        actions.extend(self.reassign_single_chunk(chunk_id));
+                    }
+                    Err(ChunkError::UnknownTransfer) => {}
+                }
+            }
+            Message::Nack {
+                transfer_id,
+                start,
+                end,
+            } => {
+                let chunk_id = ChunkId {
+                    transfer_id,
+                    start,
+                    end,
+                };
+                actions.extend(self.reassign_single_chunk(chunk_id));
+            }
+            Message::Beacon { .. } | Message::DiscoveryResponse { .. } | Message::Join { .. }
+            | Message::ChunkRequest { .. } => {}
+        }
+        Ok(actions)
+    }
+
+    /// Reassign one chunk (e.g. after Nack or integrity failure). Returns ChunkRequest(s) to new peer(s).
+    fn reassign_single_chunk(&mut self, chunk_id: ChunkId) -> Vec<OutboundAction> {
+        let mut actions = Vec::new();
+        let active = match &mut self.active_transfer {
+            Some(a) => a,
+            None => return actions,
+        };
+        let old_peer = active
+            .assignment
+            .iter()
+            .find(|(c, _)| *c == chunk_id)
+            .map(|(_, p)| *p);
+        let Some(peer_left) = old_peer else {
+            return actions;
+        };
+        let remaining: Vec<DeviceId> = std::iter::once(self.keypair.device_id())
+            .chain(self.peers.iter().copied())
+            .filter(|&p| p != peer_left)
+            .collect();
+        if remaining.is_empty() {
+            return actions;
+        }
+        let to_reassign = [chunk_id];
+        let new_assignments = scheduler::assign_chunks_to_peers(&to_reassign, &remaining);
+        active.assignment.retain(|(c, _)| *c != chunk_id);
+        for (c, new_peer) in new_assignments {
+            active.assignment.push((c, new_peer));
+            let msg = chunk::chunk_request_message(c);
+            if let Ok(bytes) = wire::encode_frame(&msg) {
+                actions.push(OutboundAction::SendMessage(new_peer, bytes));
+            }
+        }
+        actions
+    }
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum OnMessageError {
+    #[error("decode: {0}")]
+    Decode(#[from] FrameDecodeError),
 }
 
 impl Default for PeaPodCore {

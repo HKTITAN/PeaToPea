@@ -25,7 +25,8 @@ pub use identity::{DeviceId, Keypair, PublicKey};
 pub use protocol::{Message, PROTOCOL_VERSION};
 pub use wire::{decode_frame, encode_frame, FrameDecodeError, FrameEncodeError};
 pub use core::{
-    Action, ChunkError, ChunkReceiveOutcome, Config, OutboundAction, PeaPodCore, PeerMetrics,
+    Action, ChunkError, ChunkReceiveOutcome, Config, OnMessageError, OutboundAction, PeaPodCore,
+    PeerMetrics,
 };
 pub use chunk::ChunkId;
 

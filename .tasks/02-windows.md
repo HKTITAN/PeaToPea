@@ -44,33 +44,33 @@ Implementation of the PeaPod protocol for Windows: background process to discove
 
 ## 4. Local transport
 
-- [ ] **4.1** TCP server for incoming peer connections
-  - [ ] 4.1.1 Listen on a local port (or use same as discovery with different message type)
-  - [ ] 4.1.2 Accept TCP connections from peers; associate with peer_id (from discovery or handshake)
-  - [ ] 4.1.3 Decode framed messages; pass to core `on_message_received`
-  - [ ] 4.1.4 Send outbound messages from core to peers over corresponding sockets
-- [ ] **4.2** TCP client to connect to peers
-  - [ ] 4.2.1 When peer discovered, establish TCP connection to peer's advertised address/port
-  - [ ] 4.2.2 Perform encrypted handshake if required (session key establishment)
-  - [ ] 4.2.3 Exchange heartbeats and chunk messages per core
-- [ ] **4.3** Encryption and integrity
-  - [ ] 4.3.1 All chunk and control traffic over TCP encrypted by core (host passes bytes to core for encrypt/decrypt or core returns plain bytes and host sends encrypted via core)
-  - [ ] 4.3.2 Use same wire format as 07; ensure compatibility with Android/Linux/iOS/macOS
+- [x] **4.1** TCP server for incoming peer connections
+  - [x] 4.1.1 Listen on a local port (or use same as discovery with different message type) (45679)
+  - [x] 4.1.2 Accept TCP connections from peers; associate with peer_id (from handshake)
+  - [x] 4.1.3 Decode framed messages; pass to core `on_message_received`
+  - [x] 4.1.4 Send outbound messages from core to peers over corresponding sockets
+- [x] **4.2** TCP client to connect to peers
+  - [x] 4.2.1 When peer discovered, establish TCP connection to peer's advertised address/port (connect_tx from discovery)
+  - [x] 4.2.2 Perform encrypted handshake if required (session key establishment) (version+device_id+public_key, X25519+derive_session_key)
+  - [x] 4.2.3 Exchange heartbeats and chunk messages per core (encrypted frames, tick loop sends heartbeats)
+- [x] **4.3** Encryption and integrity
+  - [x] 4.3.1 All chunk and control traffic over TCP encrypted by core (host encrypt/decrypt with pea_core::identity, ChaCha20-Poly1305)
+  - [x] 4.3.2 Use same wire format as 07; ensure compatibility with Android/Linux/iOS/macOS
 
 ## 5. Integration with pea-core
 
-- [ ] **5.1** Wire core into request path
-  - [ ] 5.1.1 For each eligible request: call core with metadata (URL, range); get chunk assignments
-  - [ ] 5.1.2 Request chunks: self (WAN) + peers (send chunk request over local transport)
-  - [ ] 5.1.3 When chunk data received (from self or peer): pass to core; get reassembled segments
-  - [ ] 5.1.4 Stream reassembled response back to client app
-- [ ] **5.2** Peer lifecycle
-  - [ ] 5.2.1 On new peer discovered and connected: call core `on_peer_joined`
-  - [ ] 5.2.2 On peer disconnect or heartbeat timeout: call core `on_peer_left`
-  - [ ] 5.2.3 Periodically call core `tick()` and send heartbeat messages to each peer
-- [ ] **5.3** WAN requests
-  - [ ] 5.3.1 Execute HTTP range requests (for chunks assigned to self) using system or library HTTP client
-  - [ ] 5.3.2 Pass response bytes to core as chunk data; core verifies and reassembles
+- [x] **5.1** Wire core into request path
+  - [x] 5.1.1 For each eligible request: call core with metadata (URL, range); get chunk assignments (proxy already does)
+  - [ ] 5.1.2 Request chunks: self (WAN) + peers (send chunk request over local transport) (proxy still only uses self chunks; peer ChunkRequest/ChunkData path TODO)
+  - [x] 5.1.3 When chunk data received (from self or peer): pass to core; get reassembled segments (transport passes to on_message_received)
+  - [x] 5.1.4 Stream reassembled response back to client app (proxy accelerate_response)
+- [x] **5.2** Peer lifecycle
+  - [x] 5.2.1 On new peer discovered and connected: call core `on_peer_joined` (discovery)
+  - [x] 5.2.2 On peer disconnect or heartbeat timeout: call core `on_peer_left` (transport on connection close; discovery timeout)
+  - [x] 5.2.3 Periodically call core `tick()` and send heartbeat messages to each peer (tick loop in transport)
+- [x] **5.3** WAN requests
+  - [x] 5.3.1 Execute HTTP range requests (for chunks assigned to self) using system or library HTTP client (proxy accelerate_response)
+  - [x] 5.3.2 Pass response bytes to core as chunk data; core verifies and reassembles
 
 ## 6. System tray and UI
 

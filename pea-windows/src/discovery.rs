@@ -31,10 +31,12 @@ struct PeerState {
 }
 
 /// Run discovery: send periodic beacons, receive and parse beacons/responses, update core peer list.
+/// When a new peer is discovered, sends (device_id, addr) on `connect_tx` so transport can open outbound TCP.
 pub async fn run_discovery(
     core: Arc<Mutex<PeaPodCore>>,
     keypair: Arc<Keypair>,
     listen_port: u16,
+    connect_tx: tokio::sync::mpsc::UnboundedSender<(DeviceId, SocketAddr)>,
 ) -> std::io::Result<()> {
     let socket = make_multicast_socket().await?;
     let socket = Arc::new(socket);
@@ -45,12 +47,13 @@ pub async fn run_discovery(
     let peers_recv = peers.clone();
     let core_recv = core.clone();
     let keypair_recv = keypair.clone();
+    let connect_tx_recv = connect_tx.clone();
 
     let beacon_task = tokio::spawn(async move {
         beacon_loop(send_socket, keypair, listen_port).await
     });
     let recv_task = tokio::spawn(async move {
-        recv_loop(recv_socket, peers_recv, core_recv, keypair_recv).await
+        recv_loop(recv_socket, peers_recv, core_recv, keypair_recv, connect_tx_recv).await
     });
     let timeout_task = tokio::spawn(async move {
         peer_timeout_loop(peers.clone(), core).await
@@ -97,6 +100,7 @@ async fn recv_loop(
     peers: Arc<Mutex<HashMap<DeviceId, PeerState>>>,
     core: Arc<Mutex<PeaPodCore>>,
     keypair: Arc<Keypair>,
+    connect_tx: tokio::sync::mpsc::UnboundedSender<(DeviceId, SocketAddr)>,
 ) -> std::io::Result<()> {
     let mut buf = vec![0u8; 65536];
     let my_id = keypair.device_id();
@@ -139,6 +143,8 @@ async fn recv_loop(
                             if is_new {
                                 let mut c = core.lock().await;
                                 c.on_peer_joined(*device_id, public_key);
+                                let addr = SocketAddr::new(from.ip(), *listen_port);
+                                let _ = connect_tx.send((*device_id, addr));
                             }
                             let to = from;
                             let _ = socket.send_to(&response_frame, to).await;
@@ -168,6 +174,8 @@ async fn recv_loop(
                             if is_new {
                                 let mut c = core.lock().await;
                                 c.on_peer_joined(*device_id, public_key);
+                                let addr = SocketAddr::new(from.ip(), *listen_port);
+                                let _ = connect_tx.send((*device_id, addr));
                             }
                         }
                         _ => {}
