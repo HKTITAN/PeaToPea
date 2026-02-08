@@ -80,9 +80,9 @@ Implementation of the PeaPod protocol for Windows: background process to discove
   - [x] 6.1.3 Menu: Enable / Disable, Open settings, Exit
   - [x] 6.1.4 On Enable: start proxy, set system proxy, start discovery and local transport (proxy/discovery/transport start on app start; Enable sets system proxy)
   - [x] 6.1.5 On Disable: clear system proxy, stop discovery and transport, stop proxy (restore system proxy; Exit quits app and restores)
-- [ ] **6.2** Settings window
-  - [ ] 6.2.1 Simple settings UI: toggle PeaPod, display pod members (device IDs or anonymized), optional port/config
-  - [ ] 6.2.2 Implement via Tauri window or C#/WinUI if separate UI project
+- [x] **6.2** Settings window
+  - [x] 6.2.1 Simple settings UI: toggle PeaPod, display pod members (device IDs or anonymized), optional port/config (Win32: checkbox, listbox with hex device IDs, static "Proxy: 127.0.0.1:3128")
+  - [x] 6.2.2 Implement via Tauri window or C#/WinUI if separate UI project (implemented as Win32 window in tray thread; no separate project)
 - [ ] **6.3** Settings entry in Windows
   - [ ] 6.3.1 Document or implement "PeaPod" entry: link from Windows Settings to app (e.g. URI or open app settings page)
   - [ ] 6.3.2 Optional: add uninstall entry in Settings > Apps

@@ -60,8 +60,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 loop {
                     tokio::time::sleep(std::time::Duration::from_secs(2)).await;
                     let enabled = proxy_enabled_updater.load(std::sync::atomic::Ordering::Relaxed);
-                    let peer_count = peer_senders_updater.lock().await.len() as u32;
-                    let _ = state_tx_updater.send(tray::TrayStateUpdate { enabled, peer_count });
+                    let senders = peer_senders_updater.lock().await;
+                    let peer_count = senders.len() as u32;
+                    let peer_ids = senders.keys().map(|d| d.0).collect();
+                    drop(senders);
+                    let _ = state_tx_updater.send(tray::TrayStateUpdate {
+                        enabled,
+                        peer_count,
+                        peer_ids,
+                    });
                     let _ = PostMessageW(
                         tray_hwnd_updater,
                         tray::WM_TRAY_UPDATE_STATE,
@@ -70,6 +77,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     );
                 }
             });
+
+            // Initial state so tooltip and settings have data before first 2s tick.
+            let _ = state_tx.send(tray::TrayStateUpdate {
+                enabled: true,
+                peer_count: 0,
+                peer_ids: vec![],
+            });
+            let _ = PostMessageW(
+                tray_hwnd,
+                tray::WM_TRAY_UPDATE_STATE,
+                WPARAM(0),
+                LPARAM(0),
+            );
 
             tokio::spawn(proxy::run_proxy(
                 bind,
@@ -109,14 +129,42 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                                 let _ = system_proxy::restore_system_proxy();
                             }
                             tray::TrayCommand::OpenSettings => {
-                                // TODO: open settings window (§6.2)
+                                let senders = peer_senders.lock().await;
+                                let peer_ids = senders.keys().map(|d| d.0).collect();
+                                let peer_count = peer_ids.len() as u32;
+                                let enabled = proxy_enabled.load(std::sync::atomic::Ordering::Relaxed);
+                                drop(senders);
+                                let _ = state_tx.send(tray::TrayStateUpdate {
+                                    enabled,
+                                    peer_count,
+                                    peer_ids,
+                                });
+                                let _ = PostMessageW(
+                                    tray_hwnd,
+                                    tray::WM_TRAY_UPDATE_STATE,
+                                    WPARAM(0),
+                                    LPARAM(0),
+                                );
+                                let _ = PostMessageW(
+                                    tray_hwnd,
+                                    tray::WM_SHOW_SETTINGS,
+                                    WPARAM(0),
+                                    LPARAM(0),
+                                );
                             }
                             tray::TrayCommand::Exit => break,
                         }
                         // Update tooltip immediately after Enable/Disable
                         let enabled = proxy_enabled.load(std::sync::atomic::Ordering::Relaxed);
-                        let peer_count = peer_senders.lock().await.len() as u32;
-                        let _ = state_tx.send(tray::TrayStateUpdate { enabled, peer_count });
+                        let senders = peer_senders.lock().await;
+                        let peer_ids = senders.keys().map(|d| d.0).collect();
+                        let peer_count = senders.len() as u32;
+                        drop(senders);
+                        let _ = state_tx.send(tray::TrayStateUpdate {
+                            enabled,
+                            peer_count,
+                            peer_ids,
+                        });
                         let _ = PostMessageW(
                             tray_hwnd,
                             tray::WM_TRAY_UPDATE_STATE,
