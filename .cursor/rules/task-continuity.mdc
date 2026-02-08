@@ -12,3 +12,5 @@ alwaysApply: true
 - **Add new tasks from requirements**: When a requirement, scope change, or dependency emerges (from discussion, code review, or discovery), add it to the appropriate .tasks file: new `###` or `####` under the right `##`, or a new `##` if it's a new area. Keep the same checklist format and order.
 
 - **Update .tasks with findings and notes**: When you discover a design decision, bug cause, gotcha, or open question, record it in the relevant task file: either a short inline note under the task (e.g. `(Note: …)`) or a **Notes** section at the end of the file (see convention in .tasks/README.md). Do this as part of the same session, not later.
+
+- **When the next unchecked item needs devices, Xcode, or release**: If no such environment is available, do not loop on minor doc tweaks. State that remaining work is blocked and point to [.tasks/README.md](.tasks/README.md) “Remaining work” and “When no unchecked item is actionable…”; suggest running CI, updating CHANGELOG, or starting 05/06 in Xcode when ready.
