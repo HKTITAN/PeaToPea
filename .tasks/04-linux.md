@@ -26,7 +26,7 @@ Implementation of the PeaPod protocol for Linux: daemon that runs as system or u
   - [x] 2.2.4 When disabling: unset or restore previous proxy
 - [x] **2.3** Optional: netfilter/iptables path (post-v1)
   - [x] 2.3.1 Document iptables REDIRECT or DNAT to send selected traffic to local proxy port
-  - [ ] 2.3.2 May require cap_net_admin or root; document and provide optional script
+  - [ ] 2.3.2 May require cap_net_admin or root; document and provide optional script (Note: cap_net_admin/root documented in pea-linux README; optional script not provided.)
 - [x] **2.4** Optional: eBPF (future)
   - [x] 2.4.1 Research eBPF for traffic redirect on modern kernels; document as future option
 
