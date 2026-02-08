@@ -29,6 +29,8 @@ Create feature branches from `main` (or `develop` if you use it). Keep branches 
 2. If you changed pea-windows or pea-linux, run `cargo build` and `cargo test` for the full workspace.
 3. Fix any build or test failures before pushing.
 
+**Optional (Linux):** After building pea-linux, you can run the interop smoke script: `./scripts/interop-two-linux.sh` (starts two instances and one proxy request). See [docs/INTEROP.md](docs/INTEROP.md).
+
 ## Cursor
 
 - **Rules**: Project conventions live in `.cursor/rules/`. They guide style, terminology, and workflow.

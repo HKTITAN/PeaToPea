@@ -37,3 +37,11 @@ To see what's next: open the current task file (e.g. 01-pea-core.md) and find th
 ## Notes and findings
 
 At the end of any task file you may add a `## Notes` section. Use it for: design decisions, bug causes, gotchas, open questions, or references. Prefer one line per item; optional date prefix. Inline notes under a specific item are also fine: `(Note: …)` on the line below the checkbox. This keeps .tasks the single source of truth for both work items and context.
+
+## Remaining work (summary)
+
+- **09:** Run and record metrics (1.1–1.6, 4.1) at release; procedures in docs/QUALITY.md. Optional: coverage (6.1.3), store listing (5.4.3).
+- **04:** Optional tray (§8.1); optional other formats (§9.2); §9.1.3 test .deb on Linux at release.
+- **08:** §4.4 iOS, §4.5 macOS — document in pea-ios/pea-macos README when those implementations exist.
+- **02/03:** Optional WinDivert (§2.3), WiFi Direct (§3.2) — documented; implement when desired.
+- **05/06:** Full iOS and macOS implementations (scaffold through distribution).
