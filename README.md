@@ -64,5 +64,8 @@ rustup target add aarch64-apple-darwin x86_64-apple-darwin
 - **Project and task breakdown**: [.tasks/](.tasks/README.md) — Checklists and recommended order for building PeaPod.
 - **Architecture**: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — Layer placement, components, and data flow.
 - **Protocol**: [docs/PROTOCOL.md](docs/PROTOCOL.md) — Wire format, discovery, handshake, and versioning (reference: pea-core).
+- **pea-core API**: [docs/API.md](docs/API.md) — Main types and methods for platform authors; C FFI and JNI notes.
+- **Troubleshooting and FAQ**: [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) — Common issues and frequently asked questions.
 - **Contributing**: [CONTRIBUTING.md](CONTRIBUTING.md) — Branching, commits, and how to push to the PeaToPea repo.
+- **Changelog**: [CHANGELOG.md](CHANGELOG.md) — Version history and protocol changes.
 - **Cursor**: Rules, skills, and subagents in [.cursor/](.cursor/) for consistent AI-assisted development (rules in `.cursor/rules/`, skills in `.cursor/skills/`, agents in `.cursor/agents/`).

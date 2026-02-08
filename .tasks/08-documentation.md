@@ -27,7 +27,7 @@ Architecture, PeaPod protocol spec, and per-platform build/run instructions for 
   - [x] 2.2.3 Discovery: beacon → peer list → core; local transport: TCP between peers, encrypted
 - [x] **2.3** Host-driven core
   - [x] 2.3.1 Explain: core has no I/O; host (each implementation) does sockets, discovery, proxy/VPN; host calls core with events and receives actions
-  - [ ] 2.3.2 Link to pea-core API (or list main entry points)
+  - [x] 2.3.2 Link to pea-core API (or list main entry points) — docs/API.md
 
 ## 3. Protocol specification
 
@@ -74,38 +74,38 @@ Architecture, PeaPod protocol spec, and per-platform build/run instructions for 
 
 ## 5. pea-core API (for platform authors)
 
-- [ ] **5.1** API overview
-  - [ ] 5.1.1 List main types: e.g. PeaPodCore, Config
-  - [ ] 5.1.2 List main methods: init, on_incoming_request, on_peer_joined, on_peer_left, on_message_received, on_chunk_received, tick
-  - [ ] 5.1.3 Inputs and outputs: what host passes in, what core returns (actions, messages to send, WAN chunk requests)
+- [x] **5.1** API overview
+  - [x] 5.1.1 List main types: e.g. PeaPodCore, Config
+  - [x] 5.1.2 List main methods: init, on_incoming_request, on_peer_joined, on_peer_left, on_message_received, on_chunk_received, tick
+  - [x] 5.1.3 Inputs and outputs: what host passes in, what core returns (actions, messages to send, WAN chunk requests)
 - [ ] **5.2** Rust doc comments
   - [ ] 5.2.1 Add rustdoc to public functions and types in pea-core
-  - [ ] 5.2.2 Generate and publish docs (e.g. `cargo doc --no-deps`); optional link from root README
-- [ ] **5.3** C API (for iOS/macOS)
-  - [ ] 5.3.1 Document C header (or list functions) for Swift callers: init, feed request, feed peer events, feed message, feed chunk, tick
-  - [ ] 5.3.2 Data types: how to pass byte arrays, strings; who allocates/frees
-  - [ ] 5.3.3 Thread safety: single-threaded or allowed threads
-- [ ] **5.4** JNI API (for Android)
-  - [ ] 5.4.1 Document JNI function names and signatures (or Kotlin wrapper)
-  - [ ] 5.4.2 Same logical API as Rust; document parameter and return types (jbyteArray, jstring, etc.)
+  - [x] 5.2.2 Generate and publish docs (e.g. `cargo doc --no-deps`); optional link from root README (documented in API.md)
+- [x] **5.3** C API (for iOS/macOS)
+  - [x] 5.3.1 Document C header (or list functions) for Swift callers: init, feed request, feed peer events, feed message, feed chunk, tick
+  - [x] 5.3.2 Data types: how to pass byte arrays, strings; who allocates/frees
+  - [x] 5.3.3 Thread safety: single-threaded or allowed threads
+- [x] **5.4** JNI API (for Android)
+  - [x] 5.4.1 Document JNI function names and signatures (or Kotlin wrapper)
+  - [x] 5.4.2 Same logical API as Rust; document parameter and return types (jbyteArray, jstring, etc.)
 
 ## 6. Troubleshooting and FAQ
 
-- [ ] **6.1** Common issues
-  - [ ] 6.1.1 "No peers discovered": check firewall, multicast/broadcast, same subnet, local network permission (mobile)
-  - [ ] 6.1.2 "Transfer not accelerated": eligibility (HTTP range, no DRM); or no peers in pod
-  - [ ] 6.1.3 "App broken / not loading": ineligible flow was accelerated; fallback should prevent; document how to report
-- [ ] **6.2** FAQ
-  - [ ] 6.2.1 Does PeaPod replace my ISP? No.
-  - [ ] 6.2.2 Is my data sent to other devices? Only chunk metadata and encrypted chunks for acceleration; no central server.
-  - [ ] 6.2.3 What if I don't trust a peer? Integrity check fails; peer isolated after failures; optional "accept device" in future.
-  - [ ] 6.2.4 Link to root README for goals and non-goals
+- [x] **6.1** Common issues
+  - [x] 6.1.1 "No peers discovered": check firewall, multicast/broadcast, same subnet, local network permission (mobile)
+  - [x] 6.1.2 "Transfer not accelerated": eligibility (HTTP range, no DRM); or no peers in pod
+  - [x] 6.1.3 "App broken / not loading": ineligible flow was accelerated; fallback should prevent; document how to report
+- [x] **6.2** FAQ
+  - [x] 6.2.1 Does PeaPod replace my ISP? No.
+  - [x] 6.2.2 Is my data sent to other devices? Only chunk metadata and encrypted chunks for acceleration; no central server.
+  - [x] 6.2.3 What if I don't trust a peer? Integrity check fails; peer isolated after failures; optional "accept device" in future.
+  - [x] 6.2.4 Link to root README for goals and non-goals
 
 ## 7. Changelog and versioning
 
-- [ ] **7.1** Changelog
-  - [ ] 7.1.1 Add CHANGELOG.md (or keep in releases); format: version, date, added/changed/fixed per component
-  - [ ] 7.1.2 Update when releasing new protocol or app versions
-- [ ] **7.2** Protocol version
-  - [ ] 7.2.1 Document current protocol version in PROTOCOL.md and in pea-core (constant or config)
-  - [ ] 7.2.2 When bumping: update PROTOCOL.md, pea-core, and all clients; document in CHANGELOG
+- [x] **7.1** Changelog
+  - [x] 7.1.1 Add CHANGELOG.md (or keep in releases); format: version, date, added/changed/fixed per component
+  - [x] 7.1.2 Update when releasing new protocol or app versions
+- [x] **7.2** Protocol version
+  - [x] 7.2.1 Document current protocol version in PROTOCOL.md and in pea-core (constant or config)
+  - [x] 7.2.2 When bumping: update PROTOCOL.md, pea-core, and all clients; document in CHANGELOG
