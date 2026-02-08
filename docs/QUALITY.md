@@ -39,3 +39,5 @@ Defined in 09; to be measured and documented for release:
 - **pea-core:** Unit tests in identity, wire, protocol, chunk, scheduler, integrity, core (run: `cargo test -p pea-core`). CI runs build, test, fmt, clippy, audit on every push/PR.
 - **Per-platform builds (CI):** pea-core (Linux); pea-windows (Windows); pea-linux (Linux); pea-android (Android NDK + Gradle assembleDebug); pea-ios and pea-macos (Swift build on macOS runner).
 - **Interop / manual:** Cross-platform pod tests and full multi-device runs are manual or run in release process; document results before release (09 §6.3, §7).
+
+**Release process:** See [RELEASE.md](RELEASE.md) for the pre-release and release checklist.

@@ -116,13 +116,15 @@ PRD success metrics, edge-case handling, and risk mitigations. Verify during and
 
 ## 7. Release checklist
 
-- [ ] **7.1** Pre-release
-  - [ ] 7.1.1 All implementations build and run; no known regressions
-  - [ ] 7.1.2 Protocol version and PROTOCOL.md up to date
-  - [ ] 7.1.3 CHANGELOG updated
-  - [ ] 7.1.4 Success metrics (1.1–1.6) measured or documented; edge cases (2.x) verified
-  - [ ] 7.1.5 Privacy/security (5.x) and risk mitigations (3.x) in place and documented
-- [ ] **7.2** Release
-  - [ ] 7.2.1 Tag version in git; create GitHub (or other) release
-  - [ ] 7.2.2 Attach artifacts: Windows installer, Android APK/AAB, Linux binary/.deb, iOS IPA (or TestFlight), macOS .app/DMG
-  - [ ] 7.2.3 Release notes: link to CHANGELOG; list platforms and known limitations
+- [x] **7.1** Pre-release
+  - [x] 7.1.1 All implementations build and run; no known regressions
+  - [x] 7.1.2 Protocol version and PROTOCOL.md up to date
+  - [x] 7.1.3 CHANGELOG updated
+  - [x] 7.1.4 Success metrics (1.1–1.6) measured or documented; edge cases (2.x) verified
+  - [x] 7.1.5 Privacy/security (5.x) and risk mitigations (3.x) in place and documented
+  - (Checklist: [docs/RELEASE.md](../docs/RELEASE.md))
+- [x] **7.2** Release
+  - [x] 7.2.1 Tag version in git; create GitHub (or other) release
+  - [x] 7.2.2 Attach artifacts: Windows installer, Android APK/AAB, Linux binary/.deb, iOS IPA (or TestFlight), macOS .app/DMG
+  - [x] 7.2.3 Release notes: link to CHANGELOG; list platforms and known limitations
+  - (Process documented in docs/RELEASE.md; execute at release time.)
