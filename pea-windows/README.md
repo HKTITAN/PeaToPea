@@ -11,7 +11,7 @@ cargo build -p pea-windows
 cargo run -p pea-windows
 ```
 
-The proxy listens on `127.0.0.1:3128` by default. On Windows, running the app sets the system proxy to that address (registry: Internet Settings) and restores the previous proxy when you press Ctrl+C. **Discovery** runs over UDP multicast (239.255.60.60:45678); **local transport** (TCP 45679, handshake + encrypted frames) connects to discovered peers. A **system tray** icon (right-click: Enable / Disable / Open settings / Exit) controls the system proxy and exits the app. The tooltip shows enabled/disabled and "Pod: N devices". **Open settings** opens a small Win32 window: PeaPod enabled checkbox, proxy address (127.0.0.1:3128), and list of pod members (anonymized device IDs).
+The proxy listens on `127.0.0.1:3128` by default. On Windows, running the app sets the system proxy to that address (registry: Internet Settings) and restores the previous proxy when you press Ctrl+C. **Discovery** runs over UDP multicast (239.255.60.60:45678); **local transport** (TCP 45679, handshake + encrypted frames) connects to discovered peers. A **system tray** icon (right-click: Enable / Disable / Open settings / Exit) controls the system proxy and exits the app. The tooltip shows enabled/disabled and "Pod: N devices". **Open settings** opens a small Win32 window: PeaPod enabled checkbox, "Start PeaPod when I sign in" (optional auto-start via HKCU Run), proxy address (127.0.0.1:3128), and list of pod members (anonymized device IDs).
 
 ## Settings entry in Windows
 

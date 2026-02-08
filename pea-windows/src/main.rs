@@ -6,6 +6,8 @@ mod discovery;
 mod transport;
 
 #[cfg(windows)]
+mod autostart;
+#[cfg(windows)]
 mod system_proxy;
 #[cfg(windows)]
 mod tray;
@@ -73,10 +75,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     let peer_count = senders.len() as u32;
                     let peer_ids = senders.keys().map(|d| d.0).collect();
                     drop(senders);
+                    let autostart_enabled = autostart::is_autostart_enabled().unwrap_or(false);
                     let _ = state_tx_updater.send(tray::TrayStateUpdate {
                         enabled,
                         peer_count,
                         peer_ids,
+                        autostart_enabled,
                     });
                     let _ = PostMessageW(
                         tray_hwnd_updater,
@@ -88,10 +92,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             });
 
             // Initial state so tooltip and settings have data before first 2s tick.
+            let autostart_enabled = autostart::is_autostart_enabled().unwrap_or(false);
             let _ = state_tx.send(tray::TrayStateUpdate {
                 enabled: true,
                 peer_count: 0,
                 peer_ids: vec![],
+                autostart_enabled,
             });
             let _ = PostMessageW(
                 tray_hwnd,
@@ -137,16 +143,21 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                                 proxy_enabled.store(false, std::sync::atomic::Ordering::Relaxed);
                                 let _ = system_proxy::restore_system_proxy();
                             }
+                            tray::TrayCommand::SetAutostart(enable) => {
+                                let _ = autostart::set_autostart(enable);
+                            }
                             tray::TrayCommand::OpenSettings => {
                                 let senders = peer_senders.lock().await;
                                 let peer_ids = senders.keys().map(|d| d.0).collect();
                                 let peer_count = peer_ids.len() as u32;
                                 let enabled = proxy_enabled.load(std::sync::atomic::Ordering::Relaxed);
+                                let autostart_enabled = autostart::is_autostart_enabled().unwrap_or(false);
                                 drop(senders);
                                 let _ = state_tx.send(tray::TrayStateUpdate {
                                     enabled,
                                     peer_count,
                                     peer_ids,
+                                    autostart_enabled,
                                 });
                                 let _ = PostMessageW(
                                     tray_hwnd,
@@ -163,16 +174,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             }
                             tray::TrayCommand::Exit => break,
                         }
-                        // Update tooltip immediately after Enable/Disable
+                        // Update tooltip immediately after Enable/Disable/SetAutostart
                         let enabled = proxy_enabled.load(std::sync::atomic::Ordering::Relaxed);
                         let senders = peer_senders.lock().await;
                         let peer_ids = senders.keys().map(|d| d.0).collect();
                         let peer_count = senders.len() as u32;
+                        let autostart_enabled = autostart::is_autostart_enabled().unwrap_or(false);
                         drop(senders);
                         let _ = state_tx.send(tray::TrayStateUpdate {
                             enabled,
                             peer_count,
                             peer_ids,
+                            autostart_enabled,
                         });
                         let _ = PostMessageW(
                             tray_hwnd,

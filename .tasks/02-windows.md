@@ -93,9 +93,9 @@ Implementation of the PeaPod protocol for Windows: background process to discove
   - [x] 7.1.1 Create installer (e.g. Inno Setup, MSI, or Electron-builder/Tauri bundle) that installs binary and optional shortcut (Inno Setup: pea-windows/installer/PeaPod.iss; installs to {userpf}\PeaPod, Start Menu shortcut)
   - [x] 7.1.2 Installer does not set proxy by default; user enables in app (no [Run] step; documented)
   - [x] 7.1.3 Uninstaller restores proxy to previous state if PeaPod was enabled ([UninstallRun] runs pea_windows.exe --restore-proxy before file removal; app supports --restore-proxy)
-- [ ] **7.2** Auto-start (optional)
-  - [ ] 7.2.1 Option in settings: "Start PeaPod when I sign in"; set/clear registry or shortcut in Startup folder
-  - [ ] 7.2.2 Default: do not auto-start unless user opts in
+- [x] **7.2** Auto-start (optional)
+  - [x] 7.2.1 Option in settings: "Start PeaPod when I sign in"; set/clear registry or shortcut in Startup folder (HKCU Run key; checkbox in settings window; autostart.rs)
+  - [x] 7.2.2 Default: do not auto-start unless user opts in (no Run key at install; only when user checks the box)
 
 ## 8. Edge cases and robustness
 

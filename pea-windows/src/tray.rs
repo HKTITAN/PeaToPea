@@ -24,16 +24,19 @@ pub enum TrayCommand {
     Enable,
     Disable,
     OpenSettings,
+    SetAutostart(bool),
     Exit,
 }
 
-/// State for tooltip and settings: enabled/disabled, peer count, and peer device IDs (for settings list).
+/// State for tooltip and settings: enabled/disabled, peer count, peer device IDs, and autostart.
 #[derive(Clone, Debug)]
 pub struct TrayStateUpdate {
     pub enabled: bool,
     pub peer_count: u32,
     /// Device IDs of current peers (first 16 bytes each); used by settings window to list pod members.
     pub peer_ids: Vec<[u8; 16]>,
+    /// Start PeaPod when I sign in (§7.2).
+    pub autostart_enabled: bool,
 }
 
 const WM_TRAYICON: u32 = WM_USER + 1;
@@ -47,6 +50,7 @@ const TRAY_ID: u32 = 1;
 const IDC_CHECK_ENABLED: i32 = 101;
 const IDC_LIST_PEERS: i32 = 102;
 const IDC_STATIC_PROXY: i32 = 103;
+const IDC_CHECK_AUTOSTART: i32 = 104;
 
 // Standard Win32 control styles/messages (not all in windows crate default features).
 const BS_AUTOCHECKBOX: u32 = 0x0003;
@@ -235,11 +239,25 @@ unsafe extern "system" fn settings_wnd_proc(
         );
         let _ = CreateWindowExW(
             WINDOW_EX_STYLE::default(),
+            w!("BUTTON"),
+            w!("Start PeaPod when I sign in"),
+            WINDOW_STYLE(WS_CHILD.0 | WS_VISIBLE.0 | BS_AUTOCHECKBOX),
+            16,
+            40,
+            260,
+            24,
+            hwnd,
+            Some(HMENU(IDC_CHECK_AUTOSTART as _)),
+            Some(instance.into()),
+            None,
+        );
+        let _ = CreateWindowExW(
+            WINDOW_EX_STYLE::default(),
             w!("STATIC"),
             w!("Proxy: 127.0.0.1:3128"),
             WINDOW_STYLE(WS_CHILD | WS_VISIBLE),
             16,
-            48,
+            68,
             300,
             20,
             hwnd,
@@ -253,9 +271,9 @@ unsafe extern "system" fn settings_wnd_proc(
             PCWSTR::null(),
             WINDOW_STYLE(WS_CHILD.0 | WS_VISIBLE.0 | WS_BORDER.0 | LBS_NOTIFY),
             16,
-            76,
+            92,
             340,
-            160,
+            168,
             hwnd,
             Some(HMENU(IDC_LIST_PEERS as _)),
             Some(instance.into()),
@@ -269,6 +287,15 @@ unsafe extern "system" fn settings_wnd_proc(
                         check,
                         BM_SETCHECK,
                         if s.enabled { WPARAM(BST_CHECKED as _) } else { WPARAM(0) },
+                        LPARAM(0),
+                    );
+                }
+                let autostart = GetDlgItem(hwnd, IDC_CHECK_AUTOSTART);
+                if autostart.0 != 0 {
+                    let _ = SendMessageW(
+                        autostart,
+                        BM_SETCHECK,
+                        if s.autostart_enabled { WPARAM(BST_CHECKED as _) } else { WPARAM(0) },
                         LPARAM(0),
                     );
                 }
@@ -290,6 +317,15 @@ unsafe extern "system" fn settings_wnd_proc(
                             LPARAM(0),
                         );
                     }
+                    let autostart = GetDlgItem(hwnd, IDC_CHECK_AUTOSTART);
+                    if autostart.0 != 0 {
+                        let _ = SendMessageW(
+                            autostart,
+                            BM_SETCHECK,
+                            if s.autostart_enabled { WPARAM(BST_CHECKED as _) } else { WPARAM(0) },
+                            LPARAM(0),
+                        );
+                    }
                 }
             }
         }
@@ -305,6 +341,15 @@ unsafe extern "system" fn settings_wnd_proc(
             if !tx_ptr.is_null() {
                 let tx = &*(tx_ptr as *const UnboundedSender<TrayCommand>);
                 let _ = tx.send(if enabled { TrayCommand::Enable } else { TrayCommand::Disable });
+            }
+        } else if id == IDC_CHECK_AUTOSTART {
+            let check = GetDlgItem(hwnd, IDC_CHECK_AUTOSTART);
+            let state = SendMessageW(check, BM_GETCHECK, WPARAM(0), LPARAM(0));
+            let enabled = state.0 == BST_CHECKED as _;
+            let tx_ptr = CMD_TX.load(Ordering::Acquire);
+            if !tx_ptr.is_null() {
+                let tx = &*(tx_ptr as *const UnboundedSender<TrayCommand>);
+                let _ = tx.send(TrayCommand::SetAutostart(enabled));
             }
         }
         return LRESULT(0);
