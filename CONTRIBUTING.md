@@ -31,6 +31,8 @@ Create feature branches from `main` (or `develop` if you use it). Keep branches 
 
 **Optional (Linux):** After building pea-linux, you can run the interop smoke script: `./scripts/interop-two-linux.sh` (starts two instances and one proxy request). See [docs/INTEROP.md](docs/INTEROP.md).
 
+**Optional (macOS):** Run `./scripts/build-pea-core-apple.sh` to build pea-core for iOS and macOS; generate C header with `cbindgen pea-core -o pea_core.h`. See [scripts/README.md](scripts/README.md).
+
 ## Cursor
 
 - **Rules**: Project conventions live in `.cursor/rules/`. They guide style, terminology, and workflow.
