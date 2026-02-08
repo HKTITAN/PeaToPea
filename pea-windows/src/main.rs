@@ -2,6 +2,7 @@
 #![cfg_attr(windows, windows_subsystem = "windows")]
 
 mod proxy;
+mod discovery;
 
 #[cfg(windows)]
 mod system_proxy;
@@ -14,7 +15,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
     let _ = pea_core::Config::default();
 
-    let core = std::sync::Arc::new(tokio::sync::Mutex::new(pea_core::PeaPodCore::new()));
+    let keypair = std::sync::Arc::new(pea_core::Keypair::generate());
+    let core = std::sync::Arc::new(tokio::sync::Mutex::new(
+        pea_core::PeaPodCore::with_keypair_arc(keypair.clone()),
+    ));
     let bind: std::net::SocketAddr = proxy::DEFAULT_PROXY_ADDR.parse()?;
 
     #[cfg(windows)]
@@ -27,14 +31,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     rt.block_on(async {
         #[cfg(windows)]
         {
-            let proxy = proxy::run_proxy(bind, core);
-            let ctrl_c = tokio::signal::ctrl_c();
-            tokio::select! {
-                _ = proxy => {}
-                _ = ctrl_c => {
-                    let _ = system_proxy::restore_system_proxy();
-                }
-            }
+            tokio::spawn(proxy::run_proxy(bind, core.clone()));
+            let core_disc = core.clone();
+            let keypair_disc = keypair.clone();
+            tokio::spawn(async move {
+                let _ = discovery::run_discovery(core_disc, keypair_disc, discovery::LOCAL_TRANSPORT_PORT).await;
+            });
+            tokio::signal::ctrl_c().await.ok();
+            let _ = system_proxy::restore_system_proxy();
         }
         #[cfg(not(windows))]
         {

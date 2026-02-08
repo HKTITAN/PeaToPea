@@ -1,6 +1,7 @@
 //! Host-driven API: PeaPodCore receives events from host, returns actions.
 
 use std::collections::HashMap;
+use std::sync::Arc;
 
 use crate::chunk::{self, ChunkId, TransferState, DEFAULT_CHUNK_SIZE};
 use crate::identity::{DeviceId, Keypair, PublicKey};
@@ -36,7 +37,7 @@ struct ActiveTransfer {
 
 /// Main coordinator. Host passes events; core returns actions.
 pub struct PeaPodCore {
-    keypair: Keypair,
+    keypair: Arc<Keypair>,
     peers: Vec<DeviceId>,
     peer_last_tick: HashMap<DeviceId, u64>,
     tick_count: u64,
@@ -48,7 +49,7 @@ pub struct PeaPodCore {
 impl PeaPodCore {
     pub fn new() -> Self {
         Self {
-            keypair: Keypair::generate(),
+            keypair: Arc::new(Keypair::generate()),
             peers: Vec::new(),
             peer_last_tick: HashMap::new(),
             tick_count: 0,
@@ -58,6 +59,18 @@ impl PeaPodCore {
     }
 
     pub fn with_keypair(keypair: Keypair) -> Self {
+        Self {
+            keypair: Arc::new(keypair),
+            peers: Vec::new(),
+            peer_last_tick: HashMap::new(),
+            tick_count: 0,
+            active_transfer: None,
+            peer_metrics: HashMap::new(),
+        }
+    }
+
+    /// Same as with_keypair but takes Arc<Keypair> so the host can share the keypair (e.g. with discovery).
+    pub fn with_keypair_arc(keypair: Arc<Keypair>) -> Self {
         Self {
             keypair,
             peers: Vec::new(),

@@ -11,7 +11,7 @@ cargo build -p pea-windows
 cargo run -p pea-windows
 ```
 
-The proxy listens on `127.0.0.1:3128` by default. On Windows, running the app sets the system proxy to that address (registry: Internet Settings) and restores the previous proxy when you press Ctrl+C (or when the tray "Disable" is used, once implemented). Discovery and tray are not yet implemented (see [.tasks/02-windows.md](../.tasks/02-windows.md)).
+The proxy listens on `127.0.0.1:3128` by default. On Windows, running the app sets the system proxy to that address (registry: Internet Settings) and restores the previous proxy when you press Ctrl+C. **Discovery** runs over UDP multicast (239.255.60.60:45678): beacons every 4s, DiscoveryResponse on receive, peer timeout 16s; core `on_peer_joined` / `on_peer_left` are called. Tray and local transport (TCP) are not yet implemented (see [.tasks/02-windows.md](../.tasks/02-windows.md)).
 
 ## Tasks
 

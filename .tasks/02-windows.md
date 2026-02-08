@@ -32,12 +32,12 @@ Implementation of the PeaPod protocol for Windows: background process to discove
 
 ## 3. Discovery on Windows
 
-- [ ] **3.1** LAN discovery
-  - [ ] 3.1.1 Implement UDP socket: bind to discovery port (same as in 07-protocol-and-interop)
-  - [ ] 3.1.2 Send periodic beacon (multicast or broadcast) with device ID, public key, protocol version
-  - [ ] 3.1.3 Listen for beacons from other devices; parse and validate
-  - [ ] 3.1.4 Send response to discovered device (if required by protocol)
-  - [ ] 3.1.5 Maintain list of discovered peers; call core `on_peer_joined` / `on_peer_left` on change
+- [x] **3.1** LAN discovery
+  - [x] 3.1.1 Implement UDP socket: bind to discovery port (same as in 07-protocol-and-interop) (45678, multicast 239.255.60.60)
+  - [x] 3.1.2 Send periodic beacon (multicast or broadcast) with device ID, public key, protocol version (every 4s)
+  - [x] 3.1.3 Listen for beacons from other devices; parse and validate (decode_frame, version check)
+  - [x] 3.1.4 Send response to discovered device (if required by protocol) (DiscoveryResponse to sender)
+  - [x] 3.1.5 Maintain list of discovered peers; call core `on_peer_joined` / `on_peer_left` on change (timeout 16s)
 - [ ] **3.2** Optional: WiFi Direct
   - [ ] 3.2.1 Research Windows WiFi Direct API
   - [ ] 3.2.2 Add optional discovery via WiFi Direct if needed for same-subnet guarantee
