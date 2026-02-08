@@ -135,3 +135,4 @@ PRD success metrics, edge-case handling, and risk mitigations. Verify during and
 
 - **Metrics (1.1–1.6, 4.1):** Run at release or when devices are available; procedures in [docs/QUALITY.md](../docs/QUALITY.md) “How to measure”. Record results in INTEROP.md or release notes.
 - **Verify items (2.1.2, 2.4.3, 4.2.3):** Manual or integration when run; 01-pea-core tests cover core behavior; cross-platform “kill one peer” and “no peers” are manual until automated.
+- **Coverage (6.1.3):** Optional; cargo-tarpaulin procedure in QUALITY.md; CI job or threshold optional.
