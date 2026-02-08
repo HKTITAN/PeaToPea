@@ -106,7 +106,7 @@ PRD success metrics, edge-case handling, and risk mitigations. Verify during and
 - [x] **6.1** pea-core
   - [x] 6.1.1 Unit tests for identity, protocol, chunk manager, scheduler, integrity (01-pea-core)
   - [x] 6.1.2 Integration tests with mock host (01); run in CI on every PR
-  - [ ] 6.1.3 Optional: coverage report (e.g. cargo tarpaulin); set minimum threshold
+  - [ ] 6.1.3 Optional: coverage report (e.g. cargo tarpaulin); set minimum threshold — procedure in docs/QUALITY.md
 - [x] **6.2** Per-implementation smoke tests
   - [x] 6.2.1 Windows: build and run; enable; verify proxy and discovery (optional in CI) — CI builds
   - [x] 6.2.2 Android: build APK; install on emulator; enable VPN (optional in CI) — CI builds APK
