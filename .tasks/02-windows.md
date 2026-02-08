@@ -20,11 +20,11 @@ Implementation of the PeaPod protocol for Windows: background process to discove
   - [x] 2.1.3 Accept HTTP requests; parse URL and headers for range/eligibility
   - [x] 2.1.4 For eligible requests: hand off to core (chunking, scheduler); for ineligible: forward directly to target
   - [x] 2.1.5 Implement response path: receive chunks from core (or WAN), reassemble, send back to client (self-assigned chunks via reqwest; peer chunks fallback until §4)
-- [ ] **2.2** System proxy configuration
-  - [ ] 2.2.1 Read current system proxy (Windows registry or WinINet API)
-  - [ ] 2.2.2 Set system proxy to localhost:port when user enables PeaPod
-  - [ ] 2.2.3 Restore previous proxy (or clear) when user disables PeaPod
-  - [ ] 2.2.4 Handle "no proxy" vs "custom proxy" so we don't overwrite user's choice when off
+- [x] **2.2** System proxy configuration
+  - [x] 2.2.1 Read current system proxy (Windows registry or WinINet API) (system_proxy::get_system_proxy)
+  - [x] 2.2.2 Set system proxy to localhost:port when user enables PeaPod (set_system_proxy; main sets on start)
+  - [x] 2.2.3 Restore previous proxy (or clear) when user disables PeaPod (restore_system_proxy; backup in %APPDATA%\\PeaPod; Ctrl+C restores)
+  - [x] 2.2.4 Handle "no proxy" vs "custom proxy" so we don't overwrite user's choice when off (backup before set, restore that state on disable)
 - [ ] **2.3** Optional: WinDivert path (post-v1)
   - [ ] 2.3.1 Document WinDivert install and license
   - [ ] 2.3.2 Implement packet capture/redirect for TCP (e.g. port 80/443) to local proxy

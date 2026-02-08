@@ -11,7 +11,7 @@ cargo build -p pea-windows
 cargo run -p pea-windows
 ```
 
-The proxy listens on `127.0.0.1:3128` by default. Set the system (or app) HTTP proxy to that address to route traffic through PeaPod. Discovery and tray are not yet implemented (see [.tasks/02-windows.md](../.tasks/02-windows.md)).
+The proxy listens on `127.0.0.1:3128` by default. On Windows, running the app sets the system proxy to that address (registry: Internet Settings) and restores the previous proxy when you press Ctrl+C (or when the tray "Disable" is used, once implemented). Discovery and tray are not yet implemented (see [.tasks/02-windows.md](../.tasks/02-windows.md)).
 
 ## Tasks
 
