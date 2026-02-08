@@ -33,7 +33,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         #[cfg(windows)]
         {
             let (connect_tx, connect_rx) = tokio::sync::mpsc::unbounded_channel();
-            tokio::spawn(proxy::run_proxy(bind, core.clone()));
+            let peer_senders = std::sync::Arc::new(tokio::sync::Mutex::new(std::collections::HashMap::new()));
+            let transfer_waiters: transport::TransferWaiters =
+                std::sync::Arc::new(tokio::sync::Mutex::new(std::collections::HashMap::new()));
+            tokio::spawn(proxy::run_proxy(
+                bind,
+                core.clone(),
+                peer_senders.clone(),
+                transfer_waiters.clone(),
+            ));
             let core_disc = core.clone();
             let keypair_disc = keypair.clone();
             tokio::spawn(async move {
@@ -43,14 +51,24 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let core_trans = core.clone();
             let keypair_trans = keypair.clone();
             tokio::spawn(async move {
-                let _ = transport::run_transport(core_trans, keypair_trans, connect_rx).await;
+                let _ = transport::run_transport(
+                    core_trans,
+                    keypair_trans,
+                    connect_rx,
+                    peer_senders,
+                    transfer_waiters,
+                )
+                .await;
             });
             tokio::signal::ctrl_c().await.ok();
             let _ = system_proxy::restore_system_proxy();
         }
         #[cfg(not(windows))]
         {
-            proxy::run_proxy(bind, core).await.ok();
+            let peer_senders = std::sync::Arc::new(tokio::sync::Mutex::new(std::collections::HashMap::new()));
+            let transfer_waiters: transport::TransferWaiters =
+                std::sync::Arc::new(tokio::sync::Mutex::new(std::collections::HashMap::new()));
+            proxy::run_proxy(bind, core, peer_senders, transfer_waiters).await.ok();
         }
     })?;
     Ok(())

@@ -240,14 +240,16 @@ impl PeaPodCore {
         self.active_transfer.as_ref().map(|a| a.assignment.clone())
     }
 
-    /// Process a received message (host decrypts and passes frame bytes). Returns outbound actions (e.g. SendMessage).
+    /// Process a received message (host decrypts and passes frame bytes).
+    /// Returns (outbound actions, optional completed transfer body when ChunkData completes the transfer).
     pub fn on_message_received(
         &mut self,
         peer_id: DeviceId,
         frame_bytes: &[u8],
-    ) -> Result<Vec<OutboundAction>, OnMessageError> {
+    ) -> Result<(Vec<OutboundAction>, Option<([u8; 16], Vec<u8>)>), OnMessageError> {
         let (msg, _) = wire::decode_frame(frame_bytes).map_err(OnMessageError::Decode)?;
         let mut actions = Vec::new();
+        let mut completed = None;
         match msg {
             Message::Heartbeat { .. } => {
                 self.on_heartbeat_received(peer_id);
@@ -265,7 +267,8 @@ impl PeaPodCore {
                 payload,
             } => {
                 match self.on_chunk_received(transfer_id, start, end, hash, payload) {
-                    Ok(_) => {}
+                    Ok(Some(body)) => completed = Some((transfer_id, body)),
+                    Ok(None) => {}
                     Err(ChunkError::IntegrityFailed) => {
                         let chunk_id = ChunkId {
                             transfer_id,
@@ -292,7 +295,7 @@ impl PeaPodCore {
             Message::Beacon { .. } | Message::DiscoveryResponse { .. } | Message::Join { .. }
             | Message::ChunkRequest { .. } => {}
         }
-        Ok(actions)
+        Ok((actions, completed))
     }
 
     /// Reassign one chunk (e.g. after Nack or integrity failure). Returns ChunkRequest(s) to new peer(s).
@@ -322,7 +325,7 @@ impl PeaPodCore {
         active.assignment.retain(|(c, _)| *c != chunk_id);
         for (c, new_peer) in new_assignments {
             active.assignment.push((c, new_peer));
-            let msg = chunk::chunk_request_message(c);
+            let msg = chunk::chunk_request_message(c, None);
             if let Ok(bytes) = wire::encode_frame(&msg) {
                 actions.push(OutboundAction::SendMessage(new_peer, bytes));
             }

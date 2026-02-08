@@ -36,11 +36,13 @@ pub enum Message {
     Heartbeat {
         device_id: DeviceId,
     },
-    /// Request a chunk by transfer ID and range.
+    /// Request a chunk by transfer ID and range. Optional url so responder can fetch from WAN.
     ChunkRequest {
         transfer_id: [u8; 16],
         start: u64,
         end: u64,
+        #[serde(default)]
+        url: Option<String>,
     },
     /// Chunk payload: transfer ID, range, hash, data (or encrypted).
     ChunkData {

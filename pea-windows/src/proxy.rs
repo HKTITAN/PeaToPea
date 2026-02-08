@@ -1,25 +1,36 @@
 //! Local HTTP/HTTPS proxy: listen on localhost, parse requests, hand eligible GETs to core; forward rest.
 
+use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use std::time::Duration;
 
+use pea_core::wire::encode_frame;
+use pea_core::chunk::chunk_request_message;
 use pea_core::{Action, ChunkId, PeaPodCore};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::{TcpListener, TcpStream};
-use tokio::sync::Mutex;
+use tokio::sync::{mpsc, Mutex};
 
 /// Default proxy bind address (localhost).
 pub const DEFAULT_PROXY_ADDR: &str = "127.0.0.1:3128";
 
 /// Run the proxy: accept connections and handle each with the shared core.
-pub async fn run_proxy(bind: SocketAddr, core: Arc<Mutex<PeaPodCore>>) -> std::io::Result<()> {
+/// peer_senders: send ChunkRequest frames to peers. transfer_waiters: register (transfer_id, tx) and wait for body.
+pub async fn run_proxy(
+    bind: SocketAddr,
+    core: Arc<Mutex<PeaPodCore>>,
+    peer_senders: Arc<Mutex<HashMap<pea_core::DeviceId, mpsc::UnboundedSender<Vec<u8>>>>>,
+    transfer_waiters: crate::transport::TransferWaiters,
+) -> std::io::Result<()> {
     let listener = TcpListener::bind(bind).await?;
     loop {
         let (stream, _) = listener.accept().await?;
         let core = core.clone();
+        let peer_senders = peer_senders.clone();
+        let transfer_waiters = transfer_waiters.clone();
         tokio::spawn(async move {
-            let _ = handle_client(stream, core).await;
+            let _ = handle_client(stream, core, peer_senders, transfer_waiters).await;
         });
     }
 }
@@ -75,7 +86,12 @@ fn parse_range_header(s: &str) -> Option<(u64, u64)> {
     Some((start, end))
 }
 
-async fn handle_client(mut client: TcpStream, core: Arc<Mutex<PeaPodCore>>) -> std::io::Result<()> {
+async fn handle_client(
+    mut client: TcpStream,
+    core: Arc<Mutex<PeaPodCore>>,
+    peer_senders: Arc<Mutex<HashMap<pea_core::DeviceId, mpsc::UnboundedSender<Vec<u8>>>>>,
+    transfer_waiters: crate::transport::TransferWaiters,
+) -> std::io::Result<()> {
     let mut buf = vec![0u8; 65536];
     let n = client.read(&mut buf).await?;
     if n == 0 {
@@ -123,13 +139,17 @@ async fn handle_client(mut client: TcpStream, core: Arc<Mutex<PeaPodCore>>) -> s
             total_length,
             assignment,
         } => {
-            let self_id = core.lock().await.device_id();
-            let all_self = assignment.iter().all(|(_, p)| *p == self_id);
-            if !all_self {
-                return forward_raw(&mut client, buf).await;
-            }
-            accelerate_response(&mut client, core, transfer_id, total_length, assignment, &url)
-                .await
+            accelerate_response(
+                &mut client,
+                core,
+                transfer_id,
+                total_length,
+                assignment,
+                &url,
+                peer_senders,
+                transfer_waiters,
+            )
+            .await
         }
     }
 }
@@ -196,7 +216,7 @@ async fn forward_raw(client: &mut TcpStream, request: &[u8]) -> std::io::Result<
     Ok(())
 }
 
-/// Execute accelerate path: fetch each chunk (self) via HTTP range, feed to core, send reassembled response.
+/// Execute accelerate path: fetch self chunks via HTTP, request peer chunks over transport; wait for reassembled body and send response.
 async fn accelerate_response(
     stream: &mut TcpStream,
     core: Arc<Mutex<PeaPodCore>>,
@@ -204,50 +224,81 @@ async fn accelerate_response(
     _total_length: u64,
     assignment: Vec<(ChunkId, pea_core::DeviceId)>,
     url: &str,
+    peer_senders: Arc<Mutex<HashMap<pea_core::DeviceId, mpsc::UnboundedSender<Vec<u8>>>>>,
+    transfer_waiters: crate::transport::TransferWaiters,
 ) -> std::io::Result<()> {
+    let self_id = core.lock().await.device_id();
+    let (tx, rx) = tokio::sync::oneshot::channel();
+    {
+        let mut w = transfer_waiters.lock().await;
+        w.insert(transfer_id, tx);
+    }
+
     let http_client = reqwest::Client::builder()
         .timeout(Duration::from_secs(30))
         .build()
         .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
 
-    for (chunk_id, _peer) in assignment {
-        let end_inclusive = chunk_id.end.saturating_sub(1);
-        let range_header = format!("bytes={}-{}", chunk_id.start, end_inclusive);
-        let resp = http_client
-            .get(url)
-            .header("Range", range_header)
-            .send()
-            .await
-            .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
-        let bytes = resp
-            .bytes()
-            .await
-            .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
-        let payload = bytes.to_vec();
-        let hash = pea_core::integrity::hash_chunk(&payload);
-        let result = {
+    for (chunk_id, peer_id) in &assignment {
+        if *peer_id == self_id {
+            let end_inclusive = chunk_id.end.saturating_sub(1);
+            let range_header = format!("bytes={}-{}", chunk_id.start, end_inclusive);
+            let resp = http_client
+                .get(url)
+                .header("Range", range_header)
+                .send()
+                .await
+                .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
+            let bytes = resp
+                .bytes()
+                .await
+                .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
+            let payload = bytes.to_vec();
+            let hash = pea_core::integrity::hash_chunk(&payload);
             let mut c = core.lock().await;
-            c.on_chunk_received(
+            if let Ok(Some(full_body)) = c.on_chunk_received(
                 transfer_id,
                 chunk_id.start,
                 chunk_id.end,
                 hash,
                 payload,
-            )
-        };
-        if let Ok(Some(full_body)) = result {
+            ) {
+                let _ = transfer_waiters.lock().await.remove(&transfer_id);
+                let len = full_body.len();
+                let status = "HTTP/1.1 200 OK\r\n";
+                let headers = format!("Content-Length: {}\r\nConnection: close\r\n\r\n", len);
+                stream.write_all(status.as_bytes()).await?;
+                stream.write_all(headers.as_bytes()).await?;
+                stream.write_all(&full_body).await?;
+                stream.flush().await?;
+                return Ok(());
+            }
+        } else {
+            let msg = chunk_request_message(*chunk_id, Some(url.to_string()));
+            if let Ok(frame) = encode_frame(&msg) {
+                let senders = peer_senders.lock().await;
+                if let Some(tx) = senders.get(peer_id) {
+                    let _ = tx.send(frame);
+                }
+            }
+        }
+    }
+
+    match tokio::time::timeout(Duration::from_secs(30), rx).await {
+        Ok(Ok(full_body)) => {
+            let _ = transfer_waiters.lock().await.remove(&transfer_id);
             let len = full_body.len();
             let status = "HTTP/1.1 200 OK\r\n";
-            let headers = format!(
-                "Content-Length: {}\r\nConnection: close\r\n\r\n",
-                len
-            );
+            let headers = format!("Content-Length: {}\r\nConnection: close\r\n\r\n", len);
             stream.write_all(status.as_bytes()).await?;
             stream.write_all(headers.as_bytes()).await?;
             stream.write_all(&full_body).await?;
             stream.flush().await?;
-            return Ok(());
+            Ok(())
+        }
+        _ => {
+            let _ = transfer_waiters.lock().await.remove(&transfer_id);
+            Ok(())
         }
     }
-    Ok(())
 }

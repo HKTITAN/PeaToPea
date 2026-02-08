@@ -85,11 +85,13 @@ impl TransferState {
 }
 
 /// Build a ChunkRequest message for the given chunk (to send to a peer).
-pub fn chunk_request_message(chunk_id: ChunkId) -> Message {
+/// Pass url so the responder can fetch from WAN when serving the request.
+pub fn chunk_request_message(chunk_id: ChunkId, url: Option<String>) -> Message {
     Message::ChunkRequest {
         transfer_id: chunk_id.transfer_id,
         start: chunk_id.start,
         end: chunk_id.end,
+        url,
     }
 }
 

@@ -61,7 +61,7 @@ Implementation of the PeaPod protocol for Windows: background process to discove
 
 - [x] **5.1** Wire core into request path
   - [x] 5.1.1 For each eligible request: call core with metadata (URL, range); get chunk assignments (proxy already does)
-  - [ ] 5.1.2 Request chunks: self (WAN) + peers (send chunk request over local transport) (proxy still only uses self chunks; peer ChunkRequest/ChunkData path TODO)
+  - [x] 5.1.2 Request chunks: self (WAN) + peers (send chunk request over local transport) (ChunkRequest with url; transport serves ChunkRequest by fetching; proxy sends to peer_senders, waits via transfer_waiters)
   - [x] 5.1.3 When chunk data received (from self or peer): pass to core; get reassembled segments (transport passes to on_message_received)
   - [x] 5.1.4 Stream reassembled response back to client app (proxy accelerate_response)
 - [x] **5.2** Peer lifecycle
