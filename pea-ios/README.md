@@ -12,15 +12,20 @@ iOS protocol implementation for PeaPod (Network Extension, discovery, transport)
 
 ## Building pea-core for iOS
 
-From the **repo root**, build pea-core as a static library for device and/or simulator:
+From the **repo root**, build pea-core as a static library for device and/or simulator. You can run the helper script (on macOS) to build all Apple targets at once:
+
+```bash
+./scripts/build-pea-core-apple.sh
+```
+
+Or build manually:
 
 ```bash
 # Device (arm64)
 cargo build -p pea-core --target aarch64-apple-ios --release
 
-# Simulator (arm64 Mac or x86_64)
+# Simulator (x86_64 or aarch64-apple-ios-sim when available)
 cargo build -p pea-core --target x86_64-apple-ios --release
-# or aarch64-apple-ios-sim when available
 ```
 
 Then either:

@@ -11,7 +11,7 @@ Implementation of the PeaPod protocol for iOS: Swift app with Network Extension 
   - [ ] 1.1.2 Add Network Extension target (Packet Tunnel or App Proxy) to same project
   - [ ] 1.1.3 Configure app groups or shared container if extension and app need to share state
 - [ ] **1.2** Rust core for iOS
-  - [ ] 1.2.1 Build pea-core for `aarch64-apple-ios` (device) and `x86_64-apple-ios` (simulator)
+  - [ ] 1.2.1 Build pea-core for `aarch64-apple-ios` (device) and `x86_64-apple-ios` (simulator); optional: `./scripts/build-pea-core-apple.sh` from repo root
   - [ ] 1.2.2 Create C header (or generate via cbindgen) exposing: init, on_request, on_peer_joined, on_peer_left, on_message_received, on_chunk_received, tick
   - [ ] 1.2.3 Produce static library (.a) or XCFramework containing the Rust lib for both architectures
   - [ ] 1.2.4 Add lib to Xcode: link binary with extension and app targets; add header search path

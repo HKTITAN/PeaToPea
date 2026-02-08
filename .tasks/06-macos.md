@@ -11,7 +11,7 @@ Implementation of the PeaPod protocol for macOS: Swift app with Network Extensio
   - [ ] 1.1.2 Add Network Extension target (Packet Tunnel or App Proxy) for macOS
   - [ ] 1.1.3 Configure app groups if extension and app share state
 - [ ] **1.2** Rust core for macOS
-  - [ ] 1.2.1 Build pea-core for `aarch64-apple-darwin` (Apple Silicon) and `x86_64-apple-darwin` (Intel)
+  - [ ] 1.2.1 Build pea-core for `aarch64-apple-darwin` (Apple Silicon) and `x86_64-apple-darwin` (Intel); optional: `./scripts/build-pea-core-apple.sh` from repo root
   - [ ] 1.2.2 Same C API as iOS (or shared XCFramework with iOS + macOS slices)
   - [ ] 1.2.3 Add lib to Xcode; link with app and extension targets
   - [ ] 1.2.4 Call from Swift via bridging header or module

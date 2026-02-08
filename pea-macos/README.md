@@ -12,7 +12,13 @@ macOS protocol implementation for PeaPod (Network Extension, discovery, menu bar
 
 ## Building pea-core for macOS
 
-From the **repo root**:
+From the **repo root**. You can run the helper script (on macOS) to build all Apple targets (iOS + macOS) at once:
+
+```bash
+./scripts/build-pea-core-apple.sh
+```
+
+Or build for macOS only:
 
 ```bash
 # Apple Silicon
