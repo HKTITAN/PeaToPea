@@ -105,7 +105,7 @@ Implementation of the PeaPod protocol for Linux: daemon that runs as system or u
   - [ ] 9.2.1 Optional: .rpm for Fedora/RHEL
   - [ ] 9.2.2 Optional: Snap or Flatpak for distribution (include confinement and proxy access)
   - Note: README states "not provided yet; contributions welcome".
-- [ ] **9.3** Binary release
+- [x] **9.3** Binary release
   - [x] 9.3.1 Provide static or dynamic binary for x86_64 and aarch64 on GitHub Releases or website (CI builds x86_64 artifact; aarch64 via cross-compile; attach to release)
   - [x] 9.3.2 Document install steps: download, chmod +x, optional move to PATH and systemd enable — README
 

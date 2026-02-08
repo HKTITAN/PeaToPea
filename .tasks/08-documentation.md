@@ -61,12 +61,12 @@ Architecture, PeaPod protocol spec, and per-platform build/run instructions for 
   - [x] 4.3.3 Run: `./pea-linux` or `systemctl --user start peapod`; set HTTP_PROXY/HTTPS_PROXY if using proxy
   - [x] 4.3.4 Config: path to config file (e.g. ~/.config/peapod/config.toml); ports and options
   - [x] 4.3.5 Packaging: link to .deb or Flatpak if available (pea-linux README: cargo-deb .deb)
-- [ ] **4.4** iOS
+- [ ] **4.4** iOS (when pea-ios implementation exists: document in pea-ios/README.md)
   - [ ] 4.4.1 Prerequisites: Xcode, Apple Developer account, Rust toolchain for iOS
   - [ ] 4.4.2 Build: open pea-ios in Xcode; select target device/simulator; build (Rust built via script or Xcode build phase)
   - [ ] 4.4.3 Run: run on device/simulator; enable VPN in app; allow VPN and local network
   - [ ] 4.4.4 Distribution: TestFlight or App Store; note VPN/extension review
-- [ ] **4.5** macOS
+- [ ] **4.5** macOS (when pea-macos implementation exists: document in pea-macos/README.md)
   - [ ] 4.5.1 Prerequisites: Xcode, Rust for macOS (arm64/x86_64)
   - [ ] 4.5.2 Build: open pea-macos in Xcode; build
   - [ ] 4.5.3 Run: run app; enable from menu bar; allow extension in System Preferences if prompted

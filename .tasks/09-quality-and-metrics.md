@@ -74,8 +74,8 @@ PRD success metrics, edge-case handling, and risk mitigations. Verify during and
 ## 4. Performance and robustness
 
 - [ ] **4.1** Linear scaling (PRD)
-  - [ ] 4.1.1 Test: 2, 3, 4 devices in pod; same large download; throughput should scale roughly linearly (within LAN limits)
-  - [ ] 4.1.2 Document or note LAN bandwidth as limit (e.g. total throughput capped by slowest link)
+  - [ ] 4.1.1 Test: 2, 3, 4 devices in pod; same large download; throughput should scale roughly linearly (within LAN limits) (procedure in QUALITY.md)
+  - [ ] 4.1.2 Document or note LAN bandwidth as limit (e.g. total throughput capped by slowest link) — QUALITY.md
 - [x] **4.2** Graceful degradation
   - [x] 4.2.1 When peers disconnect: complete in-flight chunks from remaining peers or self; no crash
   - [x] 4.2.2 When all peers leave: fall back to normal path for remaining chunks

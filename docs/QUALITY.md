@@ -40,6 +40,7 @@ Defined in 09; to be measured and documented for release:
 - **Pod formation (1.4):** On two devices (e.g. Windows + Android), enable PeaPod on device A, then on device B; note the time until both UIs show “1 peer” (or equivalent). Target &lt; 5 s. Repeat for other pairs (e.g. Linux + Windows) and document.
 - **Zero breakage (1.5):** Manual test: with PeaPod enabled and proxy set, browse major sites, stream non-DRM video, download files, use apps that use HTTP; confirm no breakage. Document scenarios tested before release.
 - **Idle battery (1.6):** On Android (and iOS when available): leave PeaPod on, no active transfer, for 24 h; compare battery drain vs PeaPod off. Document threshold or “low impact” in release notes.
+- **Linear scaling (4.1):** Same large HTTP range download with 2, then 3, then 4 devices in the pod (same LAN). Throughput should scale roughly linearly with device count, within LAN limits. Document that total throughput is capped by the slowest link (WAN or LAN).
 
 ## Testing and CI
 

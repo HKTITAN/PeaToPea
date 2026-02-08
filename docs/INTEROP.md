@@ -29,7 +29,7 @@ Update the **Status** column when a pair is tested: e.g. "OK (2025-02)" or "Fail
 
 ## Automated interop (optional)
 
-- **CI:** If feasible, run two processes (e.g. Windows + Linux in CI) with mock or real discovery; run one transfer; assert success.
-- **Wire roundtrip:** Unit test that Rust encodes and Kotlin/Swift decodes (and vice versa) for each message type to catch format drift.
+- **Wire roundtrip:** pea-core unit tests (01-pea-core) cover encode/decode for all message types; no cross-language test yet.
+- **Two-process smoke (Linux):** From repo root on Linux, run `./scripts/interop-two-linux.sh` after `cargo build -p pea-linux --release`. It starts two pea-linux instances (different proxy/transport ports, same discovery port) and runs one HTTP request through the first proxy. Verifies both start and proxy works; discovery between two processes on the same host may or may not work (multicast loopback). Optional CI job can run this script on the Linux runner.
 
-When automated tests exist, link them here or from [QUALITY.md](QUALITY.md).
+When more automated tests exist (e.g. cross-platform or full transfer), link them here or from [QUALITY.md](QUALITY.md).
