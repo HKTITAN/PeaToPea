@@ -10,11 +10,12 @@ import android.os.IBinder
 import android.os.ParcelFileDescriptor
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import kotlin.concurrent.thread
 
 /**
- * VPN service for PeaPod traffic interception (.tasks/03-android §2.1, §2.4).
+ * VPN service for PeaPod traffic interception (.tasks/03-android §2.1, §2.4, §2.2).
  * Establishes tunnel (10.0.0.2/32, default route); runs as foreground with notification.
- * Packet handling / local proxy (§2.2–2.3) to be added.
+ * Local proxy on 127.0.0.1:3128 parses HTTP and calls core (§2.2.3–2.2.4). Tunnel packet read loop runs but does not yet redirect to proxy.
  */
 class PeaPodVpnService : VpnService() {
 
@@ -25,6 +26,7 @@ class PeaPodVpnService : VpnService() {
     }
 
     private var tunnelFd: ParcelFileDescriptor? = null
+    private var coreHandle: Long = 0L
 
     override fun onCreate() {
         super.onCreate()
@@ -52,8 +54,26 @@ class PeaPodVpnService : VpnService() {
             stopSelf()
             return START_NOT_STICKY
         }
+        coreHandle = PeaCore.nativeCreate()
+        LocalProxy.start(coreHandle, this)
+        startTunnelReadLoop()
         startForeground(NOTIFICATION_ID, buildNotification(0))
         return START_STICKY
+    }
+
+    /** Read packets from tunnel (required so VPN doesn't stall). Full TCP redirect to proxy deferred. */
+    private fun startTunnelReadLoop() {
+        val fd = tunnelFd ?: return
+        thread(name = "VpnTunnelRead") {
+            val buf = ByteArray(32768)
+            try {
+                java.io.FileInputStream(fd.fileDescriptor).use { stream ->
+                    while (stream.read(buf) >= 0) {
+                        // TODO §2.2.1/2.2.2: parse IP/TCP and redirect to LocalProxy or relay
+                    }
+                }
+            } catch (_: Exception) {}
+        }
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -64,6 +84,11 @@ class PeaPodVpnService : VpnService() {
     }
 
     private fun stopVpn() {
+        LocalProxy.stop()
+        if (coreHandle != 0L) {
+            PeaCore.nativeDestroy(coreHandle)
+            coreHandle = 0L
+        }
         tunnelFd?.close()
         tunnelFd = null
         stopForeground(STOP_FOREGROUND_REMOVE)

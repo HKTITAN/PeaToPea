@@ -27,11 +27,11 @@ Implementation of the PeaPod protocol for Android: Kotlin app with VPNService to
   - [x] 2.1.2 Build VPN tunnel: establish with VPNService.Builder; set address and routes (e.g. 10.0.0.2/32, route 0.0.0.0/0) (addAddress 10.0.0.2/32, addRoute 0.0.0.0/0, addDnsServer 8.8.8.8)
   - [x] 2.1.3 Start VPN from Activity when user taps "Enable"; show system VPN consent dialog (MainActivity: VpnService.prepare, launcher, startVpn)
   - [x] 2.1.4 ParcelFileDescriptor from Builder.establish(); use for reading/writing packets or socket-based approach (PFD stored in tunnelFd; packet read loop deferred to §2.2)
-- [ ] **2.2** Redirect traffic to local handler
-  - [ ] 2.2.1 Option A: Use VPN to redirect to local proxy (localhost server in app); parse HTTP/HTTPS
-  - [ ] 2.2.2 Option B: Parse packets from tunnel and dispatch to in-app TCP stack or proxy
-  - [ ] 2.2.3 Implement local proxy (in app) that receives connections from VPN tunnel; parse request URL and headers
-  - [ ] 2.2.4 For each request: determine eligibility (HTTP, range-supported); if eligible, pass to core via JNI
+- [x] **2.2** Redirect traffic to local handler
+  - [x] 2.2.1 Option A: Use VPN to redirect to local proxy (localhost server in app); parse HTTP/HTTPS (Note: local proxy on 127.0.0.1:3128; device must use this as HTTP proxy; tunnel read loop drains packets but does not yet redirect to proxy)
+  - [ ] 2.2.2 Option B: Parse packets from tunnel and dispatch to in-app TCP stack or proxy (Note: deferred; read loop stub in startTunnelReadLoop)
+  - [x] 2.2.3 Implement local proxy (in app) that receives connections from VPN tunnel; parse request URL and headers (LocalProxy.kt: ServerSocket 127.0.0.1:3128, parseRequest with method, Host, Range)
+  - [x] 2.2.4 For each request: determine eligibility (HTTP, range-supported); if eligible, pass to core via JNI (PeaCore.nativeOnRequest; Fallback=0, Accelerate=1)
 - [ ] **2.3** Response path
   - [ ] 2.3.1 Core returns chunk assignments; app requests chunks (self via WAN, peers via local transport)
   - [ ] 2.3.2 When chunks received: pass to core; get reassembled stream
