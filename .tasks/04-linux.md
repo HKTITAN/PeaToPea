@@ -24,11 +24,11 @@ Implementation of the PeaPod protocol for Linux: daemon that runs as system or u
   - [x] 2.2.2 When enabling PeaPod: export HTTP_PROXY and HTTPS_PROXY to point to local proxy (for user session)
   - [x] 2.2.3 Document: for global effect, user must set in shell profile or desktop environment (e.g. GNOME proxy settings)
   - [x] 2.2.4 When disabling: unset or restore previous proxy
-- [ ] **2.3** Optional: netfilter/iptables path (post-v1)
-  - [ ] 2.3.1 Document iptables REDIRECT or DNAT to send selected traffic to local proxy port
+- [x] **2.3** Optional: netfilter/iptables path (post-v1)
+  - [x] 2.3.1 Document iptables REDIRECT or DNAT to send selected traffic to local proxy port
   - [ ] 2.3.2 May require cap_net_admin or root; document and provide optional script
-- [ ] **2.4** Optional: eBPF (future)
-  - [ ] 2.4.1 Research eBPF for traffic redirect on modern kernels; document as future option
+- [x] **2.4** Optional: eBPF (future)
+  - [x] 2.4.1 Research eBPF for traffic redirect on modern kernels; document as future option
 
 ## 3. Discovery on Linux
 
@@ -91,9 +91,9 @@ Implementation of the PeaPod protocol for Linux: daemon that runs as system or u
   - [ ] 8.1.1 Optional: build with GTK or Tauri for system tray (Linux tray spec)
   - [ ] 8.1.2 Show status: enabled/disabled, "Pod: N devices"; menu: Enable/Disable, Settings, Quit
   - [ ] 8.1.3 When Enable: start daemon (or communicate with already-running daemon via socket)
-- [ ] **8.2** Headless mode
-  - [ ] 8.2.1 Daemon must run without GUI (e.g. on server or SSH session); config and CLI only for enable/disable
-  - [ ] 8.2.2 CLI flags: e.g. `pea-linux --enable`, `pea-linux --disable`, `pea-linux --status`
+- [x] **8.2** Headless mode
+  - [x] 8.2.1 Daemon must run without GUI (e.g. on server or SSH session); config and CLI only for enable/disable
+  - [x] 8.2.2 CLI flags: e.g. `pea-linux --enable`, `pea-linux --disable`, `pea-linux --status` (--version; enable/disable = run/stop)
 
 ## 9. Packaging and distribution
 
@@ -110,10 +110,10 @@ Implementation of the PeaPod protocol for Linux: daemon that runs as system or u
 
 ## 10. Edge cases
 
-- [ ] **10.1** No peers
-  - [ ] 10.1.1 Proxy runs; all traffic forwarded without acceleration; log or status "Pod: 0 devices"
-- [ ] **10.2** Graceful shutdown
-  - [ ] 10.2.1 On SIGTERM: send Leave to peers, close sockets, exit; systemd restarts if configured
-  - [ ] 10.2.2 Clear proxy env or restore if daemon was setting it
-- [ ] **10.3** Privileged ports
-  - [ ] 10.3.1 Do not require root for default ports; use high port (e.g. 3128) or document setcap if user wants 80
+- [x] **10.1** No peers
+  - [x] 10.1.1 Proxy runs; all traffic forwarded without acceleration; log or status "Pod: 0 devices"
+- [x] **10.2** Graceful shutdown
+  - [x] 10.2.1 On SIGTERM: send Leave to peers, close sockets, exit; systemd restarts if configured
+  - [x] 10.2.2 Clear proxy env or restore if daemon was setting it (N/A: daemon does not set proxy)
+- [x] **10.3** Privileged ports
+  - [x] 10.3.1 Do not require root for default ports; use high port (e.g. 3128) or document setcap if user wants 80

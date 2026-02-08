@@ -24,7 +24,9 @@ The daemon listens on (default ports; see Configuration):
 - **Discovery:** UDP port 45678 (multicast 239.255.60.60)
 - **Local transport:** TCP port 45679
 
-Stop with Ctrl+C.
+Stop with Ctrl+C. On Unix, SIGTERM (e.g. `systemctl --user stop peapod`) also triggers a graceful exit.
+
+**CLI:** `pea-linux --version` or `pea-linux -V` prints the version and exits. Enable = run the binary; disable = stop it (Ctrl+C, SIGTERM, or stop the systemd service).
 
 ## System proxy (using the daemon)
 
@@ -80,3 +82,14 @@ To run pea-linux as a user service (starts on login, restarts on failure):
 4. To stop: `systemctl --user stop peapod`. To disable: `systemctl --user disable peapod`.
 
 The unit file is in `pea-linux/misc/peapod.service` in the repo.
+
+## Edge cases
+
+- **No peers:** The proxy runs normally; traffic is forwarded to the origin without acceleration. No extra configuration needed.
+- **Graceful shutdown:** On SIGTERM or Ctrl+C, the daemon exits; systemd will restart it if you have `Restart=on-failure` and the service is enabled.
+- **Ports:** Default ports (3128, 45678, 45679) do not require root. To use port 80 for the proxy you would need setcap or run as root (not recommended); use a high port and point clients at it instead.
+
+## Optional: netfilter and eBPF (future)
+
+- **netfilter/iptables:** For transparent interception without setting HTTP_PROXY, you can redirect selected traffic to the local proxy port using iptables REDIRECT or DNAT. This typically requires `cap_net_admin` or root. Document the rules (e.g. redirect port 80/443 to 127.0.0.1:3128) and provide an optional script if desired; not required for v1.
+- **eBPF:** Traffic redirect via eBPF on modern kernels is a possible future option; document as such.

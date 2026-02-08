@@ -5,7 +5,16 @@ mod proxy;
 mod discovery;
 mod transport;
 
+const VERSION: &str = env!("CARGO_PKG_VERSION");
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    for arg in std::env::args().skip(1) {
+        if arg == "--version" || arg == "-V" {
+            println!("pea-linux {}", VERSION);
+            return Ok(());
+        }
+    }
+
     let _ = pea_core::Config::default();
     let cfg = config::load();
 
@@ -56,7 +65,26 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             )
             .await;
         });
-        tokio::signal::ctrl_c().await?;
+        shutdown_signal().await?;
     })?;
+    Ok(())
+}
+
+/// Wait for Ctrl+C or SIGTERM (Unix). On shutdown, runtime and tasks exit; systemd may restart if configured.
+async fn shutdown_signal() -> Result<(), Box<dyn std::error::Error>> {
+    #[cfg(unix)]
+    {
+        use tokio::signal::unix::{signal, SignalKind};
+        let mut sigterm = signal(SignalKind::terminate())
+            .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
+        tokio::select! {
+            _ = tokio::signal::ctrl_c() => {}
+            _ = sigterm.recv() => {}
+        }
+    }
+    #[cfg(not(unix))]
+    {
+        tokio::signal::ctrl_c().await?;
+    }
     Ok(())
 }
