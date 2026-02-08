@@ -48,6 +48,8 @@ Then build the app; CMake links `libpea_core.a` from `pea-android/rust-out/<abi>
 
 **JNI API:** `dev.peapod.android.PeaCore` exposes native methods that call into pea-core's C FFI: create/destroy, deviceId, onRequest, peerJoined, peerLeft, onMessageReceived, onChunkReceived, tick. See `pea-core/src/ffi.rs` for the C layout of request result and outbound actions.
 
+**Optional:** WiFi Direct (Wi-Fi P2P) for discovery is documented as optional in [.tasks/03-android.md](../.tasks/03-android.md) §3.2.
+
 ### Release build and signing (§8.2)
 
 To build a signed release AAB/APK, set Gradle properties (e.g. in `pea-android/gradle.properties` or environment):

@@ -29,6 +29,7 @@ Implementation of the PeaPod protocol for Windows: background process to discove
   - [ ] 2.3.1 Document WinDivert install and license
   - [ ] 2.3.2 Implement packet capture/redirect for TCP (e.g. port 80/443) to local proxy
   - [ ] 2.3.3 Require admin or document admin requirement for global capture
+  - (Note: pea-windows README links here for optional WinDivert.)
 
 ## 3. Discovery on Windows
 

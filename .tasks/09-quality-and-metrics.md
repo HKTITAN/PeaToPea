@@ -130,3 +130,8 @@ PRD success metrics, edge-case handling, and risk mitigations. Verify during and
   - [x] 7.2.2 Attach artifacts: Windows installer, Android APK/AAB, Linux binary/.deb, iOS IPA (or TestFlight), macOS .app/DMG
   - [x] 7.2.3 Release notes: link to CHANGELOG; list platforms and known limitations
   - (Process documented in docs/RELEASE.md; execute at release time.)
+
+## Notes
+
+- **Metrics (1.1–1.6, 4.1):** Run at release or when devices are available; procedures in [docs/QUALITY.md](../docs/QUALITY.md) “How to measure”. Record results in INTEROP.md or release notes.
+- **Verify items (2.1.2, 2.4.3, 4.2.3):** Manual or integration when run; 01-pea-core tests cover core behavior; cross-platform “kill one peer” and “no peers” are manual until automated.

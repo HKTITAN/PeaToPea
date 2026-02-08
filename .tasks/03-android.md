@@ -53,6 +53,7 @@ Implementation of the PeaPod protocol for Android: Kotlin app with VPNService to
 - [ ] **3.2** Optional: WiFi Direct
   - [ ] 3.2.1 Add Wi-Fi P2pManager for discovery if needed
   - [ ] 3.2.2 Use for local transfer or discovery; document as optional
+  - (Note: pea-android README links here for optional WiFi Direct.)
 
 ## 4. Local transport (in-app)
 

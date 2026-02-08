@@ -23,6 +23,10 @@ The proxy listens on `127.0.0.1:3128` by default. On Windows, running the app se
 
 A per-user installer (Inno Setup) is in [installer/](installer/). Build the app with `cargo build -p pea-windows --release`, then build the setup with Inno Setup (see [installer/README.md](installer/README.md)). The installer does **not** set the system proxy; the user enables it in the app (tray → Enable). On uninstall, the setup runs `pea_windows.exe --restore-proxy` to restore the previous proxy state.
 
+## Optional (post-v1)
+
+- **WinDivert:** Packet-level capture for transparent interception (no system proxy) is optional; see [.tasks/02-windows.md](../.tasks/02-windows.md) §2.3.
+
 ## Tasks
 
 See [.tasks/02-windows.md](../.tasks/02-windows.md) for the full Windows implementation checklist.
