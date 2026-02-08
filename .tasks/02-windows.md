@@ -4,22 +4,22 @@ Implementation of the PeaPod protocol for Windows: background process to discove
 
 ## 1. Project scaffold
 
-- [ ] **1.1** Create protocol implementation for Windows (crate or app)
-  - [ ] 1.1.1 Add `pea-windows/` as Rust binary (e.g. `cargo init --bin pea-windows`) or Tauri app
-  - [ ] 1.1.2 Add dependency on `pea-core` (path or workspace)
-  - [ ] 1.1.3 Add Cargo.toml with Windows-only deps (e.g. `winapi` or `windows` crate for tray/proxy)
-- [ ] **1.2** Build and run
-  - [ ] 1.2.1 `cargo build` and `cargo run` succeed on Windows
-  - [ ] 1.2.2 Document how to run from command line for development
+- [x] **1.1** Create protocol implementation for Windows (crate or app)
+  - [x] 1.1.1 Add `pea-windows/` as Rust binary (e.g. `cargo init --bin pea-windows`) or Tauri app
+  - [x] 1.1.2 Add dependency on `pea-core` (path or workspace)
+  - [x] 1.1.3 Add Cargo.toml with Windows-only deps (e.g. `winapi` or `windows` crate for tray/proxy)
+- [x] **1.2** Build and run
+  - [x] 1.2.1 `cargo build` and `cargo run` succeed on Windows
+  - [x] 1.2.2 Document how to run from command line for development (pea-windows/README.md)
 
 ## 2. Traffic interception (v1: system proxy)
 
-- [ ] **2.1** Proxy server
-  - [ ] 2.1.1 Implement local HTTP/HTTPS proxy server (listen on localhost, e.g. 127.0.0.1:port)
-  - [ ] 2.1.2 Accept CONNECT for HTTPS; tunnel or parse where possible for range requests
-  - [ ] 2.1.3 Accept HTTP requests; parse URL and headers for range/eligibility
-  - [ ] 2.1.4 For eligible requests: hand off to core (chunking, scheduler); for ineligible: forward directly to target
-  - [ ] 2.1.5 Implement response path: receive chunks from core (or WAN), reassemble, send back to client
+- [x] **2.1** Proxy server
+  - [x] 2.1.1 Implement local HTTP/HTTPS proxy server (listen on localhost, e.g. 127.0.0.1:port)
+  - [x] 2.1.2 Accept CONNECT for HTTPS; tunnel or parse where possible for range requests (v1: tunnel only)
+  - [x] 2.1.3 Accept HTTP requests; parse URL and headers for range/eligibility
+  - [x] 2.1.4 For eligible requests: hand off to core (chunking, scheduler); for ineligible: forward directly to target
+  - [x] 2.1.5 Implement response path: receive chunks from core (or WAN), reassemble, send back to client (self-assigned chunks via reqwest; peer chunks fallback until §4)
 - [ ] **2.2** System proxy configuration
   - [ ] 2.2.1 Read current system proxy (Windows registry or WinINet API)
   - [ ] 2.2.2 Set system proxy to localhost:port when user enables PeaPod

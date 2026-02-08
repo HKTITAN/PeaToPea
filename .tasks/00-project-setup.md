@@ -81,9 +81,9 @@ Repo structure, tooling, and CI. Complete before building protocol implementatio
 
 ## 8. Dependency and license audit
 
-- [ ] **8.1** Licenses
+- [x] **8.1** Licenses
   - [x] 8.1.1 Choose license for project (e.g. MIT, Apache-2.0) and add LICENSE file
   - [x] 8.1.2 Document third-party licenses for Rust crates (cargo license or similar)
-- [ ] **8.2** Security
+- [x] **8.2** Security
   - [x] 8.2.1 Add `cargo audit` to CI (optional) for Rust
   - [x] 8.2.2 Document process for dependency updates

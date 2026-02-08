@@ -2,6 +2,13 @@
 name = "pea-windows"
 version = "0.1.0"
 edition = "2021"
+description = "PeaPod protocol implementation for Windows (proxy, discovery, transport, tray)"
 
 [dependencies]
 pea-core = { path = "../pea-core" }
+tokio = { version = "1", features = ["rt", "net", "io-util", "sync"] }
+httparse = "1.8"
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }
+
+[target.'cfg(windows)'.dependencies]
+windows = { version = "0.58", features = ["Win32_Foundation"] }
