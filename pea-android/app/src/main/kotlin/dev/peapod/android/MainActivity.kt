@@ -1,21 +1,54 @@
 package dev.peapod.android
 
+import android.content.Intent
+import android.net.VpnService
+import android.os.Build
 import android.os.Bundle
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import dev.peapod.android.databinding.ActivityMainBinding
 
 /**
- * Placeholder activity for PeaPod Android. Protocol implementation (VPNService, discovery, transport)
- * will be added per .tasks/03-android.md. PeaCore (JNI to pea-core) is used when libpea_core.a is linked.
+ * Main screen: Enable PeaPod (starts VPN with system consent), status (.tasks/03-android §2.1.3, §6.1).
  */
 class MainActivity : AppCompatActivity() {
+
+    private lateinit var binding: ActivityMainBinding
+
+    private val vpnPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == RESULT_OK) {
+            startVpn()
+        } else {
+            binding.status.text = getString(R.string.status_consent_denied)
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(android.R.layout.activity_list_item)
-        // Exercise JNI: create core and get device ID (no-op when using stub)
-        val handle = PeaCore.nativeCreate()
-        if (handle != 0L) {
-            PeaCore.nativeDeviceId(handle)
-            PeaCore.nativeDestroy(handle)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        binding.buttonEnable.setOnClickListener { onEnableClicked() }
+        binding.status.text = ""
+    }
+
+    private fun onEnableClicked() {
+        val intent = VpnService.prepare(this)
+        if (intent != null) {
+            vpnPermissionLauncher.launch(intent)
+        } else {
+            startVpn()
         }
+    }
+
+    private fun startVpn() {
+        val intent = Intent(this, PeaPodVpnService::class.java)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(intent)
+        } else {
+            startService(intent)
+        }
+        binding.status.text = getString(R.string.peapod_active)
     }
 }

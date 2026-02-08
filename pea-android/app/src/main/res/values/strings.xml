@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">PeaPod</string>
+    <string name="enable_peapod">Enable PeaPod</string>
+    <string name="peapod_active">PeaPod active</string>
+    <string name="peapod_pod_devices">Pod: %1$d device(s)</string>
+    <string name="disconnect">Disconnect</string>
+    <string name="status_consent_denied">VPN consent denied</string>
 </resources>

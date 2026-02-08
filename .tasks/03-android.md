@@ -22,11 +22,11 @@ Implementation of the PeaPod protocol for Android: Kotlin app with VPNService to
 
 ## 2. VPNService and traffic interception
 
-- [ ] **2.1** VPN setup
-  - [ ] 2.1.1 Create class extending VPNService
-  - [ ] 2.1.2 Build VPN tunnel: establish with VPNService.Builder; set address and routes (e.g. 10.0.0.2/32, route 0.0.0.0/0)
-  - [ ] 2.1.3 Start VPN from Activity when user taps "Enable"; show system VPN consent dialog
-  - [ ] 2.1.4 ParcelFileDescriptor from Builder.establish(); use for reading/writing packets or socket-based approach
+- [x] **2.1** VPN setup
+  - [x] 2.1.1 Create class extending VPNService (PeaPodVpnService)
+  - [x] 2.1.2 Build VPN tunnel: establish with VPNService.Builder; set address and routes (e.g. 10.0.0.2/32, route 0.0.0.0/0) (addAddress 10.0.0.2/32, addRoute 0.0.0.0/0, addDnsServer 8.8.8.8)
+  - [x] 2.1.3 Start VPN from Activity when user taps "Enable"; show system VPN consent dialog (MainActivity: VpnService.prepare, launcher, startVpn)
+  - [x] 2.1.4 ParcelFileDescriptor from Builder.establish(); use for reading/writing packets or socket-based approach (PFD stored in tunnelFd; packet read loop deferred to §2.2)
 - [ ] **2.2** Redirect traffic to local handler
   - [ ] 2.2.1 Option A: Use VPN to redirect to local proxy (localhost server in app); parse HTTP/HTTPS
   - [ ] 2.2.2 Option B: Parse packets from tunnel and dispatch to in-app TCP stack or proxy
@@ -37,10 +37,10 @@ Implementation of the PeaPod protocol for Android: Kotlin app with VPNService to
   - [ ] 2.3.2 When chunks received: pass to core; get reassembled stream
   - [ ] 2.3.3 Write reassembled response back through VPN to app (so original app receives response)
   - [ ] 2.3.4 For ineligible: forward request to real network and forward response back (transparent pass-through)
-- [ ] **2.4** Foreground service and notification
-  - [ ] 2.4.1 When VPN is active, run as foreground service with persistent notification
-  - [ ] 2.4.2 Notification content: "PeaPod active" and "Pod: N devices" (update when pod changes)
-  - [ ] 2.4.3 User can tap notification to open app; optional "Disconnect" action in notification
+- [x] **2.4** Foreground service and notification
+  - [x] 2.4.1 When VPN is active, run as foreground service with persistent notification (startForeground in onStartCommand)
+  - [x] 2.4.2 Notification content: "PeaPod active" and "Pod: N devices" (update when pod changes) (buildNotification(peerCount); updateNotification() for later discovery)
+  - [x] 2.4.3 User can tap notification to open app; optional "Disconnect" action in notification (contentIntent MainActivity; action Disconnect)
 
 ## 3. Discovery on Android
 
