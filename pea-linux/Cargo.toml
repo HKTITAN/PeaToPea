@@ -2,6 +2,10 @@
 name = "pea-linux"
 version = "0.1.0"
 edition = "2021"
+description = "PeaPod protocol implementation for Linux (proxy, discovery, transport daemon)"
 
 [dependencies]
 pea-core = { path = "../pea-core" }
+tokio = { version = "1", features = ["rt", "net", "io-util", "sync", "signal"] }
+httparse = "1.8"
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }

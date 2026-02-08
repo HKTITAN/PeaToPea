@@ -4,21 +4,21 @@ Implementation of the PeaPod protocol for Linux: daemon that runs as system or u
 
 ## 1. Project scaffold
 
-- [ ] **1.1** Create protocol implementation for Linux (crate)
-  - [ ] 1.1.1 Add `pea-linux/` as Rust binary (e.g. `cargo init --bin pea-linux`)
-  - [ ] 1.1.2 Add dependency on `pea-core`
-  - [ ] 1.1.3 Add Cargo.toml with Linux deps (e.g. for systemd, or minimal for proxy only)
+- [x] **1.1** Create protocol implementation for Linux (crate)
+  - [x] 1.1.1 Add `pea-linux/` as Rust binary (e.g. `cargo init --bin pea-linux`)
+  - [x] 1.1.2 Add dependency on `pea-core`
+  - [x] 1.1.3 Add Cargo.toml with Linux deps (e.g. for systemd, or minimal for proxy only)
 - [ ] **1.2** Build
-  - [ ] 1.2.1 `cargo build --release` for target `x86_64-unknown-linux-gnu` and optionally `aarch64-unknown-linux-gnu`
-  - [ ] 1.2.2 Document run: `./pea-linux` or `pea-linux` from PATH
+  - [x] 1.2.1 `cargo build --release` for target `x86_64-unknown-linux-gnu` and optionally `aarch64-unknown-linux-gnu`
+  - [x] 1.2.2 Document run: `./pea-linux` or `pea-linux` from PATH (README)
 
 ## 2. Traffic interception (v1: system proxy)
 
-- [ ] **2.1** Proxy server
-  - [ ] 2.1.1 Implement HTTP/HTTPS proxy (listen on 127.0.0.1:port, configurable)
-  - [ ] 2.1.2 Handle CONNECT (HTTPS) and GET/POST with range; parse for eligibility
-  - [ ] 2.1.3 Eligible requests: hand to core; execute chunk plan (self + peers); reassemble and return
-  - [ ] 2.1.4 Ineligible: forward to upstream (direct or via existing system proxy)
+- [x] **2.1** Proxy server
+  - [x] 2.1.1 Implement HTTP/HTTPS proxy (listen on 127.0.0.1:port, configurable)
+  - [x] 2.1.2 Handle CONNECT (HTTPS) and GET/POST with range; parse for eligibility
+  - [x] 2.1.3 Eligible requests: hand to core; execute chunk plan (self + peers); reassemble and return
+  - [x] 2.1.4 Ineligible: forward to upstream (direct or via existing system proxy)
 - [ ] **2.2** System proxy configuration
   - [ ] 2.2.1 Read environment: HTTP_PROXY, HTTPS_PROXY (many GUI apps and terminals respect these)
   - [ ] 2.2.2 When enabling PeaPod: export HTTP_PROXY and HTTPS_PROXY to point to local proxy (for user session)
@@ -32,36 +32,36 @@ Implementation of the PeaPod protocol for Linux: daemon that runs as system or u
 
 ## 3. Discovery on Linux
 
-- [ ] **3.1** LAN discovery
-  - [ ] 3.1.1 UDP socket: bind to discovery port; join multicast group (same as 07) or use broadcast
-  - [ ] 3.1.2 Send periodic beacon (device ID, public key, protocol version)
-  - [ ] 3.1.3 Receive beacons; parse; maintain peer list; notify core on peer join/leave
-  - [ ] 3.1.4 Advertise own IP and TCP port for local transport in beacon
+- [x] **3.1** LAN discovery
+  - [x] 3.1.1 UDP socket: bind to discovery port; join multicast group (same as 07) or use broadcast
+  - [x] 3.1.2 Send periodic beacon (device ID, public key, protocol version)
+  - [x] 3.1.3 Receive beacons; parse; maintain peer list; notify core on peer join/leave
+  - [x] 3.1.4 Advertise own IP and TCP port for local transport in beacon
 - [ ] **3.2** Firewall
   - [ ] 3.2.1 Document: allow inbound UDP on discovery port and TCP on local transport port (e.g. ufw or firewalld)
   - [ ] 3.2.2 Optional: open ports automatically with policy kit or document manual step
 
 ## 4. Local transport
 
-- [ ] **4.1** TCP server
-  - [ ] 4.1.1 Listen on configurable port (e.g. 0 for ephemeral, or fixed port from config)
-  - [ ] 4.1.2 Accept connections from peers; associate with peer_id; frame messages
-  - [ ] 4.1.3 Pass received messages to core; send core output to peer sockets
-- [ ] **4.2** TCP client
-  - [ ] 4.2.1 Connect to each discovered peer's advertised address:port
-  - [ ] 4.2.2 Handshake and encrypted message exchange per core
-  - [ ] 4.2.3 Heartbeats and chunk traffic
-- [ ] **4.3** Same wire format as 07; encryption via core
+- [x] **4.1** TCP server
+  - [x] 4.1.1 Listen on configurable port (e.g. 0 for ephemeral, or fixed port from config)
+  - [x] 4.1.2 Accept connections from peers; associate with peer_id; frame messages
+  - [x] 4.1.3 Pass received messages to core; send core output to peer sockets
+- [x] **4.2** TCP client
+  - [x] 4.2.1 Connect to each discovered peer's advertised address:port
+  - [x] 4.2.2 Handshake and encrypted message exchange per core
+  - [x] 4.2.3 Heartbeats and chunk traffic
+- [x] **4.3** Same wire format as 07; encryption via core
 
 ## 5. Integration with pea-core
 
-- [ ] **5.1** Request path
-  - [ ] 5.1.1 For each eligible request: core returns chunk plan; daemon fetches chunks (self + peers)
-  - [ ] 5.1.2 Pass chunk data to core; stream reassembled response to client
-- [ ] **5.2** Peer lifecycle and tick
-  - [ ] 5.2.1 On peer join/leave: call core; send/receive heartbeats; call core tick()
-- [ ] **5.3** WAN
-  - [ ] 5.3.1 Use HTTP client (e.g. reqwest or ureq) for range requests assigned to self
+- [x] **5.1** Request path
+  - [x] 5.1.1 For each eligible request: core returns chunk plan; daemon fetches chunks (self + peers)
+  - [x] 5.1.2 Pass chunk data to core; stream reassembled response to client
+- [x] **5.2** Peer lifecycle and tick
+  - [x] 5.2.1 On peer join/leave: call core; send/receive heartbeats; call core tick()
+- [x] **5.3** WAN
+  - [x] 5.3.1 Use HTTP client (e.g. reqwest or ureq) for range requests assigned to self
 
 ## 6. Configuration
 
