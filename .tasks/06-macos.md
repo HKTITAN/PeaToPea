@@ -105,3 +105,7 @@ Implementation of the PeaPod protocol for macOS: Swift app with Network Extensio
   - [ ] 9.2.2 Document or handle "disconnect on sleep" for VPN
 - [ ] **9.3** Multiple network interfaces
   - [ ] 9.3.1 Prefer same interface for discovery and local transport (e.g. Wi-Fi); document multi-interface behavior
+
+## Notes
+
+- Scaffold support: scripts/build-pea-core-apple.sh; pea-core/cbindgen.toml for C header; pea-macos/README.md “Next steps”. Next: Xcode project with app + Network Extension.

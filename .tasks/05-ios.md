@@ -115,3 +115,7 @@ Implementation of the PeaPod protocol for iOS: Swift app with Network Extension 
   - [ ] 9.2.3 Apple may review VPN/Network Extension; ensure compliance with App Store guidelines
 - [ ] **9.3** TestFlight
   - [ ] 9.3.1 Use TestFlight for beta; test on multiple devices and iOS versions
+
+## Notes
+
+- Scaffold support: scripts/build-pea-core-apple.sh builds pea-core for iOS/macOS; pea-core/cbindgen.toml + `cbindgen pea-core -o pea_core.h` for C header (CI verifies); pea-ios/README.md “Next steps” for Xcode project creation.
