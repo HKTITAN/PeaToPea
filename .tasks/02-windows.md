@@ -99,12 +99,12 @@ Implementation of the PeaPod protocol for Windows: background process to discove
 
 ## 8. Edge cases and robustness
 
-- [ ] **8.1** No peers
-  - [ ] 8.1.1 When no peers in pod: proxy still runs; forward all traffic normally (no acceleration)
-  - [ ] 8.1.2 UI shows "Pod: 0 devices" or "No peers nearby"
-- [ ] **8.2** Graceful shutdown
-  - [ ] 8.2.1 On exit: send Leave to peers, clear system proxy, close sockets
-  - [ ] 8.2.2 Do not leave system proxy pointing to closed port
-- [ ] **8.3** Ineligible traffic
-  - [ ] 8.3.1 Detect and pass through non-HTTP or non-range requests without breaking
-  - [ ] 8.3.2 Do not accelerate HTTPS where range cannot be used (e.g. streaming DRM); tunnel only
+- [x] **8.1** No peers
+  - [x] 8.1.1 When no peers in pod: proxy still runs; forward all traffic normally (no acceleration) (core returns Fallback or assignment to self; proxy forward_raw / accelerate_response)
+  - [x] 8.1.2 UI shows "Pod: 0 devices" or "No peers nearby" (tooltip "Pod: N device(s)" with N=0)
+- [x] **8.2** Graceful shutdown
+  - [x] 8.2.1 On exit: send Leave to peers, clear system proxy, close sockets (proxy restored on Exit/Ctrl+C; process exit closes sockets; explicit Leave message optional)
+  - [x] 8.2.2 Do not leave system proxy pointing to closed port (restore_system_proxy() before exit)
+- [x] **8.3** Ineligible traffic
+  - [x] 8.3.1 Detect and pass through non-HTTP or non-range requests without breaking (forward_raw when parse fails, no host, or !is_eligible; CONNECT tunneled)
+  - [x] 8.3.2 Do not accelerate HTTPS where range cannot be used (e.g. streaming DRM); tunnel only (CONNECT → tunnel_connect; no range → core Fallback → forward_raw)
