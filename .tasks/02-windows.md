@@ -76,7 +76,7 @@ Implementation of the PeaPod protocol for Windows: background process to discove
 
 - [x] **6.1** Tray icon
   - [x] 6.1.1 Create system tray icon (Windows API or Tauri) (Win32 Shell_NotifyIconW, hidden window)
-  - [ ] 6.1.2 Show "PeaPod" and state: enabled/disabled, "Pod: N devices" (tooltip "PeaPod" only for now)
+  - [x] 6.1.2 Show "PeaPod" and state: enabled/disabled, "Pod: N devices" (tooltip updates via TrayStateUpdate + WM_TRAY_UPDATE_STATE; periodic and on Enable/Disable)
   - [x] 6.1.3 Menu: Enable / Disable, Open settings, Exit
   - [x] 6.1.4 On Enable: start proxy, set system proxy, start discovery and local transport (proxy/discovery/transport start on app start; Enable sets system proxy)
   - [x] 6.1.5 On Disable: clear system proxy, stop discovery and transport, stop proxy (restore system proxy; Exit quits app and restores)
