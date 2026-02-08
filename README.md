@@ -66,6 +66,7 @@ rustup target add aarch64-apple-darwin x86_64-apple-darwin
 - **Protocol**: [docs/PROTOCOL.md](docs/PROTOCOL.md) — Wire format, discovery, handshake, and versioning (reference: pea-core).
 - **pea-core API**: [docs/API.md](docs/API.md) — Main types and methods for platform authors; C FFI and JNI notes.
 - **Troubleshooting and FAQ**: [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) — Common issues and frequently asked questions.
+- **Quality and metrics**: [docs/QUALITY.md](docs/QUALITY.md) — Edge cases, risk mitigations, and PRD success metrics.
 - **Contributing**: [CONTRIBUTING.md](CONTRIBUTING.md) — Branching, commits, and how to push to the PeaToPea repo.
 - **Changelog**: [CHANGELOG.md](CHANGELOG.md) — Version history and protocol changes.
 - **Cursor**: Rules, skills, and subagents in [.cursor/](.cursor/) for consistent AI-assisted development (rules in `.cursor/rules/`, skills in `.cursor/skills/`, agents in `.cursor/agents/`).

@@ -19,6 +19,18 @@
 
 - Ineligible flows should never be accelerated; the core returns **Fallback** and the host forwards the request to the origin. If something breaks, it may be a bug in the host (e.g. wrong eligibility check or forwarding). Report with platform, app name, and URL (if possible) in the project repo.
 
+### Device leaves mid-transfer
+
+- Chunks assigned to that peer are **reassigned automatically** to remaining peers (or self). The transfer completes without manual action. If all peers leave, the host falls back to the normal path for the remainder.
+
+---
+
+## Limitations and risks
+
+- **CDN / multi-IP:** Requests from multiple devices (each with its own WAN IP) can look like multiple clients to a CDN. Some CDNs may throttle or rate-limit. We do not spoof a single IP; each device uses its own.
+- **Upload acceleration:** May require server support (e.g. multipart upload or range PUT). When in doubt, the implementation falls back to single-device upload.
+- **No central logging:** PeaPod does not send logs or telemetry to any central server (per design). Local logging only.
+
 ---
 
 ## FAQ
