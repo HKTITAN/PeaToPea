@@ -38,6 +38,24 @@ jobs:
       - name: Build pea-linux
         run: cargo build -p pea-linux --verbose
 
+  pea-linux-release:
+    name: pea-linux (release binary)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-action@stable
+
+      - name: Build release
+        run: cargo build -p pea-linux --release --verbose
+
+      - name: Upload x86_64 binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: pea-linux-x86_64-unknown-linux-gnu
+          path: target/release/pea-linux
+
   pea-windows:
     name: pea-windows
     runs-on: windows-latest

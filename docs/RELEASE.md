@@ -21,7 +21,7 @@ Use this checklist when cutting a new release. See [.tasks/09-quality-and-metric
 - [ ] **Artifacts:** Attach build artifacts as needed:
   - Windows: installer (e.g. from pea-windows/installer) or portable binary
   - Android: APK or AAB (debug or signed release)
-  - Linux: binary and/or .deb (see pea-linux README)
+  - Linux: binary and/or .deb (see [pea-linux README](../pea-linux/README.md)). The CI job `pea-linux-release` produces a x86_64 release binary (artifact `pea-linux-x86_64-unknown-linux-gnu`); download from the workflow run or build locally with `cargo build -p pea-linux --release`. For aarch64, cross-compile: `rustup target add aarch64-unknown-linux-gnu` then `cargo build -p pea-linux --release --target aarch64-unknown-linux-gnu` (linker may need to be set; see rustup doc).
   - iOS: IPA or TestFlight (when implemented)
   - macOS: .app or DMG (when implemented)
 - [ ] **Release notes:** In the release description, link to CHANGELOG and list supported platforms and known limitations.
