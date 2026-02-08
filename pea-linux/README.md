@@ -13,6 +13,17 @@ cargo build -p pea-linux --release
 
 Optional targets: `x86_64-unknown-linux-gnu`, `aarch64-unknown-linux-gnu` (e.g. for cross-compile).
 
+### Build a .deb (Debian/Ubuntu)
+
+Install [cargo-deb](https://github.com/kornelski/cargo-deb) then from the **repo root**:
+
+```bash
+cargo install cargo-deb
+cargo deb -p pea-linux
+```
+
+The `.deb` is written to `target/debian/`. It installs the binary to `/usr/bin/pea-linux` and the systemd user unit to `/usr/lib/systemd/user/peapod.service`. Install with `sudo dpkg -i target/debian/pea-linux_*.deb`. After install, enable the user service: `systemctl --user daemon-reload && systemctl --user enable peapod` (edit the unit's `ExecStart` if the binary is not in `/usr/bin`). To uninstall: `sudo dpkg -r pea-linux`.
+
 ## Run
 
 - **From repo:** `./target/release/pea-linux` or `./target/debug/pea-linux`

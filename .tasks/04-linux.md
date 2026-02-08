@@ -97,9 +97,9 @@ Implementation of the PeaPod protocol for Linux: daemon that runs as system or u
 
 ## 9. Packaging and distribution
 
-- [ ] **9.1** .deb (Debian/Ubuntu)
-  - [ ] 9.1.1 Create debian/ directory or use cargo-deb: control file, install binary to /usr/bin
-  - [ ] 9.1.2 Install systemd user unit to /usr/lib/systemd/user/ or document manual install
+- [x] **9.1** .deb (Debian/Ubuntu)
+  - [x] 9.1.1 Create debian/ directory or use cargo-deb: control file, install binary to /usr/bin
+  - [x] 9.1.2 Install systemd user unit to /usr/lib/systemd/user/ or document manual install
   - [ ] 9.1.3 Build .deb and test install/uninstall
 - [ ] **9.2** Other formats
   - [ ] 9.2.1 Optional: .rpm for Fedora/RHEL

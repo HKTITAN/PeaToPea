@@ -3,6 +3,18 @@ name = "pea-linux"
 version = "0.1.0"
 edition = "2021"
 description = "PeaPod protocol implementation for Linux (proxy, discovery, transport daemon)"
+license = "MIT"
+repository = "https://github.com/HKTITAN/PeaToPea"
+readme = "README.md"
+
+[package.metadata.deb]
+section = "net"
+priority = "optional"
+depends = "$auto"
+assets = [
+    ["target/release/pea-linux", "usr/bin/", "755"],
+    ["misc/peapod.service", "usr/lib/systemd/user/peapod.service", "644"],
+]
 
 [dependencies]
 pea-core = { path = "../pea-core" }
