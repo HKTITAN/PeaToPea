@@ -9,10 +9,10 @@ Implementation of the PeaPod protocol for Android: Kotlin app with VPNService to
   - [x] 1.1.2 Set minSdk (e.g. 24) and targetSdk (e.g. 34)
   - [x] 1.1.3 Add main Activity (or single-Activity app) and Application class if needed
   - [x] 1.1.4 Add dependency on AndroidX and Material (or minimal UI libs)
-- [ ] **1.2** Rust core integration
+- [x] **1.2** Rust core integration
   - [x] 1.2.1 Create `pea-android/rust/` or `pea-core-android/` for Rust code that builds for Android (pea-core built for Android targets; libs in rust-out/<abi>)
   - [x] 1.2.2 Add NDK build: compile pea-core (or thin JNI wrapper) for armeabi-v7a, arm64-v8a, x86_64 (for emulator) (CMake links libpea_core.a; CI builds aarch64/x86_64)
-  - [ ] 1.2.3 Expose JNI functions: init core, on_request, on_peer_joined, on_peer_left, on_message_received, tick, etc.
+  - [x] 1.2.3 Expose JNI functions: init core, on_request, on_peer_joined, on_peer_left, on_message_received, tick, etc. (pea-core ffi.rs C API + pea_jni.c JNI wrappers + PeaCore.kt)
   - [x] 1.2.4 Load native lib in Kotlin (System.loadLibrary) and call from Kotlin
 - [x] **1.3** Permissions and manifest
   - [x] 1.3.1 Add INTERNET permission

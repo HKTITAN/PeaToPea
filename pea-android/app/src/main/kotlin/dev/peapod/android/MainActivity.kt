@@ -5,17 +5,17 @@ import androidx.appcompat.app.AppCompatActivity
 
 /**
  * Placeholder activity for PeaPod Android. Protocol implementation (VPNService, discovery, transport)
- * will be added per .tasks/03-android.md. Loads native lib that links pea-core (Rust) when built.
+ * will be added per .tasks/03-android.md. PeaCore (JNI to pea-core) is used when libpea_core.a is linked.
  */
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(android.R.layout.activity_list_item)
-    }
-
-    companion object {
-        init {
-            System.loadLibrary("pea_jni")
+        // Exercise JNI: create core and get device ID (no-op when using stub)
+        val handle = PeaCore.nativeCreate()
+        if (handle != 0L) {
+            PeaCore.nativeDeviceId(handle)
+            PeaCore.nativeDestroy(handle)
         }
     }
 }

@@ -44,7 +44,9 @@ cp target/i686-linux-android/release/libpea_core.a pea-android/rust-out/x86/
 cp target/x86_64-linux-android/release/libpea_core.a pea-android/rust-out/x86_64/
 ```
 
-Then build the app; CMake links `libpea_core.a` from `pea-android/rust-out/<abi>/` (or set `PEA_CORE_LIB_DIR` in gradle.properties to the repo `target` layout). If the libs are missing, the native build is skipped (see app `build.gradle.kts`).
+Then build the app; CMake links `libpea_core.a` from `pea-android/rust-out/<abi>/`. If the libs are missing, the stub (`pea_stub.c`) is used and JNI calls return safe defaults (e.g. `PeaCore.nativeCreate()` returns 0).
+
+**JNI API:** `dev.peapod.android.PeaCore` exposes native methods that call into pea-core's C FFI: create/destroy, deviceId, onRequest, peerJoined, peerLeft, onMessageReceived, onChunkReceived, tick. See `pea-core/src/ffi.rs` for the C layout of request result and outbound actions.
 
 ## Tasks
 
