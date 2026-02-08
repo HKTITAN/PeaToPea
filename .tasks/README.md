@@ -40,7 +40,7 @@ At the end of any task file you may add a `## Notes` section. Use it for: design
 
 ## Remaining work (summary)
 
-- **09:** Run and record metrics (1.1–1.6, 4.1) at release; procedures in docs/QUALITY.md. Optional: coverage (6.1.3), store listing (5.4.3).
+- **09:** Run and record metrics (1.1–1.6, 4.1) at release; procedures in docs/QUALITY.md. Optional coverage (6.1.3) and store listing (5.4.3) documented in QUALITY.md; implement at release when publishing to stores.
 - **04:** Optional tray (§8.1); optional other formats (§9.2); §9.1.3 test .deb on Linux at release.
 - **08:** §4.4 iOS, §4.5 macOS — document in pea-ios/pea-macos README when those implementations exist.
 - **02/03:** Optional WinDivert (§2.3), WiFi Direct (§3.2) — documented; implement when desired.
