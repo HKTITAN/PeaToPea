@@ -28,7 +28,7 @@ cargo build -p pea-core --target aarch64-apple-darwin --release
 cargo build -p pea-core --target x86_64-apple-darwin --release
 ```
 
-Use `target/<triple>/release/libpea_core.a` in your Xcode project, or build an XCFramework for a universal binary (document steps in .tasks/06-macos when implementing).
+Use `target/<triple>/release/libpea_core.a` in your Xcode project, or build an XCFramework for a universal binary (document steps in .tasks/06-macos when implementing). Generate a C header from the repo root: `cbindgen pea-core -o pea_core.h` (see [docs/API.md](../docs/API.md)).
 
 ## Scaffold
 

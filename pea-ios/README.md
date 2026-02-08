@@ -30,7 +30,7 @@ cargo build -p pea-core --target x86_64-apple-ios --release
 
 Then either:
 
-- **Static lib**: Use `target/<triple>/release/libpea_core.a` in your Xcode project and link from the app or extension target.
+- **Static lib**: Use `target/<triple>/release/libpea_core.a` in your Xcode project and link from the app or extension target. Generate a C header from the repo root: `cbindgen pea-core -o pea_core.h` (see [docs/API.md](../docs/API.md)).
 - **XCFramework**: Build a universal binary and wrap in an XCFramework so one artifact works for device and simulator; document the exact `lipo`/`xcodebuild -create-xcframework` steps in .tasks/05-ios when implementing.
 
 ## Scaffold
