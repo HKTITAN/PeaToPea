@@ -21,7 +21,7 @@ Use this checklist when cutting a new release. See [.tasks/09-quality-and-metric
 - [ ] **Artifacts:** Attach build artifacts as needed:
   - Windows: installer (e.g. from pea-windows/installer) or portable binary
   - Android: APK or AAB (debug or signed release)
-  - Linux: binary and/or .deb (see [pea-linux README](../pea-linux/README.md)). **Binary:** CI job `pea-linux-release` produces a x86_64 artifact; or build locally with `cargo build -p pea-linux --release`. For aarch64: `cargo build -p pea-linux --release --target aarch64-unknown-linux-gnu`. **.deb:** `cargo install cargo-deb && cargo deb -p pea-linux` from repo root; install with `dpkg -i target/debian/pea-linux_*.deb`.
+  - Linux: binary and/or .deb (see [pea-linux README](../pea-linux/README.md)). **Binary:** CI job `pea-linux-release` produces a x86_64 artifact; or build locally with `cargo build -p pea-linux --release`. For aarch64: `cargo build -p pea-linux --release --target aarch64-unknown-linux-gnu`. **.deb:** `cargo install cargo-deb && cargo deb -p pea-linux` from repo root; install with `dpkg -i target/debian/pea-linux_*.deb`. Before release, test .deb on a Debian/Ubuntu system: install, run, then `dpkg -r pea-linux`.
   - iOS: IPA or TestFlight (when implemented)
   - macOS: .app or DMG (when implemented)
 - [ ] **Release notes:** In the release description, link to CHANGELOG and list supported platforms and known limitations.
