@@ -77,6 +77,11 @@ impl TransferState {
     pub fn chunk_ids(&self) -> &[ChunkId] {
         &self.chunk_ids
     }
+
+    /// Whether the chunk has been received and verified.
+    pub fn is_chunk_received(&self, chunk_id: ChunkId) -> bool {
+        self.received.contains_key(&chunk_id)
+    }
 }
 
 /// Build a ChunkRequest message for the given chunk (to send to a peer).
@@ -143,6 +148,15 @@ mod tests {
     }
 
     #[test]
+    fn split_various_sizes() {
+        let id = [0u8; 16];
+        assert_eq!(split_into_chunks(id, 0, 100).len(), 0);
+        assert_eq!(split_into_chunks(id, 50, 100).len(), 1);
+        assert_eq!(split_into_chunks(id, 1000, 100).len(), 10);
+        assert_eq!(split_into_chunks(id, 1001, 100).len(), 11);
+    }
+
+    #[test]
     fn transfer_state_reassemble() {
         let id = [2u8; 16];
         let chunks = split_into_chunks(id, 100, 30);
@@ -164,5 +178,18 @@ mod tests {
             }
         }
         assert!(state.is_complete());
+    }
+
+    #[test]
+    fn duplicate_chunk_idempotent() {
+        let id = [3u8; 16];
+        let chunks = split_into_chunks(id, 60, 30);
+        let mut state = TransferState::new(id, 60, chunks.clone());
+        let c = &chunks[0];
+        let payload: Vec<u8> = (c.start..c.end).map(|i| i as u8).collect();
+        let hash = integrity::hash_chunk(&payload);
+        let _ = on_chunk_data_received(&mut state, c.transfer_id, c.start, c.end, hash, payload.clone());
+        let r2 = on_chunk_data_received(&mut state, c.transfer_id, c.start, c.end, hash, payload);
+        assert!(matches!(r2, ChunkReceiveResult::InProgress));
     }
 }

@@ -10,6 +10,19 @@ use crate::wire;
 
 const HEARTBEAT_TIMEOUT_TICKS: u64 = 5;
 
+/// Configuration for timeouts and peer trust (optional; use defaults when not set).
+#[derive(Clone, Debug, Default)]
+pub struct Config {}
+
+/// Optional per-peer metrics for scheduler weighting.
+#[derive(Clone, Debug, Default)]
+pub struct PeerMetrics {
+    /// Estimated bandwidth in bytes per second; higher gives more chunks.
+    pub bandwidth_bytes_per_sec: Option<u64>,
+    /// Latency in milliseconds (for future use).
+    pub latency_ms: Option<u32>,
+}
+
 /// Stub for upload path (split outbound into chunks; full impl later).
 pub fn split_upload_chunks(transfer_id: [u8; 16], data_len: u64, chunk_size: u64) -> Vec<ChunkId> {
     chunk::split_into_chunks(transfer_id, data_len, chunk_size)
@@ -28,6 +41,8 @@ pub struct PeaPodCore {
     peer_last_tick: HashMap<DeviceId, u64>,
     tick_count: u64,
     active_transfer: Option<ActiveTransfer>,
+    /// Optional metrics per peer (and self) for weighted chunk assignment.
+    peer_metrics: HashMap<DeviceId, PeerMetrics>,
 }
 
 impl PeaPodCore {
@@ -38,6 +53,7 @@ impl PeaPodCore {
             peer_last_tick: HashMap::new(),
             tick_count: 0,
             active_transfer: None,
+            peer_metrics: HashMap::new(),
         }
     }
 
@@ -48,7 +64,32 @@ impl PeaPodCore {
             peer_last_tick: HashMap::new(),
             tick_count: 0,
             active_transfer: None,
+            peer_metrics: HashMap::new(),
         }
+    }
+
+    /// Set or update metrics for a peer (or self) for weighted chunk assignment.
+    pub fn set_peer_metrics(&mut self, peer_id: DeviceId, metrics: PeerMetrics) {
+        self.peer_metrics.insert(peer_id, metrics);
+    }
+
+    /// Build weights for the given workers (self first, then peers). Returns None only when
+    /// every participant has default weight 1, so that weighted scheduling is used whenever
+    /// any participant (including self) has a non-default bandwidth.
+    fn worker_weights(&self, workers: &[DeviceId]) -> Option<Vec<u64>> {
+        let weights: Vec<u64> = workers
+            .iter()
+            .map(|id| {
+                self.peer_metrics
+                    .get(id)
+                    .and_then(|m| m.bandwidth_bytes_per_sec)
+                    .unwrap_or(1)
+            })
+            .collect();
+        if weights.iter().all(|&w| w == 1) {
+            return None;
+        }
+        Some(weights)
     }
 
     pub fn device_id(&self) -> DeviceId {
@@ -73,7 +114,8 @@ impl PeaPodCore {
         let workers: Vec<DeviceId> = std::iter::once(self.keypair.device_id())
             .chain(self.peers.iter().copied())
             .collect();
-        let assignment = scheduler::assign_chunks_to_peers(&chunk_ids, &workers);
+        let weights = self.worker_weights(&workers);
+        let assignment = scheduler::assign_chunks_to_peers_weighted(&chunk_ids, &workers, weights.as_deref());
         let state = TransferState::new(transfer_id, total_length, chunk_ids.clone());
         self.active_transfer = Some(ActiveTransfer {
             state,
@@ -197,6 +239,13 @@ pub enum ChunkError {
     UnknownTransfer,
     #[error("integrity check failed")]
     IntegrityFailed,
+}
+
+/// Outcome of processing a received chunk: result and any outbound actions (e.g. reassign on failure).
+#[derive(Debug)]
+pub struct ChunkReceiveOutcome {
+    pub result: Result<Option<Vec<u8>>, ChunkError>,
+    pub actions: Vec<OutboundAction>,
 }
 
 /// Action after host passes request metadata.
