@@ -127,6 +127,10 @@ Binary releases may be provided for `x86_64-unknown-linux-gnu` and `aarch64-unkn
 - **Graceful shutdown:** On SIGTERM or Ctrl+C, the daemon exits; systemd will restart it if you have `Restart=on-failure` and the service is enabled.
 - **Ports:** Default ports (3128, 45678, 45679) do not require root. To use port 80 for the proxy you would need setcap or run as root (not recommended); use a high port and point clients at it instead.
 
+## Optional: system tray (future)
+
+A system tray icon (e.g. GTK or Tauri) could show status (enabled/disabled, pod size) and a menu (Enable/Disable, Settings, Quit); it would start or talk to the daemon. Not required for headless or CLI-only use.
+
 ## Optional: netfilter and eBPF (future)
 
 - **netfilter/iptables:** For transparent interception without setting HTTP_PROXY, you can redirect selected traffic to the local proxy port using iptables REDIRECT or DNAT. This typically requires `cap_net_admin` or root. Document the rules (e.g. redirect port 80/443 to 127.0.0.1:3128) and provide an optional script if desired; not required for v1.

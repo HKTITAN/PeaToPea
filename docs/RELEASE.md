@@ -13,6 +13,7 @@ Use this checklist when cutting a new release. See [.tasks/09-quality-and-metric
 - [ ] **Protocol version:** [docs/PROTOCOL.md](PROTOCOL.md) and pea-core `PROTOCOL_VERSION` are in sync. If you bumped the protocol, all clients are updated and documented in CHANGELOG.
 - [ ] **CHANGELOG:** [CHANGELOG.md](../CHANGELOG.md) updated with version, date, and added/changed/fixed per component.
 - [ ] **Metrics and edge cases:** Success metrics (09 §1) measured or documented; edge cases (09 §2) verified (manual or automated).
+- [ ] **Full pod test (09 §6.3.2):** If possible, run one transfer with one device of each type (Windows, Android, Linux, iOS, macOS) on the same LAN; document result in [INTEROP.md](INTEROP.md) (status and date).
 - [ ] **Privacy and risks:** Privacy/security (09 §5) and risk mitigations (09 §3) in place and documented (see [QUALITY.md](QUALITY.md)).
 
 ## Release

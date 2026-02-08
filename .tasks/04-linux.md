@@ -87,7 +87,7 @@ Implementation of the PeaPod protocol for Linux: daemon that runs as system or u
 
 ## 8. Optional tray and UI
 
-- [ ] **8.1** Tray icon
+- [ ] **8.1** Tray icon (optional; documented as future in pea-linux README)
   - [ ] 8.1.1 Optional: build with GTK or Tauri for system tray (Linux tray spec)
   - [ ] 8.1.2 Show status: enabled/disabled, "Pod: N devices"; menu: Enable/Disable, Settings, Quit
   - [ ] 8.1.3 When Enable: start daemon (or communicate with already-running daemon via socket)

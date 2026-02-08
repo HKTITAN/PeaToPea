@@ -114,7 +114,7 @@ PRD success metrics, edge-case handling, and risk mitigations. Verify during and
   - [x] 6.2.4 iOS/macOS: build (CI if macOS runner available)
 - [x] **6.3** Interop
   - [x] 6.3.1 Cross-platform interop tests (07); document manual test results and, if any, automated — docs/INTEROP.md
-  - [ ] 6.3.2 Full pod test (five device types) before release; document in 08
+  - [ ] 6.3.2 Full pod test (five device types) before release; document in 08 — step in docs/RELEASE.md Pre-release
 
 ## 7. Release checklist
 

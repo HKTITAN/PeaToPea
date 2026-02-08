@@ -70,8 +70,8 @@ Each implementation (per OS) must speak the same protocol; the tests below verif
   - [x] 5.1.5 Linux + macOS: same
   - [x] 5.1.6 Full pod: one device of each type (Windows, Android, Linux, iOS, macOS) in same pod; one transfer uses chunks from multiple device types; verify no breakage
   - (Matrix and how-to: [docs/INTEROP.md](../docs/INTEROP.md); execute tests and fill status.)
-- [ ] **5.2** Automated interop (optional)
-  - [ ] 5.2.1 If possible: run two processes (e.g. Windows + Linux in CI) with mock or real discovery; run one transfer; assert success — scripts/interop-two-linux.sh smoke test (two pea-linux + one proxy request); optional CI
+- [x] **5.2** Automated interop (optional)
+  - [x] 5.2.1 If possible: run two processes (e.g. Windows + Linux in CI) with mock or real discovery; run one transfer; assert success — scripts/interop-two-linux.sh; CI job interop-smoke runs it (continue-on-error)
   - [x] 5.2.2 Or: unit test wire format: Rust encodes, Kotlin/Swift decodes (and vice versa) for each message type — pea-core unit tests cover Rust encode/decode (01); Kotlin/Swift roundtrip not yet
 - [x] **5.3** Document results
   - [x] 5.3.1 In 08-documentation: list tested platform pairs and outcome; update as new platforms added — docs/INTEROP.md
