@@ -48,6 +48,21 @@ Then build the app; CMake links `libpea_core.a` from `pea-android/rust-out/<abi>
 
 **JNI API:** `dev.peapod.android.PeaCore` exposes native methods that call into pea-core's C FFI: create/destroy, deviceId, onRequest, peerJoined, peerLeft, onMessageReceived, onChunkReceived, tick. See `pea-core/src/ffi.rs` for the C layout of request result and outbound actions.
 
+### Release build and signing (§8.2)
+
+To build a signed release AAB/APK, set Gradle properties (e.g. in `pea-android/gradle.properties` or environment):
+
+- `RELEASE_STORE_FILE`: path to keystore file  
+- `RELEASE_STORE_PASSWORD`  
+- `RELEASE_KEY_ALIAS`  
+- `RELEASE_KEY_PASSWORD`  
+
+Then run `gradle assembleRelease` or `gradle bundleRelease` (AAB). If these are not set, the release build type still builds but uses no signing (or debug); configure signing for Play Store or sideload.
+
+### CI
+
+GitHub Actions (`.github/workflows/ci.yml`) builds pea-core for `aarch64-linux-android` and `x86_64-linux-android`, copies libs into `rust-out/`, and runs `gradle assembleDebug`. Test the resulting APK on an emulator (x86_64) or real device (arm64).
+
 ## Tasks
 
 See [.tasks/03-android.md](../.tasks/03-android.md) for the full Android implementation checklist.

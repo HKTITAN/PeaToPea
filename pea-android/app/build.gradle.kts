@@ -19,9 +19,27 @@ android {
             }
         }
     }
+    signingConfigs {
+        create("release") {
+            val storeFileEnv = project.findProperty("RELEASE_STORE_FILE")?.toString()
+            val storePwd = project.findProperty("RELEASE_STORE_PASSWORD")?.toString()
+            val keyAliasEnv = project.findProperty("RELEASE_KEY_ALIAS")?.toString()
+            val keyPwd = project.findProperty("RELEASE_KEY_PASSWORD")?.toString()
+            if (storeFileEnv != null && storePwd != null && keyAliasEnv != null && keyPwd != null) {
+                storeFile = file(storeFileEnv)
+                storePassword = storePwd
+                keyAlias = keyAliasEnv
+                keyPassword = keyPwd
+            }
+        }
+    }
     buildTypes {
         release {
             isMinifyEnabled = false
+            val releaseConfig = signingConfigs.findByName("release")
+            if (releaseConfig != null && releaseConfig.storeFile?.exists() == true) {
+                signingConfig = releaseConfig
+            }
         }
     }
     buildFeatures {
