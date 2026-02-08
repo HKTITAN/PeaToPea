@@ -4,8 +4,10 @@ PRD success metrics, edge-case handling, and risk mitigations. Verify during and
 
 ## 1. PRD success metrics
 
+(Measurement procedures: docs/QUALITY.md “How to measure”.)
+
 - [ ] **1.1** Throughput improvement
-  - [ ] 1.1.1 Define test: single large HTTP range download (e.g. 100 MB) with one peer; measure time with PeaPod on vs off
+  - [ ] 1.1.1 Define test: single large HTTP range download (e.g. 100 MB) with one peer; measure time with PeaPod on vs off (procedure in QUALITY.md)
   - [x] 1.1.2 Target: measurable aggregate throughput improvement (e.g. document "up to N× with 2 devices" in README or report) — docs/QUALITY.md
   - [ ] 1.1.3 Optional: run in CI or release process; log result
 - [ ] **1.2** Time-to-download

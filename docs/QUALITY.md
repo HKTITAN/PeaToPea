@@ -34,6 +34,13 @@ Defined in 09; to be measured and documented for release:
 - **Zero application breakage:** Ineligible flows must fall back to the normal path; no modification of response that could break apps. Goal: browse major sites, stream video (non-DRM), download files—no breakage. Implementations only accelerate eligible (e.g. HTTP GET with Range) and forward the rest.
 - **Minimal idle battery (mobile):** Low-power behavior implemented on Android (03); measure and document idle drain. iOS when implemented (05).
 
+### How to measure (09 §1)
+
+- **Throughput (1.1) / time-to-download (1.2):** On two devices on the same LAN, set system proxy to the PeaPod proxy on each; enable PeaPod on both. Download a large file (e.g. 100 MB) via HTTP range (e.g. `curl -O` or a test URL). Note time with PeaPod on. Disable PeaPod on one device (or both) and repeat; compare times. Optional: run in CI using a local HTTP server and scripted curl.
+- **Pod formation (1.4):** On two devices (e.g. Windows + Android), enable PeaPod on device A, then on device B; note the time until both UIs show “1 peer” (or equivalent). Target &lt; 5 s. Repeat for other pairs (e.g. Linux + Windows) and document.
+- **Zero breakage (1.5):** Manual test: with PeaPod enabled and proxy set, browse major sites, stream non-DRM video, download files, use apps that use HTTP; confirm no breakage. Document scenarios tested before release.
+- **Idle battery (1.6):** On Android (and iOS when available): leave PeaPod on, no active transfer, for 24 h; compare battery drain vs PeaPod off. Document threshold or “low impact” in release notes.
+
 ## Testing and CI
 
 - **pea-core:** Unit tests in identity, wire, protocol, chunk, scheduler, integrity, core (run: `cargo test -p pea-core`). CI runs build, test, fmt, clippy, audit on every push/PR.
