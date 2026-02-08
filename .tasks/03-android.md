@@ -94,10 +94,10 @@ Implementation of the PeaPod protocol for Android: Kotlin app with VPNService to
 - [x] **6.2** Settings
   - [x] 6.2.1 Settings screen or fragment: battery saver option (reduce participation when low battery), optional "Start on boot" (SettingsActivity with switches; PeaPodPreferences; BootReceiver for start on boot)
   - [x] 6.2.2 Link from Android Settings: add optional Settings panel or "Open in PeaPod" from notification (Settings action in notification opens SettingsActivity; main screen Settings button)
-- [ ] **6.3** First-run and permissions
-  - [ ] 6.3.1 On first launch: explain PeaPod and request VPN permission (system dialog when user enables)
-  - [ ] 6.3.2 Request local network permission (Android 12+) before starting discovery
-  - [ ] 6.3.3 Handle "don't ask again" and guide user to app settings if permission denied
+- [x] **6.3** First-run and permissions
+  - [x] 6.3.1 On first launch: explain PeaPod and request VPN permission (system dialog when user enables) (showFirstRunDialog with first_run_title/message; VPN consent via VpnService.prepare when user taps Enable)
+  - [x] 6.3.2 Request local network permission (Android 12+) before starting discovery (API 33+ request NEARBY_WIFI_DEVICES in onEnableClicked before proceedToVpnPrepare)
+  - [x] 6.3.3 Handle "don't ask again" and guide user to app settings if permission denied (showPermissionDeniedOrOpenSettings with Open Settings -> APPLICATION_DETAILS_SETTINGS)
 
 ## 7. Battery and performance (PRD)
 
