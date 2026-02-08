@@ -5,7 +5,7 @@ All notable changes to the PeaPod project are documented here. Format: version (
 ## [Unreleased]
 
 - **pea-core:** cbindgen.toml for C header generation (iOS/macOS); CI step generates and verifies pea_core.h.
-- **Documentation:** QUALITY.md — how to measure metrics (throughput, pod formation, linear scaling, battery), optional coverage (cargo-tarpaulin), store listing/privacy policy guidance. RELEASE.md — full pod test step, .deb test step. INTEROP.md — two-process smoke script; optional CI job. iOS/macOS READMEs — next steps for Xcode project; scripts/build-pea-core-apple.sh to build pea-core for iOS and macOS. CONTRIBUTING — optional interop script. scripts/README.md — describes interop and Apple build scripts. .tasks README — remaining work summary.
+- **Documentation:** QUALITY.md — how to measure metrics (throughput, pod formation, linear scaling, battery), optional coverage (cargo-tarpaulin), store listing/privacy policy guidance. RELEASE.md — full pod test step, .deb test step. INTEROP.md — two-process smoke script; optional CI job. iOS/macOS READMEs — next steps for Xcode project; scripts/build-pea-core-apple.sh to build pea-core for iOS and macOS. CONTRIBUTING — optional interop script. scripts/README.md — describes interop and Apple build scripts. .tasks README — remaining work summary; 05/06 task files — Notes section with scaffold support summary.
 - (Ongoing work: see [.tasks/](.tasks/README.md).)
 
 ## 0.1.0 (initial)
