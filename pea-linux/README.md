@@ -95,6 +95,19 @@ For a system-wide install (e.g. under `/usr/local` or `/opt`), run as a dedicate
 
 The unit file is `pea-linux/misc/peapod-system.service` (User=peapod, Group=peapod).
 
+**Packaging:** When building a .deb or other package, include `misc/peapod.service` (and optionally `misc/peapod-system.service`) so the package can install them (e.g. to `/usr/lib/systemd/user/` or `/etc/systemd/system/`). Otherwise users copy the unit file manually as above.
+
+## Binary release (install from tarball)
+
+If you have a prebuilt binary (e.g. from GitHub Releases):
+
+1. Download and extract the tarball (or the binary alone).
+2. Make it executable: `chmod +x pea-linux`
+3. Optional: move to PATH, e.g. `mv pea-linux ~/.local/bin/` or `sudo mv pea-linux /usr/local/bin/`
+4. Run: `pea-linux` (or `./pea-linux` from the current directory). To run as a user service, copy `misc/peapod.service` to `~/.config/systemd/user/`, edit `ExecStart` to the binary path, then `systemctl --user daemon-reload && systemctl --user enable --now peapod`.
+
+Binary releases may be provided for `x86_64-unknown-linux-gnu` and `aarch64-unknown-linux-gnu`; see the project releases page.
+
 ## Edge cases
 
 - **No peers:** The proxy runs normally; traffic is forwarded to the origin without acceleration. No extra configuration needed.

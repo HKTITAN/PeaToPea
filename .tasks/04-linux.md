@@ -82,8 +82,8 @@ Implementation of the PeaPod protocol for Linux: daemon that runs as system or u
 - [x] **7.2** System service (optional)
   - [x] 7.2.1 Write system unit for installation under /usr/local or /opt
   - [x] 7.2.2 Run as dedicated user (e.g. peapod) for security
-- [ ] **7.3** Installer or package
-  - [ ] 7.3.1 Place unit file in package so package install can enable user service (or document manual copy)
+- [x] **7.3** Installer or package
+  - [x] 7.3.1 Place unit file in package so package install can enable user service (or document manual copy) — README Packaging note
 
 ## 8. Optional tray and UI
 
@@ -106,7 +106,7 @@ Implementation of the PeaPod protocol for Linux: daemon that runs as system or u
   - [ ] 9.2.2 Optional: Snap or Flatpak for distribution (include confinement and proxy access)
 - [ ] **9.3** Binary release
   - [ ] 9.3.1 Provide static or dynamic binary for x86_64 and aarch64 on GitHub Releases or website
-  - [ ] 9.3.2 Document install steps: download, chmod +x, optional move to PATH and systemd enable
+  - [x] 9.3.2 Document install steps: download, chmod +x, optional move to PATH and systemd enable — README
 
 ## 10. Edge cases
 
