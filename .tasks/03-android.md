@@ -32,11 +32,11 @@ Implementation of the PeaPod protocol for Android: Kotlin app with VPNService to
   - [ ] 2.2.2 Option B: Parse packets from tunnel and dispatch to in-app TCP stack or proxy (Note: deferred; read loop stub in startTunnelReadLoop)
   - [x] 2.2.3 Implement local proxy (in app) that receives connections from VPN tunnel; parse request URL and headers (LocalProxy.kt: ServerSocket 127.0.0.1:3128, parseRequest with method, Host, Range)
   - [x] 2.2.4 For each request: determine eligibility (HTTP, range-supported); if eligible, pass to core via JNI (PeaCore.nativeOnRequest; Fallback=0, Accelerate=1)
-- [ ] **2.3** Response path
-  - [ ] 2.3.1 Core returns chunk assignments; app requests chunks (self via WAN, peers via local transport)
-  - [ ] 2.3.2 When chunks received: pass to core; get reassembled stream
-  - [ ] 2.3.3 Write reassembled response back through VPN to app (so original app receives response)
-  - [ ] 2.3.4 For ineligible: forward request to real network and forward response back (transparent pass-through)
+- [x] **2.3** Response path
+  - [x] 2.3.1 Core returns chunk assignments; app requests chunks (self via WAN, peers via local transport) (parse assignment in LocalProxy; fetch self-assigned via fetchChunkViaWan; peer chunks need §4)
+  - [x] 2.3.2 When chunks received: pass to core; get reassembled stream (nativeOnChunkReceived with SHA-256 hash; body in bodyBuf when return 1)
+  - [x] 2.3.3 Write reassembled response back through VPN to app (so original app receives response) (206 Partial Content + Content-Range or 200 OK; write to clientOut)
+  - [x] 2.3.4 For ineligible: forward request to real network and forward response back (transparent pass-through) (Fallback path in §2.2)
 - [x] **2.4** Foreground service and notification
   - [x] 2.4.1 When VPN is active, run as foreground service with persistent notification (startForeground in onStartCommand)
   - [x] 2.4.2 Notification content: "PeaPod active" and "Pod: N devices" (update when pod changes) (buildNotification(peerCount); updateNotification() for later discovery)
