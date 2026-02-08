@@ -11,8 +11,6 @@ use pea_core::PublicKey;
 use tokio::net::UdpSocket;
 use tokio::sync::Mutex;
 
-pub const DISCOVERY_PORT: u16 = 45678;
-pub const LOCAL_TRANSPORT_PORT: u16 = 45679;
 const MULTICAST_GROUP: &str = "239.255.60.60";
 const BEACON_INTERVAL: Duration = Duration::from_secs(4);
 const PEER_TIMEOUT: Duration = Duration::from_secs(16);
@@ -26,10 +24,11 @@ struct PeerState {
 pub async fn run_discovery(
     core: Arc<Mutex<PeaPodCore>>,
     keypair: Arc<Keypair>,
-    listen_port: u16,
+    discovery_port: u16,
+    transport_port: u16,
     connect_tx: tokio::sync::mpsc::UnboundedSender<(DeviceId, SocketAddr)>,
 ) -> std::io::Result<()> {
-    let socket = make_multicast_socket().await?;
+    let socket = make_multicast_socket(discovery_port).await?;
     let socket = Arc::new(socket);
     let peers: Arc<Mutex<HashMap<DeviceId, PeerState>>> = Arc::new(Mutex::new(HashMap::new()));
 
@@ -41,10 +40,10 @@ pub async fn run_discovery(
     let connect_tx_recv = connect_tx.clone();
 
     let beacon_task = tokio::spawn(async move {
-        beacon_loop(send_socket, keypair, listen_port).await
+        beacon_loop(send_socket, keypair, discovery_port, transport_port).await
     });
     let recv_task = tokio::spawn(async move {
-        recv_loop(recv_socket, peers_recv, core_recv, keypair_recv, connect_tx_recv).await
+        recv_loop(recv_socket, peers_recv, core_recv, keypair_recv, transport_port, connect_tx_recv).await
     });
     let timeout_task = tokio::spawn(async move {
         peer_timeout_loop(peers.clone(), core).await
@@ -54,8 +53,8 @@ pub async fn run_discovery(
     Ok(())
 }
 
-async fn make_multicast_socket() -> std::io::Result<UdpSocket> {
-    let std_sock = std::net::UdpSocket::bind(("0.0.0.0", DISCOVERY_PORT))?;
+async fn make_multicast_socket(discovery_port: u16) -> std::io::Result<UdpSocket> {
+    let std_sock = std::net::UdpSocket::bind(("0.0.0.0", discovery_port))?;
     let multicast: std::net::Ipv4Addr = MULTICAST_GROUP
         .parse()
         .map_err(|e: std::net::AddrParseError| std::io::Error::new(std::io::ErrorKind::InvalidInput, e))?;
@@ -67,7 +66,8 @@ async fn make_multicast_socket() -> std::io::Result<UdpSocket> {
 async fn beacon_loop(
     socket: Arc<UdpSocket>,
     keypair: Arc<Keypair>,
-    listen_port: u16,
+    discovery_port: u16,
+    transport_port: u16,
 ) -> std::io::Result<()> {
     let device_id = keypair.device_id();
     let public_key = keypair.public_key().clone();
@@ -75,11 +75,11 @@ async fn beacon_loop(
         protocol_version: PROTOCOL_VERSION,
         device_id,
         public_key,
-        listen_port,
+        listen_port: transport_port,
     };
     let frame = encode_frame(&beacon)
         .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;
-    let dest: SocketAddr = format!("{}:{}", MULTICAST_GROUP, DISCOVERY_PORT).parse()?;
+    let dest: SocketAddr = format!("{}:{}", MULTICAST_GROUP, discovery_port).parse()?;
     loop {
         let _ = socket.send_to(&frame, dest).await;
         tokio::time::sleep(BEACON_INTERVAL).await;
@@ -91,6 +91,7 @@ async fn recv_loop(
     peers: Arc<Mutex<HashMap<DeviceId, PeerState>>>,
     core: Arc<Mutex<PeaPodCore>>,
     keypair: Arc<Keypair>,
+    transport_port: u16,
     connect_tx: tokio::sync::mpsc::UnboundedSender<(DeviceId, SocketAddr)>,
 ) -> std::io::Result<()> {
     let mut buf = vec![0u8; 65536];
@@ -100,7 +101,7 @@ async fn recv_loop(
         protocol_version: PROTOCOL_VERSION,
         device_id: my_id,
         public_key: my_public,
-        listen_port: LOCAL_TRANSPORT_PORT,
+        listen_port: transport_port,
     })
     .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;
 

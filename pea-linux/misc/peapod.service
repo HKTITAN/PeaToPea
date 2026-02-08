@@ -1,0 +1,13 @@
+[Unit]
+Description=PeaPod Linux daemon (proxy, discovery, local transport)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/pea-linux
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

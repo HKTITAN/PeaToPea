@@ -8,7 +8,7 @@ Implementation of the PeaPod protocol for Linux: daemon that runs as system or u
   - [x] 1.1.1 Add `pea-linux/` as Rust binary (e.g. `cargo init --bin pea-linux`)
   - [x] 1.1.2 Add dependency on `pea-core`
   - [x] 1.1.3 Add Cargo.toml with Linux deps (e.g. for systemd, or minimal for proxy only)
-- [ ] **1.2** Build
+- [x] **1.2** Build
   - [x] 1.2.1 `cargo build --release` for target `x86_64-unknown-linux-gnu` and optionally `aarch64-unknown-linux-gnu`
   - [x] 1.2.2 Document run: `./pea-linux` or `pea-linux` from PATH (README)
 
@@ -19,11 +19,11 @@ Implementation of the PeaPod protocol for Linux: daemon that runs as system or u
   - [x] 2.1.2 Handle CONNECT (HTTPS) and GET/POST with range; parse for eligibility
   - [x] 2.1.3 Eligible requests: hand to core; execute chunk plan (self + peers); reassemble and return
   - [x] 2.1.4 Ineligible: forward to upstream (direct or via existing system proxy)
-- [ ] **2.2** System proxy configuration
-  - [ ] 2.2.1 Read environment: HTTP_PROXY, HTTPS_PROXY (many GUI apps and terminals respect these)
-  - [ ] 2.2.2 When enabling PeaPod: export HTTP_PROXY and HTTPS_PROXY to point to local proxy (for user session)
-  - [ ] 2.2.3 Document: for global effect, user must set in shell profile or desktop environment (e.g. GNOME proxy settings)
-  - [ ] 2.2.4 When disabling: unset or restore previous proxy
+- [x] **2.2** System proxy configuration
+  - [x] 2.2.1 Read environment: HTTP_PROXY, HTTPS_PROXY (many GUI apps and terminals respect these)
+  - [x] 2.2.2 When enabling PeaPod: export HTTP_PROXY and HTTPS_PROXY to point to local proxy (for user session)
+  - [x] 2.2.3 Document: for global effect, user must set in shell profile or desktop environment (e.g. GNOME proxy settings)
+  - [x] 2.2.4 When disabling: unset or restore previous proxy
 - [ ] **2.3** Optional: netfilter/iptables path (post-v1)
   - [ ] 2.3.1 Document iptables REDIRECT or DNAT to send selected traffic to local proxy port
   - [ ] 2.3.2 May require cap_net_admin or root; document and provide optional script
@@ -37,8 +37,8 @@ Implementation of the PeaPod protocol for Linux: daemon that runs as system or u
   - [x] 3.1.2 Send periodic beacon (device ID, public key, protocol version)
   - [x] 3.1.3 Receive beacons; parse; maintain peer list; notify core on peer join/leave
   - [x] 3.1.4 Advertise own IP and TCP port for local transport in beacon
-- [ ] **3.2** Firewall
-  - [ ] 3.2.1 Document: allow inbound UDP on discovery port and TCP on local transport port (e.g. ufw or firewalld)
+- [x] **3.2** Firewall
+  - [x] 3.2.1 Document: allow inbound UDP on discovery port and TCP on local transport port (e.g. ufw or firewalld)
   - [ ] 3.2.2 Optional: open ports automatically with policy kit or document manual step
 
 ## 4. Local transport
@@ -65,20 +65,20 @@ Implementation of the PeaPod protocol for Linux: daemon that runs as system or u
 
 ## 6. Configuration
 
-- [ ] **6.1** Config file
-  - [ ] 6.1.1 Support config file (e.g. `~/.config/peapod/config.toml` or `/etc/peapod/config.toml`)
-  - [ ] 6.1.2 Options: proxy listen port, discovery port, transport port, optional proxy upstream
+- [x] **6.1** Config file
+  - [x] 6.1.1 Support config file (e.g. `~/.config/peapod/config.toml` or `/etc/peapod/config.toml`)
+  - [x] 6.1.2 Options: proxy listen port, discovery port, transport port, optional proxy upstream
   - [ ] 6.1.3 Optional: enable/disable from config (or from CLI/tray only)
-- [ ] **6.2** Environment
-  - [ ] 6.2.1 Override config with env vars if desired (e.g. PEAPOD_PROXY_PORT)
-  - [ ] 6.2.2 Document env vars in 08-documentation
+- [x] **6.2** Environment
+  - [x] 6.2.1 Override config with env vars if desired (e.g. PEAPOD_PROXY_PORT)
+  - [x] 6.2.2 Document env vars in 08-documentation
 
 ## 7. systemd integration
 
-- [ ] **7.1** User service (recommended)
-  - [ ] 7.1.1 Write systemd user unit file (e.g. `~/.config/systemd/user/peapod.service`)
-  - [ ] 7.1.2 ExecStart = path to pea-linux binary and args (e.g. --proxy-port 3128)
-  - [ ] 7.1.3 Restart=on-failure; document how to enable: `systemctl --user enable peapod`
+- [x] **7.1** User service (recommended)
+  - [x] 7.1.1 Write systemd user unit file (e.g. `~/.config/systemd/user/peapod.service`)
+  - [x] 7.1.2 ExecStart = path to pea-linux binary and args (e.g. --proxy-port 3128)
+  - [x] 7.1.3 Restart=on-failure; document how to enable: `systemctl --user enable peapod`
 - [ ] **7.2** System service (optional)
   - [ ] 7.2.1 Write system unit for installation under /usr/local or /opt
   - [ ] 7.2.2 Run as dedicated user (e.g. peapod) for security

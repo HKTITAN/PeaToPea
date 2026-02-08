@@ -12,8 +12,6 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::{mpsc, Mutex};
 
-use crate::discovery;
-
 const HANDSHAKE_SIZE: usize = 1 + 16 + 32; // version + device_id + public_key
 const LEN_SIZE: usize = 4;
 const MAX_FRAME_LEN: u32 = 16 * 1024 * 1024;
@@ -46,11 +44,12 @@ pub type TransferWaiters = Arc<Mutex<std::collections::HashMap<[u8; 16], tokio::
 pub async fn run_transport(
     core: Arc<Mutex<PeaPodCore>>,
     keypair: Arc<Keypair>,
+    transport_port: u16,
     mut connect_rx: mpsc::UnboundedReceiver<(DeviceId, SocketAddr)>,
     peer_senders: Arc<Mutex<HashMap<DeviceId, mpsc::UnboundedSender<Vec<u8>>>>>,
     transfer_waiters: TransferWaiters,
 ) -> std::io::Result<()> {
-    let listener = TcpListener::bind(("0.0.0.0", discovery::LOCAL_TRANSPORT_PORT)).await?;
+    let listener = TcpListener::bind(("0.0.0.0", transport_port)).await?;
 
     let tick_core = core.clone();
     let tick_senders = peer_senders.clone();
