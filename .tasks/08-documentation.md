@@ -78,8 +78,8 @@ Architecture, PeaPod protocol spec, and per-platform build/run instructions for 
   - [x] 5.1.1 List main types: e.g. PeaPodCore, Config
   - [x] 5.1.2 List main methods: init, on_incoming_request, on_peer_joined, on_peer_left, on_message_received, on_chunk_received, tick
   - [x] 5.1.3 Inputs and outputs: what host passes in, what core returns (actions, messages to send, WAN chunk requests)
-- [ ] **5.2** Rust doc comments
-  - [ ] 5.2.1 Add rustdoc to public functions and types in pea-core
+- [x] **5.2** Rust doc comments
+  - [x] 5.2.1 Add rustdoc to public functions and types in pea-core
   - [x] 5.2.2 Generate and publish docs (e.g. `cargo doc --no-deps`); optional link from root README (documented in API.md)
 - [x] **5.3** C API (for iOS/macOS)
   - [x] 5.3.1 Document C header (or list functions) for Swift callers: init, feed request, feed peer events, feed message, feed chunk, tick

@@ -36,7 +36,8 @@ struct ActiveTransfer {
     assignment: Vec<(ChunkId, DeviceId)>,
 }
 
-/// Main coordinator. Host passes events; core returns actions.
+/// Main coordinator. The host passes events (request metadata, peer join/leave, messages, chunk data);
+/// the core returns actions (chunk assignment, messages to send). No I/O inside the core.
 pub struct PeaPodCore {
     keypair: Arc<Keypair>,
     peers: Vec<DeviceId>,
@@ -106,6 +107,7 @@ impl PeaPodCore {
         Some(weights)
     }
 
+    /// This device's 16-byte ID (used in discovery and as "self" in assignments).
     pub fn device_id(&self) -> DeviceId {
         self.keypair.device_id()
     }
@@ -146,7 +148,8 @@ impl PeaPodCore {
         derive_session_key(&self.keypair.shared_secret(peer_public))
     }
 
-    /// On incoming request (URL, optional range). Returns Accelerate with plan or Fallback.
+    /// Called when the host has an eligible request. Returns [`Action::Accelerate`] with chunk assignment
+    /// (host then fetches self chunks and sends ChunkRequest to peers) or [`Action::Fallback`].
     pub fn on_incoming_request(
         &mut self,
         _url: &str,
@@ -178,7 +181,8 @@ impl PeaPodCore {
         }
     }
 
-    /// Process received ChunkData. Returns Ok(Some(reassembled_bytes)) when transfer complete, Ok(None) when in progress, Err on integrity failure.
+    /// Process received chunk. Returns `Ok(Some(body))` when the transfer is complete and reassembled,
+    /// `Ok(None)` when still in progress, or `Err(ChunkError)` on integrity failure or unknown transfer.
     pub fn on_chunk_received(
         &mut self,
         transfer_id: [u8; 16],
@@ -201,7 +205,7 @@ impl PeaPodCore {
         }
     }
 
-    /// Peer joined. Update peer list and last-seen.
+    /// Notify that a peer joined (from discovery). Updates peer list for chunk assignment.
     pub fn on_peer_joined(&mut self, peer_id: DeviceId, _public_key: &PublicKey) {
         if !self.peers.contains(&peer_id) {
             self.peers.push(peer_id);
@@ -209,7 +213,7 @@ impl PeaPodCore {
         self.peer_last_tick.insert(peer_id, self.tick_count);
     }
 
-    /// Peer left. Redistribute its chunks and return outbound actions (ChunkRequests to new peers).
+    /// Notify that a peer left. Redistributes its chunks to remaining peers; returns actions to send ChunkRequests.
     pub fn on_peer_left(&mut self, peer_id: DeviceId) -> Vec<OutboundAction> {
         self.peers.retain(|p| *p != peer_id);
         self.peer_last_tick.remove(&peer_id);
@@ -222,6 +226,7 @@ impl PeaPodCore {
     }
 
     /// Periodic tick: check heartbeat timeouts (treat overdue peers as left), produce heartbeat messages.
+    /// Periodic tick (e.g. every 1 s). Returns outbound actions (e.g. heartbeats); host sends them to peers.
     pub fn tick(&mut self) -> Vec<OutboundAction> {
         self.tick_count = self.tick_count.saturating_add(1);
         let mut actions = Vec::new();
@@ -370,6 +375,7 @@ impl PeaPodCore {
     }
 }
 
+/// Error when processing a received message (e.g. frame decode failure).
 #[derive(Debug, thiserror::Error)]
 pub enum OnMessageError {
     #[error("decode: {0}")]
@@ -382,6 +388,7 @@ impl Default for PeaPodCore {
     }
 }
 
+/// Error from `on_chunk_received`: unknown transfer or integrity check failed.
 #[derive(Debug, thiserror::Error)]
 pub enum ChunkError {
     #[error("unknown transfer")]
@@ -397,18 +404,21 @@ pub struct ChunkReceiveOutcome {
     pub actions: Vec<OutboundAction>,
 }
 
-/// Action after host passes request metadata.
+/// Result of `on_incoming_request`: accelerate (with chunk assignment) or fall back to normal path.
 pub enum Action {
+    /// Core produced a chunk plan; host fetches self chunks via WAN and sends ChunkRequest to peers.
     Accelerate {
         transfer_id: [u8; 16],
         total_length: u64,
         assignment: Vec<(ChunkId, DeviceId)>,
     },
+    /// Do not accelerate; host forwards the request normally.
     Fallback,
 }
 
-/// Action for host to perform.
+/// Instruction for the host: send a message to a peer (e.g. ChunkRequest, Heartbeat, Leave).
 pub enum OutboundAction {
+    /// Send the given bytes to the peer over the local transport (host encrypts if required).
     SendMessage(DeviceId, Vec<u8>),
 }
 

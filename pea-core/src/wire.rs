@@ -18,6 +18,7 @@ pub fn encode_frame(msg: &Message) -> Result<Vec<u8>, FrameEncodeError> {
     Ok(out)
 }
 
+/// Error encoding a message into a frame (bincode or size limit).
 #[derive(Debug, thiserror::Error)]
 pub enum FrameEncodeError {
     #[error("encode error: {0}")]
@@ -44,6 +45,7 @@ pub fn decode_frame(bytes: &[u8]) -> Result<(Message, usize), FrameDecodeError> 
     Ok((msg, LEN_SIZE + len))
 }
 
+/// Error decoding a frame (need more bytes, too large, or bincode failure).
 #[derive(Debug, thiserror::Error)]
 pub enum FrameDecodeError {
     #[error("need more bytes")]
