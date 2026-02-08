@@ -44,7 +44,7 @@ cargo build -p pea-core
 cargo test -p pea-core
 ```
 
-**Build and run per platform:** See each implementation’s README for prerequisites and steps: [Windows](pea-windows/README.md), [Android](pea-android/README.md), [Linux](pea-linux/README.md), [iOS](pea-ios/README.md), [macOS](pea-macos/README.md).
+**Build and run per platform:** See each implementation’s README for prerequisites and steps: [Windows](pea-windows/README.md), [Android](pea-android/README.md), [Linux](pea-linux/README.md), [iOS](pea-ios/README.md), [macOS](pea-macos/README.md). On Linux, an optional [interop smoke script](docs/INTEROP.md#automated-interop-optional) runs two pea-linux instances and one proxy request (`./scripts/interop-two-linux.sh`).
 
 Optional targets for platform implementations (add when working on that platform):
 
