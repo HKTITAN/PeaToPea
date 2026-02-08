@@ -7,6 +7,8 @@ mod transport;
 
 #[cfg(windows)]
 mod system_proxy;
+#[cfg(windows)]
+mod tray;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     #[cfg(windows)]
@@ -36,6 +38,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let peer_senders = std::sync::Arc::new(tokio::sync::Mutex::new(std::collections::HashMap::new()));
             let transfer_waiters: transport::TransferWaiters =
                 std::sync::Arc::new(tokio::sync::Mutex::new(std::collections::HashMap::new()));
+            let (tray_tx, mut tray_rx) = tokio::sync::mpsc::unbounded_channel::<tray::TrayCommand>();
+            let tray_tx_for_thread = tray_tx.clone();
+            std::thread::spawn(move || {
+                let _ = tray::run_tray(tray_tx_for_thread);
+            });
             tokio::spawn(proxy::run_proxy(
                 bind,
                 core.clone(),
@@ -60,7 +67,26 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 )
                 .await;
             });
-            tokio::signal::ctrl_c().await.ok();
+            let (host, port) = ("127.0.0.1", 3128u16);
+            loop {
+                tokio::select! {
+                    Some(cmd) = tray_rx.recv() => {
+                        match cmd {
+                            tray::TrayCommand::Enable => {
+                                let _ = system_proxy::set_system_proxy(host, port);
+                            }
+                            tray::TrayCommand::Disable => {
+                                let _ = system_proxy::restore_system_proxy();
+                            }
+                            tray::TrayCommand::OpenSettings => {
+                                // TODO: open settings window (§6.2)
+                            }
+                            tray::TrayCommand::Exit => break,
+                        }
+                    }
+                    _ = tokio::signal::ctrl_c() => break,
+                }
+            }
             let _ = system_proxy::restore_system_proxy();
         }
         #[cfg(not(windows))]
