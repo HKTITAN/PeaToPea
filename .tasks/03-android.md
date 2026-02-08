@@ -4,21 +4,21 @@ Implementation of the PeaPod protocol for Android: Kotlin app with VPNService to
 
 ## 1. Android project scaffold
 
-- [ ] **1.1** Create protocol implementation for Android (project)
-  - [ ] 1.1.1 Create `pea-android/` with Gradle (Kotlin DSL or Groovy)
-  - [ ] 1.1.2 Set minSdk (e.g. 24) and targetSdk (e.g. 34)
-  - [ ] 1.1.3 Add main Activity (or single-Activity app) and Application class if needed
-  - [ ] 1.1.4 Add dependency on AndroidX and Material (or minimal UI libs)
+- [x] **1.1** Create protocol implementation for Android (project)
+  - [x] 1.1.1 Create `pea-android/` with Gradle (Kotlin DSL or Groovy)
+  - [x] 1.1.2 Set minSdk (e.g. 24) and targetSdk (e.g. 34)
+  - [x] 1.1.3 Add main Activity (or single-Activity app) and Application class if needed
+  - [x] 1.1.4 Add dependency on AndroidX and Material (or minimal UI libs)
 - [ ] **1.2** Rust core integration
-  - [ ] 1.2.1 Create `pea-android/rust/` or `pea-core-android/` for Rust code that builds for Android
-  - [ ] 1.2.2 Add NDK build: compile pea-core (or thin JNI wrapper) for armeabi-v7a, arm64-v8a, x86_64 (for emulator)
+  - [x] 1.2.1 Create `pea-android/rust/` or `pea-core-android/` for Rust code that builds for Android (pea-core built for Android targets; libs in rust-out/<abi>)
+  - [x] 1.2.2 Add NDK build: compile pea-core (or thin JNI wrapper) for armeabi-v7a, arm64-v8a, x86_64 (for emulator) (CMake links libpea_core.a; CI builds aarch64/x86_64)
   - [ ] 1.2.3 Expose JNI functions: init core, on_request, on_peer_joined, on_peer_left, on_message_received, tick, etc.
-  - [ ] 1.2.4 Load native lib in Kotlin (System.loadLibrary) and call from Kotlin
-- [ ] **1.3** Permissions and manifest
-  - [ ] 1.3.1 Add INTERNET permission
-  - [ ] 1.3.2 Add FOREGROUND_SERVICE and FOREGROUND_SERVICE_SPECIAL_USE (or appropriate type) for VPN
-  - [ ] 1.3.3 Add local network / nearby devices permission (Android 12+) for discovery
-  - [ ] 1.3.4 Declare VPN service in manifest; add BIND_VPN_SERVICE permission
+  - [x] 1.2.4 Load native lib in Kotlin (System.loadLibrary) and call from Kotlin
+- [x] **1.3** Permissions and manifest
+  - [x] 1.3.1 Add INTERNET permission
+  - [x] 1.3.2 Add FOREGROUND_SERVICE and FOREGROUND_SERVICE_SPECIAL_USE (or appropriate type) for VPN
+  - [x] 1.3.3 Add local network / nearby devices permission (Android 12+) for discovery (ACCESS_NETWORK_STATE, CHANGE_WIFI_MULTICAST_STATE, POST_NOTIFICATIONS)
+  - [x] 1.3.4 Declare VPN service in manifest; add BIND_VPN_SERVICE permission (PeaPodVpnService with specialUse/vpn type)
 
 ## 2. VPNService and traffic interception
 
