@@ -32,6 +32,8 @@ Then either:
 
 This directory is a Swift Package placeholder. Replace or add an Xcode project (`.xcodeproj`) for the app and Network Extension when implementing per [.tasks/05-ios.md](../.tasks/05-ios.md).
 
+**Next steps (from .tasks §1):** (1) Create an Xcode project with an iOS app target (Swift, e.g. iOS 15+). (2) Add a Network Extension target (Packet Tunnel or App Proxy). (3) Configure app groups for shared state between app and extension. (4) Build pea-core for `aarch64-apple-ios` and `x86_64-apple-ios`; add the static lib and C header to the project; call from Swift. (5) Enable Network Extensions and Personal VPN capabilities; add local network usage description.
+
 ## Tasks
 
 See [.tasks/05-ios.md](../.tasks/05-ios.md) for the full iOS implementation checklist.

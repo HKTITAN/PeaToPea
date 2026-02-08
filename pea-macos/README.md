@@ -28,6 +28,8 @@ Use `target/<triple>/release/libpea_core.a` in your Xcode project, or build an X
 
 This directory is a Swift Package placeholder. Replace or add an Xcode project (`.xcodeproj`) for the menu bar app and Network Extension when implementing per [.tasks/06-macos.md](../.tasks/06-macos.md).
 
+**Next steps (from .tasks §1):** (1) Create an Xcode project with a macOS app target (Swift, AppKit or SwiftUI, e.g. macOS 12+). (2) Add a Network Extension target (Packet Tunnel or App Proxy). (3) Configure app groups if extension and app share state. (4) Build pea-core for `aarch64-apple-darwin` and `x86_64-apple-darwin`; add the static lib and C API to the project; call from Swift. (5) Enable Network Extensions and Personal VPN; set Sandbox and Hardened Runtime for distribution.
+
 ## Tasks
 
 See [.tasks/06-macos.md](../.tasks/06-macos.md) for the full macOS implementation checklist.

@@ -4,6 +4,8 @@ Implementation of the PeaPod protocol for iOS: Swift app with Network Extension 
 
 ## 1. iOS project scaffold
 
+(Next steps summarized in [pea-ios/README.md](../pea-ios/README.md) “Next steps”.)
+
 - [ ] **1.1** Create protocol implementation for iOS (Xcode project)
   - [ ] 1.1.1 Create `pea-ios/` with Xcode; iOS app target (Swift, minimum iOS version e.g. 15)
   - [ ] 1.1.2 Add Network Extension target (Packet Tunnel or App Proxy) to same project
