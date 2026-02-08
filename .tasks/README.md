@@ -44,6 +44,6 @@ At the end of any task file you may add a `## Notes` section. Use it for: design
 - **04:** Optional tray (§8.1); optional other formats (§9.2); §9.1.3 test .deb on Linux at release.
 - **08:** §4.4 iOS, §4.5 macOS — document in pea-ios/pea-macos README when those implementations exist.
 - **02/03:** Optional WinDivert (§2.3), WiFi Direct (§3.2) — documented; implement when desired.
-- **05/06:** Full iOS and macOS implementations (scaffold through distribution).
+- **05/06:** Full iOS and macOS implementations. Scaffold support in place: build script (scripts/build-pea-core-apple.sh), cbindgen for C header (pea-core/cbindgen.toml, CI verifies), README “Next steps”. Next: create Xcode project with app + Network Extension target per READMEs.
 
 When no unchecked item is actionable without devices, Xcode, or release: run build/test in CI, update CHANGELOG, or start 05/06 per the “Next steps” in pea-ios/pea-macos READMEs.
