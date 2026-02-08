@@ -63,12 +63,12 @@ Repo structure, tooling, and CI. Complete before building protocol implementatio
   - [x] 6.1.2 Run `cargo test` for pea-core
   - [x] 6.1.3 Build pea-windows on Windows runner (optional)
   - [x] 6.1.4 Build pea-linux on Linux runner (optional)
-- [ ] **6.2** Android CI
-  - [ ] 6.2.1 Add job to build pea-android (debug APK)
-  - [ ] 6.2.2 Build Rust core for Android targets in CI
-- [ ] **6.3** iOS/macOS CI
-  - [ ] 6.3.1 Add job to build pea-ios (simulator) if macOS runner available
-  - [ ] 6.3.2 Add job to build pea-macos if macOS runner available
+- [x] **6.2** Android CI
+  - [x] 6.2.1 Add job to build pea-android (debug APK)
+  - [x] 6.2.2 Build Rust core for Android targets in CI
+- [x] **6.3** iOS/macOS CI
+  - [x] 6.3.1 Add job to build pea-ios (simulator) if macOS runner available
+  - [x] 6.3.2 Add job to build pea-macos if macOS runner available
 - [x] **6.4** Linting and format
   - [x] 6.4.1 Run `cargo fmt -- --check` for Rust
   - [x] 6.4.2 Run `cargo clippy` for pea-core (and other Rust crates)
