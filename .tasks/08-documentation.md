@@ -60,7 +60,7 @@ Architecture, PeaPod protocol spec, and per-platform build/run instructions for 
   - [x] 4.3.2 Build: `cargo build --release` in pea-linux
   - [x] 4.3.3 Run: `./pea-linux` or `systemctl --user start peapod`; set HTTP_PROXY/HTTPS_PROXY if using proxy
   - [x] 4.3.4 Config: path to config file (e.g. ~/.config/peapod/config.toml); ports and options
-  - [ ] 4.3.5 Packaging: link to .deb or Flatpak if available
+  - [x] 4.3.5 Packaging: link to .deb or Flatpak if available (pea-linux README: cargo-deb .deb)
 - [ ] **4.4** iOS
   - [ ] 4.4.1 Prerequisites: Xcode, Apple Developer account, Rust toolchain for iOS
   - [ ] 4.4.2 Build: open pea-ios in Xcode; select target device/simulator; build (Rust built via script or Xcode build phase)
