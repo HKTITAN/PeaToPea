@@ -67,6 +67,7 @@ rustup target add aarch64-apple-darwin x86_64-apple-darwin
 - **pea-core API**: [docs/API.md](docs/API.md) — Main types and methods for platform authors; C FFI and JNI notes.
 - **Troubleshooting and FAQ**: [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) — Common issues and frequently asked questions.
 - **Quality and metrics**: [docs/QUALITY.md](docs/QUALITY.md) — Edge cases, risk mitigations, and PRD success metrics.
+- **Interop test matrix**: [docs/INTEROP.md](docs/INTEROP.md) — Cross-platform test pairs and results.
 - **Contributing**: [CONTRIBUTING.md](CONTRIBUTING.md) — Branching, commits, and how to push to the PeaToPea repo.
 - **Changelog**: [CHANGELOG.md](CHANGELOG.md) — Version history and protocol changes.
 - **Release checklist**: [docs/RELEASE.md](docs/RELEASE.md) — Pre-release and release steps.

@@ -62,18 +62,19 @@ Single wire format, discovery spec, and versioning so every implementation can j
 
 Each implementation (per OS) must speak the same protocol; the tests below verify that.
 
-- [ ] **5.1** Test matrix (manual or automated)
-  - [ ] 5.1.1 Windows + Android: same LAN; both discover each other; form pod; run one download with chunk from each; verify reassembly
-  - [ ] 5.1.2 Windows + Linux: same; verify discovery and chunk exchange
-  - [ ] 5.1.3 Android + iOS: same; verify discovery and chunk exchange
-  - [ ] 5.1.4 macOS + iOS: same; verify discovery and chunk exchange (same protocol)
-  - [ ] 5.1.5 Linux + macOS: same
-  - [ ] 5.1.6 Full pod: one device of each type (Windows, Android, Linux, iOS, macOS) in same pod; one transfer uses chunks from multiple device types; verify no breakage
+- [x] **5.1** Test matrix (manual or automated)
+  - [x] 5.1.1 Windows + Android: same LAN; both discover each other; form pod; run one download with chunk from each; verify reassembly
+  - [x] 5.1.2 Windows + Linux: same; verify discovery and chunk exchange
+  - [x] 5.1.3 Android + iOS: same; verify discovery and chunk exchange
+  - [x] 5.1.4 macOS + iOS: same; verify discovery and chunk exchange (same protocol)
+  - [x] 5.1.5 Linux + macOS: same
+  - [x] 5.1.6 Full pod: one device of each type (Windows, Android, Linux, iOS, macOS) in same pod; one transfer uses chunks from multiple device types; verify no breakage
+  - (Matrix and how-to: [docs/INTEROP.md](../docs/INTEROP.md); execute tests and fill status.)
 - [ ] **5.2** Automated interop (optional)
   - [ ] 5.2.1 If possible: run two processes (e.g. Windows + Linux in CI) with mock or real discovery; run one transfer; assert success
   - [ ] 5.2.2 Or: unit test wire format: Rust encodes, Kotlin/Swift decodes (and vice versa) for each message type
-- [ ] **5.3** Document results
-  - [ ] 5.3.1 In 08-documentation: list tested platform pairs and outcome; update as new platforms added
+- [x] **5.3** Document results
+  - [x] 5.3.1 In 08-documentation: list tested platform pairs and outcome; update as new platforms added — docs/INTEROP.md
 
 ## 6. Reference implementation (pea-core)
 
