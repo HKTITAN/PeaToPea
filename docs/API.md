@@ -25,7 +25,7 @@ Helpers: **beacon_frame(listen_port)**, **discovery_response_frame(listen_port)*
 
 **pea_core_create** / **pea_core_destroy**; **pea_core_device_id**; **pea_core_beacon_frame**, **pea_core_discovery_response_frame**; **pea_core_on_incoming_request**, **pea_core_on_chunk_received**, **pea_core_on_peer_joined**, **pea_core_on_peer_left**, **pea_core_on_message_received**, **pea_core_tick**. Host provides buffers; core fills or returns length. Use from one thread or serialize access.
 
-**iOS/macOS:** To call from Swift, use a bridging header that declares these C functions, or generate a `.h` with [cbindgen](https://github.com/eqrion/cbindgen) (e.g. `cbindgen pea-core -l C -o pea_core.h` from the repo root; add `pea_core.h` and the static lib to your Xcode target).
+**iOS/macOS:** To call from Swift, use a bridging header that declares these C functions, or generate a `.h` with [cbindgen](https://github.com/eqrion/cbindgen). From the repo root: `cargo install cbindgen` (once), then `cbindgen pea-core -o pea_core.h` (pea-core has a `cbindgen.toml` that exports the C ABI). Add `pea_core.h` and the static lib to your Xcode target.
 
 ## JNI (Android)
 

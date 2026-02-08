@@ -1,0 +1,27 @@
+# Generate C header for iOS/macOS (Swift bridging). Run from repo root:
+#   cbindgen pea-core -o pea_core.h
+# or from pea-core: cbindgen . -o pea_core.h
+
+language = "C"
+
+[export]
+# Only export the C ABI from the ffi module (avoid Rust types from other modules)
+include = [
+  "pea_core_version",
+  "pea_core_create",
+  "pea_core_destroy",
+  "pea_core_device_id",
+  "pea_core_beacon_frame",
+  "pea_core_discovery_response_frame",
+  "pea_core_decode_discovery_frame",
+  "pea_core_handshake_bytes",
+  "pea_core_session_key",
+  "pea_core_encrypt_wire",
+  "pea_core_decrypt_wire",
+  "pea_core_on_request",
+  "pea_core_peer_joined",
+  "pea_core_peer_left",
+  "pea_core_on_message_received",
+  "pea_core_on_chunk_received",
+  "pea_core_tick",
+]
