@@ -44,12 +44,12 @@ Implementation of the PeaPod protocol for Android: Kotlin app with VPNService to
 
 ## 3. Discovery on Android
 
-- [ ] **3.1** LAN discovery
-  - [ ] 3.1.1 Request local network permission (Android 12+); handle denied case
-  - [ ] 3.1.2 Create UDP socket; join multicast group or use broadcast (same group/port as 07)
-  - [ ] 3.1.3 Send periodic beacon (device ID, public key, protocol version) from Kotlin or via JNI (core can produce payload; Kotlin sends)
-  - [ ] 3.1.4 Receive beacons; parse; maintain peer list; call into core on_peer_joined / on_peer_left
-  - [ ] 3.1.5 Advertise own IP and port for local transport (TCP) in beacon or separate message
+- [x] **3.1** LAN discovery
+  - [x] 3.1.1 Request local network permission (Android 12+); handle denied case (NEARBY_WIFI_DEVICES with neverForLocation for API 33+; Discovery.start catches SecurityException)
+  - [x] 3.1.2 Create UDP socket; join multicast group or use broadcast (same group/port as 07) (Discovery.kt: MulticastSocket 45678, join 239.255.60.60)
+  - [x] 3.1.3 Send periodic beacon (device ID, public key, protocol version) from Kotlin or via JNI (core can produce payload; Kotlin sends) (PeaCore.nativeBeaconFrame every 4s)
+  - [x] 3.1.4 Receive beacons; parse; maintain peer list; call into core on_peer_joined / on_peer_left (nativeDecodeDiscoveryFrame; peer timeout 16s; nativePeerJoined/nativePeerLeft)
+  - [x] 3.1.5 Advertise own IP and port for local transport (TCP) in beacon or separate message (listen_port in beacon and DiscoveryResponse; LOCAL_TRANSPORT_PORT 45679 for §4)
 - [ ] **3.2** Optional: WiFi Direct
   - [ ] 3.2.1 Add Wi-Fi P2pManager for discovery if needed
   - [ ] 3.2.2 Use for local transfer or discovery; document as optional

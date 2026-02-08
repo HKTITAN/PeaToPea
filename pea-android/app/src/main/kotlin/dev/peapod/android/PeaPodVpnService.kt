@@ -7,6 +7,8 @@ import android.content.Intent
 import android.net.VpnService
 import android.os.Build
 import android.os.IBinder
+import android.os.Handler
+import android.os.Looper
 import android.os.ParcelFileDescriptor
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -56,8 +58,12 @@ class PeaPodVpnService : VpnService() {
         }
         coreHandle = PeaCore.nativeCreate()
         LocalProxy.start(coreHandle, this)
+        Discovery.onPeerCountChanged = {
+            Handler(Looper.getMainLooper()).post { updateNotification(Discovery.peerCount()) }
+        }
+        Discovery.start(coreHandle, Discovery.LOCAL_TRANSPORT_PORT)
         startTunnelReadLoop()
-        startForeground(NOTIFICATION_ID, buildNotification(0))
+        startForeground(NOTIFICATION_ID, buildNotification(Discovery.peerCount()))
         return START_STICKY
     }
 
@@ -84,6 +90,8 @@ class PeaPodVpnService : VpnService() {
     }
 
     private fun stopVpn() {
+        Discovery.stop()
+        Discovery.onPeerCountChanged = null
         LocalProxy.stop()
         if (coreHandle != 0L) {
             PeaCore.nativeDestroy(coreHandle)

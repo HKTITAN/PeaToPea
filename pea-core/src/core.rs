@@ -5,7 +5,7 @@ use std::sync::Arc;
 
 use crate::chunk::{self, ChunkId, TransferState, DEFAULT_CHUNK_SIZE};
 use crate::identity::{DeviceId, Keypair, PublicKey};
-use crate::protocol::Message;
+use crate::protocol::{Message, PROTOCOL_VERSION};
 use crate::scheduler;
 use crate::wire;
 use crate::wire::FrameDecodeError;
@@ -108,6 +108,28 @@ impl PeaPodCore {
 
     pub fn device_id(&self) -> DeviceId {
         self.keypair.device_id()
+    }
+
+    /// Build discovery beacon frame (length-prefix + bincode Beacon) for the host to send via UDP. Same format as 07.
+    pub fn beacon_frame(&self, listen_port: u16) -> Result<Vec<u8>, wire::FrameEncodeError> {
+        let beacon = Message::Beacon {
+            protocol_version: PROTOCOL_VERSION,
+            device_id: self.keypair.device_id(),
+            public_key: self.keypair.public_key().clone(),
+            listen_port,
+        };
+        wire::encode_frame(&beacon)
+    }
+
+    /// Build DiscoveryResponse frame (sent to beacon sender). Same wire shape, different variant.
+    pub fn discovery_response_frame(&self, listen_port: u16) -> Result<Vec<u8>, wire::FrameEncodeError> {
+        let resp = Message::DiscoveryResponse {
+            protocol_version: PROTOCOL_VERSION,
+            device_id: self.keypair.device_id(),
+            public_key: self.keypair.public_key().clone(),
+            listen_port,
+        };
+        wire::encode_frame(&resp)
     }
 
     /// On incoming request (URL, optional range). Returns Accelerate with plan or Fallback.

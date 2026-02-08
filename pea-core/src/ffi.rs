@@ -7,7 +7,8 @@ use std::slice;
 
 use crate::chunk::ChunkId;
 use crate::identity::{DeviceId, PublicKey};
-use crate::protocol::PROTOCOL_VERSION;
+use crate::protocol::{Message, PROTOCOL_VERSION};
+use crate::wire::decode_frame;
 use crate::{Action, PeaPodCore};
 
 /// Returns the current protocol version. Used so the staticlib exports a C symbol and is linkable.
@@ -44,6 +45,100 @@ pub extern "C" fn pea_core_device_id(h: *mut c_void, out_buf: *mut u8, out_len: 
         out_buf.copy_from_nonoverlapping(id.as_bytes().as_ptr(), 16);
     }
     0
+}
+
+/// Build discovery beacon frame for host to send (UDP). Fills out_buf with length-prefix + bincode Beacon. Returns bytes written, or -1 on error.
+#[no_mangle]
+pub extern "C" fn pea_core_beacon_frame(
+    h: *mut c_void,
+    listen_port: u16,
+    out_buf: *mut u8,
+    out_buf_len: usize,
+) -> c_int {
+    if h.is_null() || out_buf.is_null() {
+        return -1;
+    }
+    let core = unsafe { &*(h as *const PeaPodCore) };
+    let frame = match core.beacon_frame(listen_port) {
+        Ok(f) => f,
+        Err(_) => return -1,
+    };
+    if frame.len() > out_buf_len {
+        return -1;
+    }
+    unsafe {
+        out_buf.copy_from_nonoverlapping(frame.as_ptr(), frame.len());
+    }
+    frame.len() as c_int
+}
+
+/// Build DiscoveryResponse frame (send to beacon sender). Returns bytes written, or -1 on error.
+#[no_mangle]
+pub extern "C" fn pea_core_discovery_response_frame(
+    h: *mut c_void,
+    listen_port: u16,
+    out_buf: *mut u8,
+    out_buf_len: usize,
+) -> c_int {
+    if h.is_null() || out_buf.is_null() {
+        return -1;
+    }
+    let core = unsafe { &*(h as *const PeaPodCore) };
+    let frame = match core.discovery_response_frame(listen_port) {
+        Ok(f) => f,
+        Err(_) => return -1,
+    };
+    if frame.len() > out_buf_len {
+        return -1;
+    }
+    unsafe {
+        out_buf.copy_from_nonoverlapping(frame.as_ptr(), frame.len());
+    }
+    frame.len() as c_int
+}
+
+/// Decode a discovery frame (Beacon or DiscoveryResponse). Fills device_id (16), public_key (32), listen_port. Returns 0 on success, -1 on error.
+#[no_mangle]
+pub extern "C" fn pea_core_decode_discovery_frame(
+    bytes: *const u8,
+    len: usize,
+    out_device_id_16: *mut u8,
+    out_public_key_32: *mut u8,
+    out_listen_port: *mut u16,
+) -> c_int {
+    if bytes.is_null() || out_device_id_16.is_null() || out_public_key_32.is_null() || out_listen_port.is_null() {
+        return -1;
+    }
+    let slice = unsafe { slice::from_raw_parts(bytes, len) };
+    let (msg, _) = match decode_frame(slice) {
+        Ok(x) => x,
+        Err(_) => return -1,
+    };
+    match &msg {
+        Message::Beacon {
+            protocol_version,
+            device_id,
+            public_key,
+            listen_port,
+        }
+        | Message::DiscoveryResponse {
+            protocol_version,
+            device_id,
+            public_key,
+            listen_port,
+        } => {
+            if *protocol_version != PROTOCOL_VERSION {
+                return -1;
+            }
+            unsafe {
+                out_device_id_16.copy_from_nonoverlapping(device_id.as_bytes().as_ptr(), 16);
+                out_public_key_32.copy_from_nonoverlapping(public_key.as_bytes().as_ptr(), 32);
+                *out_listen_port = *listen_port;
+            }
+            0
+        }
+        _ => -1,
+    }
 }
 
 /// On incoming request. url_len is byte length of url (UTF-8). range_end > range_start for a valid range; else treated as no range.

@@ -67,4 +67,21 @@ object PeaCore {
     /** Tick. Fills outBuf with serialized outbound actions. Returns bytes written or 0. */
     @JvmStatic
     external fun nativeTick(handle: Long, outBuf: ByteArray): Int
+
+    /** Build discovery beacon frame. Returns bytes written to outBuf, or -1 on error. */
+    @JvmStatic
+    external fun nativeBeaconFrame(handle: Long, listenPort: Int, outBuf: ByteArray): Int
+
+    /** Build DiscoveryResponse frame (send to beacon sender). Returns bytes written, or -1 on error. */
+    @JvmStatic
+    external fun nativeDiscoveryResponseFrame(handle: Long, listenPort: Int, outBuf: ByteArray): Int
+
+    /** Decode Beacon or DiscoveryResponse frame. Fills outDeviceId (16), outPublicKey (32), outListenPort[0]. Returns 0 on success, -1 on error. */
+    @JvmStatic
+    external fun nativeDecodeDiscoveryFrame(
+        frame: ByteArray,
+        outDeviceId: ByteArray,
+        outPublicKey: ByteArray,
+        outListenPort: IntArray
+    ): Int
 }

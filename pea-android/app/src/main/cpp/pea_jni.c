@@ -18,6 +18,10 @@ extern int pea_core_on_chunk_received(void* h, const uint8_t* transfer_id_16,
     uint64_t start, uint64_t end, const uint8_t* hash_32,
     const uint8_t* payload, size_t payload_len, uint8_t* out_buf, size_t out_buf_len);
 extern int pea_core_tick(void* h, uint8_t* out_buf, size_t out_buf_len);
+extern int pea_core_beacon_frame(void* h, uint16_t listen_port, uint8_t* out_buf, size_t out_buf_len);
+extern int pea_core_discovery_response_frame(void* h, uint16_t listen_port, uint8_t* out_buf, size_t out_buf_len);
+extern int pea_core_decode_discovery_frame(const uint8_t* bytes, size_t len,
+    uint8_t* out_device_id_16, uint8_t* out_public_key_32, uint16_t* out_listen_port);
 
 #define PEA_CORE_JNI "dev/peapod/android/PeaCore"
 
@@ -170,5 +174,63 @@ Java_dev_peapod_android_PeaCore_nativeTick(JNIEnv *env, jclass clazz, jlong hand
     jsize out_len = (*env)->GetArrayLength(env, outBuf);
     int r = pea_core_tick((void*)(uintptr_t)handle, (uint8_t*)out, (size_t)out_len);
     (*env)->ReleaseByteArrayElements(env, outBuf, out, 0);
+    return (jint)r;
+}
+
+JNIEXPORT jint JNICALL
+Java_dev_peapod_android_PeaCore_nativeBeaconFrame(JNIEnv *env, jclass clazz, jlong handle,
+    jint listenPort, jbyteArray outBuf) {
+    (void)clazz;
+    if (!outBuf) return -1;
+    jbyte* out = (*env)->GetByteArrayElements(env, outBuf, NULL);
+    if (!out) return -1;
+    jsize out_len = (*env)->GetArrayLength(env, outBuf);
+    int r = pea_core_beacon_frame((void*)(uintptr_t)handle, (uint16_t)listenPort, (uint8_t*)out, (size_t)out_len);
+    (*env)->ReleaseByteArrayElements(env, outBuf, out, 0);
+    return (jint)r;
+}
+
+JNIEXPORT jint JNICALL
+Java_dev_peapod_android_PeaCore_nativeDiscoveryResponseFrame(JNIEnv *env, jclass clazz, jlong handle,
+    jint listenPort, jbyteArray outBuf) {
+    (void)clazz;
+    if (!outBuf) return -1;
+    jbyte* out = (*env)->GetByteArrayElements(env, outBuf, NULL);
+    if (!out) return -1;
+    jsize out_len = (*env)->GetArrayLength(env, outBuf);
+    int r = pea_core_discovery_response_frame((void*)(uintptr_t)handle, (uint16_t)listenPort, (uint8_t*)out, (size_t)out_len);
+    (*env)->ReleaseByteArrayElements(env, outBuf, out, 0);
+    return (jint)r;
+}
+
+JNIEXPORT jint JNICALL
+Java_dev_peapod_android_PeaCore_nativeDecodeDiscoveryFrame(JNIEnv *env, jclass clazz,
+    jbyteArray frame, jbyteArray outDeviceId, jbyteArray outPublicKey, jintArray outListenPort) {
+    (void)clazz;
+    if (!frame || !outDeviceId || !outPublicKey || !outListenPort) return -1;
+    if ((*env)->GetArrayLength(env, outDeviceId) < 16) return -1;
+    if ((*env)->GetArrayLength(env, outPublicKey) < 32) return -1;
+    if ((*env)->GetArrayLength(env, outListenPort) < 1) return -1;
+    jbyte* f = (*env)->GetByteArrayElements(env, frame, NULL);
+    if (!f) return -1;
+    jsize f_len = (*env)->GetArrayLength(env, frame);
+    jbyte* id = (*env)->GetByteArrayElements(env, outDeviceId, NULL);
+    jbyte* pk = (*env)->GetByteArrayElements(env, outPublicKey, NULL);
+    jint* port = (*env)->GetIntArrayElements(env, outListenPort, NULL);
+    if (!id || !pk || !port) {
+        (*env)->ReleaseByteArrayElements(env, frame, f, JNI_ABORT);
+        if (id) (*env)->ReleaseByteArrayElements(env, outDeviceId, id, JNI_ABORT);
+        if (pk) (*env)->ReleaseByteArrayElements(env, outPublicKey, pk, JNI_ABORT);
+        if (port) (*env)->ReleaseIntArrayElements(env, outListenPort, port, JNI_ABORT);
+        return -1;
+    }
+    uint16_t listen_port;
+    int r = pea_core_decode_discovery_frame((const uint8_t*)f, (size_t)f_len,
+        (uint8_t*)id, (uint8_t*)pk, &listen_port);
+    (*env)->ReleaseByteArrayElements(env, frame, f, JNI_ABORT);
+    (*env)->ReleaseByteArrayElements(env, outDeviceId, id, 0);
+    (*env)->ReleaseByteArrayElements(env, outPublicKey, pk, 0);
+    port[0] = (jint)listen_port;
+    (*env)->ReleaseIntArrayElements(env, outListenPort, port, 0);
     return (jint)r;
 }
