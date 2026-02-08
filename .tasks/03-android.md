@@ -56,17 +56,17 @@ Implementation of the PeaPod protocol for Android: Kotlin app with VPNService to
 
 ## 4. Local transport (in-app)
 
-- [ ] **4.1** TCP server
-  - [ ] 4.1.1 Bind TCP server socket to local port (or use one chosen at runtime)
-  - [ ] 4.1.2 Accept connections from peers; associate with peer_id (from discovery)
-  - [ ] 4.1.3 Read framed messages; pass bytes to core (JNI); send back responses from core to socket
-- [ ] **4.2** TCP client
-  - [ ] 4.2.1 When peer discovered, connect to peer's advertised IP:port
-  - [ ] 4.2.2 Perform handshake if needed; then exchange messages per protocol
-  - [ ] 4.2.3 Handle disconnect; call core on_peer_left
-- [ ] **4.3** Encryption
-  - [ ] 4.3.1 Use core for encrypt/decrypt of wire messages (JNI); send only encrypted bytes over TCP
-  - [ ] 4.3.2 Same wire format as other platforms
+- [x] **4.1** TCP server
+  - [x] 4.1.1 Bind TCP server socket to local port (or use one chosen at runtime) (Transport: ServerSocket LOCAL_TRANSPORT_PORT 45679)
+  - [x] 4.1.2 Accept connections from peers; associate with peer_id (from discovery) (handshake_accept gives peer_id + session_key; add to peerSenders)
+  - [x] 4.1.3 Read framed messages; pass bytes to core (JNI); send back responses from core to socket (4-byte LE length + cipher; decrypt, nativeOnMessageReceived, parseAndSendOutbound)
+- [x] **4.2** TCP client
+  - [x] 4.2.1 When peer discovered, connect to peer's advertised IP:port (Discovery.onPeerDiscovered -> Transport.connectTo(deviceId, publicKey, addr, port))
+  - [x] 4.2.2 Perform handshake if needed; then exchange messages per protocol (handshake_connect: send our 49 bytes, read 49, derive session_key; same frame loop)
+  - [x] 4.2.3 Handle disconnect; call core on_peer_left (on read loop exit remove from peerSenders, nativePeerLeft)
+- [x] **4.3** Encryption
+  - [x] 4.3.1 Use core for encrypt/decrypt of wire messages (JNI); send only encrypted bytes over TCP (nativeEncryptWire/nativeDecryptWire; ChaCha20-Poly1305 via pea-core)
+  - [x] 4.3.2 Same wire format as other platforms (49-byte handshake; 4-byte LE length + ciphertext; same as pea-windows)
 
 ## 5. Integration with pea-core (JNI)
 

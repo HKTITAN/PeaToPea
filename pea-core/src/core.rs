@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::chunk::{self, ChunkId, TransferState, DEFAULT_CHUNK_SIZE};
-use crate::identity::{DeviceId, Keypair, PublicKey};
+use crate::identity::{derive_session_key, DeviceId, Keypair, PublicKey};
 use crate::protocol::{Message, PROTOCOL_VERSION};
 use crate::scheduler;
 use crate::wire;
@@ -130,6 +130,20 @@ impl PeaPodCore {
             listen_port,
         };
         wire::encode_frame(&resp)
+    }
+
+    /// Handshake bytes for local transport: 1 version + 16 device_id + 32 public_key.
+    pub fn handshake_bytes(&self) -> [u8; 49] {
+        let mut out = [0u8; 49];
+        out[0] = PROTOCOL_VERSION;
+        out[1..17].copy_from_slice(self.keypair.device_id().as_bytes());
+        out[17..49].copy_from_slice(self.keypair.public_key().as_bytes());
+        out
+    }
+
+    /// Session key for a peer (from shared secret with peer's public key).
+    pub fn session_key(&self, peer_public: &PublicKey) -> [u8; 32] {
+        derive_session_key(&self.keypair.shared_secret(peer_public))
     }
 
     /// On incoming request (URL, optional range). Returns Accelerate with plan or Fallback.

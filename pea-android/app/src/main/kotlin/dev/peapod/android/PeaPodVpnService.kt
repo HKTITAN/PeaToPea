@@ -61,7 +61,11 @@ class PeaPodVpnService : VpnService() {
         Discovery.onPeerCountChanged = {
             Handler(Looper.getMainLooper()).post { updateNotification(Discovery.peerCount()) }
         }
+        Discovery.onPeerDiscovered = { deviceId, publicKey, addr, port ->
+            Transport.connectTo(deviceId, publicKey, addr, port)
+        }
         Discovery.start(coreHandle, Discovery.LOCAL_TRANSPORT_PORT)
+        Transport.start(coreHandle)
         startTunnelReadLoop()
         startForeground(NOTIFICATION_ID, buildNotification(Discovery.peerCount()))
         return START_STICKY
@@ -90,8 +94,10 @@ class PeaPodVpnService : VpnService() {
     }
 
     private fun stopVpn() {
+        Transport.stop()
         Discovery.stop()
         Discovery.onPeerCountChanged = null
+        Discovery.onPeerDiscovered = null
         LocalProxy.stop()
         if (coreHandle != 0L) {
             PeaCore.nativeDestroy(coreHandle)

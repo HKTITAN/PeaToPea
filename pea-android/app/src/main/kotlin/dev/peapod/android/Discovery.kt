@@ -45,6 +45,10 @@ object Discovery {
     @Volatile
     var onPeerCountChanged: (() -> Unit)? = null
 
+    /** Optional: called when a new peer is discovered (deviceId, publicKey, addr, port) so transport can connect. */
+    @Volatile
+    var onPeerDiscovered: ((ByteArray, ByteArray, java.net.InetAddress, Int) -> Unit)? = null
+
     /** Start discovery: bind multicast, send beacon loop, receive loop, timeout loop. Call when VPN/core is up. */
     fun start(coreHandle: Long, listenPort: Int) {
         if (coreHandle == 0L) return
@@ -111,6 +115,7 @@ object Discovery {
                 if (isNew) {
                     PeaCore.nativePeerJoined(coreHandle, outDeviceId, outPublicKey)
                     onPeerCountChanged?.invoke()
+                    onPeerDiscovered?.invoke(outDeviceId, outPublicKey, from, peerPort)
                 }
                 if (responseLen > 0) {
                     try {

@@ -15,3 +15,7 @@ int pea_core_tick(void* h, void* out_buf, size_t out_buf_len) { (void)h; (void)o
 int pea_core_beacon_frame(void* h, uint16_t listen_port, void* out_buf, size_t out_buf_len) { (void)h; (void)listen_port; (void)out_buf; (void)out_buf_len; return -1; }
 int pea_core_discovery_response_frame(void* h, uint16_t listen_port, void* out_buf, size_t out_buf_len) { (void)h; (void)listen_port; (void)out_buf; (void)out_buf_len; return -1; }
 int pea_core_decode_discovery_frame(const void* bytes, size_t len, void* out_device_id_16, void* out_public_key_32, uint16_t* out_listen_port) { (void)bytes; (void)len; (void)out_device_id_16; (void)out_public_key_32; (void)out_listen_port; return -1; }
+int pea_core_handshake_bytes(void* h, void* out_buf, size_t out_buf_len) { (void)h; (void)out_buf; (void)out_buf_len; return -1; }
+int pea_core_session_key(void* h, const void* peer_public_key_32, void* out_session_key_32) { (void)h; (void)peer_public_key_32; (void)out_session_key_32; return -1; }
+int pea_core_encrypt_wire(const void* session_key_32, uint64_t nonce, const void* plain, size_t plain_len, void* out_buf, size_t out_buf_len) { (void)session_key_32; (void)nonce; (void)plain; (void)plain_len; (void)out_buf; (void)out_buf_len; return -1; }
+int pea_core_decrypt_wire(const void* session_key_32, uint64_t nonce, const void* cipher, size_t cipher_len, void* out_buf, size_t out_buf_len) { (void)session_key_32; (void)nonce; (void)cipher; (void)cipher_len; (void)out_buf; (void)out_buf_len; return -1; }

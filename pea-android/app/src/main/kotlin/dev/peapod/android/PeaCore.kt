@@ -10,6 +10,9 @@ object PeaCore {
         System.loadLibrary("pea_jni")
     }
 
+    /** Protocol version for handshake (must match pea-core PROTOCOL_VERSION). */
+    const val PROTOCOL_VERSION: Int = 1
+
     /** Create core instance. Returns 0 if stub or failure. */
     @JvmStatic
     external fun nativeCreate(): Long
@@ -84,4 +87,20 @@ object PeaCore {
         outPublicKey: ByteArray,
         outListenPort: IntArray
     ): Int
+
+    /** Handshake bytes (49: version + device_id + public_key). Returns 0 on success, -1 on error. */
+    @JvmStatic
+    external fun nativeHandshakeBytes(handle: Long, outBuf: ByteArray): Int
+
+    /** Derive session key for peer. outSessionKey must be 32 bytes. Returns 0 on success, -1 on error. */
+    @JvmStatic
+    external fun nativeSessionKey(handle: Long, peerPublicKey: ByteArray, outSessionKey: ByteArray): Int
+
+    /** Encrypt for wire. Output length = plain.size + 16. Returns bytes written, or -1 on error. */
+    @JvmStatic
+    external fun nativeEncryptWire(sessionKey: ByteArray, nonce: Long, plain: ByteArray, outBuf: ByteArray): Int
+
+    /** Decrypt from wire. Output length = cipher.size - 16. Returns bytes written, or -1 on error. */
+    @JvmStatic
+    external fun nativeDecryptWire(sessionKey: ByteArray, nonce: Long, cipher: ByteArray, outBuf: ByteArray): Int
 }

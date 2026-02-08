@@ -22,6 +22,12 @@ extern int pea_core_beacon_frame(void* h, uint16_t listen_port, uint8_t* out_buf
 extern int pea_core_discovery_response_frame(void* h, uint16_t listen_port, uint8_t* out_buf, size_t out_buf_len);
 extern int pea_core_decode_discovery_frame(const uint8_t* bytes, size_t len,
     uint8_t* out_device_id_16, uint8_t* out_public_key_32, uint16_t* out_listen_port);
+extern int pea_core_handshake_bytes(void* h, uint8_t* out_buf, size_t out_buf_len);
+extern int pea_core_session_key(void* h, const uint8_t* peer_public_key_32, uint8_t* out_session_key_32);
+extern int pea_core_encrypt_wire(const uint8_t* session_key_32, uint64_t nonce,
+    const uint8_t* plain, size_t plain_len, uint8_t* out_buf, size_t out_buf_len);
+extern int pea_core_decrypt_wire(const uint8_t* session_key_32, uint64_t nonce,
+    const uint8_t* cipher, size_t cipher_len, uint8_t* out_buf, size_t out_buf_len);
 
 #define PEA_CORE_JNI "dev/peapod/android/PeaCore"
 
@@ -232,5 +238,83 @@ Java_dev_peapod_android_PeaCore_nativeDecodeDiscoveryFrame(JNIEnv *env, jclass c
     (*env)->ReleaseByteArrayElements(env, outPublicKey, pk, 0);
     port[0] = (jint)listen_port;
     (*env)->ReleaseIntArrayElements(env, outListenPort, port, 0);
+    return (jint)r;
+}
+
+JNIEXPORT jint JNICALL
+Java_dev_peapod_android_PeaCore_nativeHandshakeBytes(JNIEnv *env, jclass clazz, jlong handle, jbyteArray outBuf) {
+    (void)clazz;
+    if (!outBuf || (*env)->GetArrayLength(env, outBuf) < 49) return -1;
+    jbyte* out = (*env)->GetByteArrayElements(env, outBuf, NULL);
+    if (!out) return -1;
+    int r = pea_core_handshake_bytes((void*)(uintptr_t)handle, (uint8_t*)out, 49);
+    (*env)->ReleaseByteArrayElements(env, outBuf, out, 0);
+    return (jint)r;
+}
+
+JNIEXPORT jint JNICALL
+Java_dev_peapod_android_PeaCore_nativeSessionKey(JNIEnv *env, jclass clazz, jlong handle,
+    jbyteArray peerPublicKey, jbyteArray outSessionKey) {
+    (void)clazz;
+    if (!peerPublicKey || (*env)->GetArrayLength(env, peerPublicKey) < 32) return -1;
+    if (!outSessionKey || (*env)->GetArrayLength(env, outSessionKey) < 32) return -1;
+    jbyte* pk = (*env)->GetByteArrayElements(env, peerPublicKey, NULL);
+    jbyte* out = (*env)->GetByteArrayElements(env, outSessionKey, NULL);
+    if (!pk || !out) {
+        if (pk) (*env)->ReleaseByteArrayElements(env, peerPublicKey, pk, JNI_ABORT);
+        if (out) (*env)->ReleaseByteArrayElements(env, outSessionKey, out, JNI_ABORT);
+        return -1;
+    }
+    int r = pea_core_session_key((void*)(uintptr_t)handle, (const uint8_t*)pk, (uint8_t*)out);
+    (*env)->ReleaseByteArrayElements(env, peerPublicKey, pk, JNI_ABORT);
+    (*env)->ReleaseByteArrayElements(env, outSessionKey, out, 0);
+    return (jint)r;
+}
+
+JNIEXPORT jint JNICALL
+Java_dev_peapod_android_PeaCore_nativeEncryptWire(JNIEnv *env, jclass clazz,
+    jbyteArray sessionKey, jlong nonce, jbyteArray plain, jbyteArray outBuf) {
+    (void)clazz;
+    if (!sessionKey || !plain || !outBuf) return -1;
+    jbyte* key = (*env)->GetByteArrayElements(env, sessionKey, NULL);
+    jbyte* p = (*env)->GetByteArrayElements(env, plain, NULL);
+    jbyte* out = (*env)->GetByteArrayElements(env, outBuf, NULL);
+    if (!key || !p || !out) {
+        if (key) (*env)->ReleaseByteArrayElements(env, sessionKey, key, JNI_ABORT);
+        if (p) (*env)->ReleaseByteArrayElements(env, plain, p, JNI_ABORT);
+        if (out) (*env)->ReleaseByteArrayElements(env, outBuf, out, JNI_ABORT);
+        return -1;
+    }
+    jsize plain_len = (*env)->GetArrayLength(env, plain);
+    jsize out_len = (*env)->GetArrayLength(env, outBuf);
+    int r = pea_core_encrypt_wire((const uint8_t*)key, (uint64_t)nonce,
+        (const uint8_t*)p, (size_t)plain_len, (uint8_t*)out, (size_t)out_len);
+    (*env)->ReleaseByteArrayElements(env, sessionKey, key, JNI_ABORT);
+    (*env)->ReleaseByteArrayElements(env, plain, p, JNI_ABORT);
+    (*env)->ReleaseByteArrayElements(env, outBuf, out, 0);
+    return (jint)r;
+}
+
+JNIEXPORT jint JNICALL
+Java_dev_peapod_android_PeaCore_nativeDecryptWire(JNIEnv *env, jclass clazz,
+    jbyteArray sessionKey, jlong nonce, jbyteArray cipher, jbyteArray outBuf) {
+    (void)clazz;
+    if (!sessionKey || !cipher || !outBuf) return -1;
+    jbyte* key = (*env)->GetByteArrayElements(env, sessionKey, NULL);
+    jbyte* c = (*env)->GetByteArrayElements(env, cipher, NULL);
+    jbyte* out = (*env)->GetByteArrayElements(env, outBuf, NULL);
+    if (!key || !c || !out) {
+        if (key) (*env)->ReleaseByteArrayElements(env, sessionKey, key, JNI_ABORT);
+        if (c) (*env)->ReleaseByteArrayElements(env, cipher, c, JNI_ABORT);
+        if (out) (*env)->ReleaseByteArrayElements(env, outBuf, out, JNI_ABORT);
+        return -1;
+    }
+    jsize cipher_len = (*env)->GetArrayLength(env, cipher);
+    jsize out_len = (*env)->GetArrayLength(env, outBuf);
+    int r = pea_core_decrypt_wire((const uint8_t*)key, (uint64_t)nonce,
+        (const uint8_t*)c, (size_t)cipher_len, (uint8_t*)out, (size_t)out_len);
+    (*env)->ReleaseByteArrayElements(env, sessionKey, key, JNI_ABORT);
+    (*env)->ReleaseByteArrayElements(env, cipher, c, JNI_ABORT);
+    (*env)->ReleaseByteArrayElements(env, outBuf, out, 0);
     return (jint)r;
 }

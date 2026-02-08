@@ -6,7 +6,7 @@ use std::os::raw::c_int;
 use std::slice;
 
 use crate::chunk::ChunkId;
-use crate::identity::{DeviceId, PublicKey};
+use crate::identity::{decrypt_wire, encrypt_wire, DeviceId, PublicKey};
 use crate::protocol::{Message, PROTOCOL_VERSION};
 use crate::wire::decode_frame;
 use crate::{Action, PeaPodCore};
@@ -139,6 +139,110 @@ pub extern "C" fn pea_core_decode_discovery_frame(
         }
         _ => -1,
     }
+}
+
+const HANDSHAKE_SIZE: usize = 1 + 16 + 32;
+
+/// Fill out_buf with handshake bytes (49: version + device_id + public_key). Returns 0 on success, -1 on error.
+#[no_mangle]
+pub extern "C" fn pea_core_handshake_bytes(h: *mut c_void, out_buf: *mut u8, out_buf_len: usize) -> c_int {
+    if h.is_null() || out_buf.is_null() || out_buf_len < HANDSHAKE_SIZE {
+        return -1;
+    }
+    let core = unsafe { &*(h as *const PeaPodCore) };
+    let bytes = core.handshake_bytes();
+    unsafe {
+        out_buf.copy_from_nonoverlapping(bytes.as_ptr(), HANDSHAKE_SIZE);
+    }
+    0
+}
+
+/// Derive session key for a peer. Fills out_session_key_32 (32 bytes). Returns 0 on success, -1 on error.
+#[no_mangle]
+pub extern "C" fn pea_core_session_key(
+    h: *mut c_void,
+    peer_public_key_32: *const u8,
+    out_session_key_32: *mut u8,
+) -> c_int {
+    if h.is_null() || peer_public_key_32.is_null() || out_session_key_32.is_null() {
+        return -1;
+    }
+    let core = unsafe { &*(h as *const PeaPodCore) };
+    let pk = unsafe { slice::from_raw_parts(peer_public_key_32, 32) };
+    let mut arr = [0u8; 32];
+    arr.copy_from_slice(pk);
+    let peer_public = PublicKey(arr);
+    let key = core.session_key(&peer_public);
+    unsafe {
+        out_session_key_32.copy_from_nonoverlapping(key.as_ptr(), 32);
+    }
+    0
+}
+
+/// Encrypt plaintext for wire. Output is ciphertext (plain_len + 16 for tag). Returns bytes written, or -1 on error.
+#[no_mangle]
+pub extern "C" fn pea_core_encrypt_wire(
+    session_key_32: *const u8,
+    nonce: u64,
+    plain: *const u8,
+    plain_len: usize,
+    out_buf: *mut u8,
+    out_buf_len: usize,
+) -> c_int {
+    if session_key_32.is_null() || plain.is_null() || out_buf.is_null() {
+        return -1;
+    }
+    let key = unsafe { slice::from_raw_parts(session_key_32, 32) };
+    if key.len() != 32 {
+        return -1;
+    }
+    let mut key_arr = [0u8; 32];
+    key_arr.copy_from_slice(key);
+    let plain_slice = unsafe { slice::from_raw_parts(plain, plain_len) };
+    let cipher = match encrypt_wire(&key_arr, nonce, plain_slice) {
+        Ok(c) => c,
+        Err(_) => return -1,
+    };
+    if cipher.len() > out_buf_len {
+        return -1;
+    }
+    unsafe {
+        out_buf.copy_from_nonoverlapping(cipher.as_ptr(), cipher.len());
+    }
+    cipher.len() as c_int
+}
+
+/// Decrypt ciphertext from wire. Output is plaintext (cipher_len - 16). Returns bytes written, or -1 on error.
+#[no_mangle]
+pub extern "C" fn pea_core_decrypt_wire(
+    session_key_32: *const u8,
+    nonce: u64,
+    cipher: *const u8,
+    cipher_len: usize,
+    out_buf: *mut u8,
+    out_buf_len: usize,
+) -> c_int {
+    if session_key_32.is_null() || cipher.is_null() || out_buf.is_null() {
+        return -1;
+    }
+    let key = unsafe { slice::from_raw_parts(session_key_32, 32) };
+    if key.len() != 32 {
+        return -1;
+    }
+    let mut key_arr = [0u8; 32];
+    key_arr.copy_from_slice(key);
+    let cipher_slice = unsafe { slice::from_raw_parts(cipher, cipher_len) };
+    let plain = match decrypt_wire(&key_arr, nonce, cipher_slice) {
+        Ok(p) => p,
+        Err(_) => return -1,
+    };
+    if plain.len() > out_buf_len {
+        return -1;
+    }
+    unsafe {
+        out_buf.copy_from_nonoverlapping(plain.as_ptr(), plain.len());
+    }
+    plain.len() as c_int
 }
 
 /// On incoming request. url_len is byte length of url (UTF-8). range_end > range_start for a valid range; else treated as no range.
