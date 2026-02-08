@@ -24,6 +24,7 @@ This page summarizes PRD success metrics, edge-case handling, and risk mitigatio
 - **Chunk-level hashing:** Every chunk has a hash; verified on receive; reject and reassign on failure (pea-core).
 - **Local-only:** Chunks only between local peers (same LAN); no central server for data.
 - **No centralized logging:** No logs or telemetry sent to a central server; local logging only.
+- **Store listing / privacy policy (09 §5.4.3):** When publishing to an app store (e.g. Google Play, Apple App Store), the store listing and any required privacy policy should state that the app does not collect personal data and that data stays on the user’s local network (no central server).
 
 ## Success metrics (PRD)
 
