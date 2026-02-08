@@ -13,6 +13,15 @@ mod tray;
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     #[cfg(windows)]
     {
+        // Uninstaller runs "pea-windows.exe --restore-proxy" to restore system proxy before removing files.
+        if std::env::args().any(|a| a == "--restore-proxy") {
+            let _ = system_proxy::restore_system_proxy();
+            return Ok(());
+        }
+    }
+
+    #[cfg(windows)]
+    {
         use windows::Win32::Foundation::BOOL;
         let _ = BOOL(1);
     }

@@ -19,6 +19,10 @@ The proxy listens on `127.0.0.1:3128` by default. On Windows, running the app se
 - **Windows Settings link:** A dedicated "PeaPod" entry in Windows Settings (e.g. a link under Settings > Network & Internet > Proxy, or an app settings page) can be added when the app is packaged (installer or MSIX per [.tasks/02-windows.md](../.tasks/02-windows.md) §7). Until then, the app is started manually and controlled via the tray.
 - **Uninstall:** When an installer exists (§7), uninstalling will appear in **Settings > Apps > Installed apps**; the uninstaller will restore the system proxy if PeaPod was enabled (see §7.1.3).
 
+## Installer
+
+A per-user installer (Inno Setup) is in [installer/](installer/). Build the app with `cargo build -p pea-windows --release`, then build the setup with Inno Setup (see [installer/README.md](installer/README.md)). The installer does **not** set the system proxy; the user enables it in the app (tray → Enable). On uninstall, the setup runs `pea_windows.exe --restore-proxy` to restore the previous proxy state.
+
 ## Tasks
 
 See [.tasks/02-windows.md](../.tasks/02-windows.md) for the full Windows implementation checklist.
