@@ -16,6 +16,7 @@ object Discovery {
     const val LOCAL_TRANSPORT_PORT = 45679
     private const val MULTICAST_GROUP = "239.255.60.60"
     private const val BEACON_INTERVAL_MS = 4000L
+    private const val BEACON_INTERVAL_THROTTLE_MS = 12000L
     private const val PEER_TIMEOUT_MS = 16000L
     private const val TIMEOUT_CHECK_MS = 4000L
     private const val BEACON_FRAME_MAX = 256
@@ -49,6 +50,10 @@ object Discovery {
     @Volatile
     var onPeerDiscovered: ((ByteArray, ByteArray, java.net.InetAddress, Int) -> Unit)? = null
 
+    /** When true, use longer beacon interval to reduce battery use (§7.1). Set by service from battery state. */
+    @Volatile
+    var throttleBeacon = false
+
     /** Start discovery: bind multicast, send beacon loop, receive loop, timeout loop. Call when VPN/core is up. */
     fun start(coreHandle: Long, listenPort: Int) {
         if (coreHandle == 0L) return
@@ -70,7 +75,7 @@ object Discovery {
                             socket?.send(DatagramPacket(beaconBuf, n, group, DISCOVERY_PORT))
                         } catch (_: Exception) {}
                     }
-                    Thread.sleep(BEACON_INTERVAL_MS)
+                    Thread.sleep(if (throttleBeacon) BEACON_INTERVAL_THROTTLE_MS else BEACON_INTERVAL_MS)
                 }
             }
             thread(name = "DiscoveryRecv") {

@@ -12,9 +12,18 @@
     <string name="settings_title">Settings</string>
     <string name="settings_battery_saver">Battery saver (reduce participation when low battery)</string>
     <string name="settings_start_on_boot">Start PeaPod when device boots</string>
+    <string name="settings_battery_threshold">Pause when battery below</string>
     <string name="first_run_title">Welcome to PeaPod</string>
     <string name="first_run_message">PeaPod lets you share bandwidth with nearby devices in your pod. When you tap Enable, the system will ask for VPN access so PeaPod can coordinate traffic.</string>
     <string name="permission_local_network_denied">PeaPod needs local network access to discover nearby devices.</string>
     <string name="permission_open_settings">Open Settings</string>
     <string name="permission_denied_settings_hint">You can enable it in app settings.</string>
+    <string-array name="battery_threshold_options">
+        <item>5%</item>
+        <item>10%</item>
+        <item>15%</item>
+        <item>20%</item>
+        <item>25%</item>
+        <item>30%</item>
+    </string-array>
 </resources>

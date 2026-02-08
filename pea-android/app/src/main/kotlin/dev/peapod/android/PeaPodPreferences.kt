@@ -9,6 +9,8 @@ object PeaPodPreferences {
     private const val KEY_BATTERY_SAVER = "battery_saver"
     private const val KEY_START_ON_BOOT = "start_on_boot"
     private const val KEY_FIRST_RUN_SEEN = "first_run_seen"
+    private const val KEY_BATTERY_THRESHOLD_PERCENT = "battery_threshold_percent"
+    private const val DEFAULT_BATTERY_THRESHOLD = 15
 
     private fun prefs(context: Context): SharedPreferences =
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -32,5 +34,14 @@ object PeaPodPreferences {
 
     fun setFirstRunSeen(context: Context) {
         prefs(context).edit().putBoolean(KEY_FIRST_RUN_SEEN, true).apply()
+    }
+
+    /** Pause/throttle when battery below this percent (if battery saver on). Default 15. §7.1.2 */
+    fun batteryThresholdPercent(context: Context): Int =
+        prefs(context).getInt(KEY_BATTERY_THRESHOLD_PERCENT, DEFAULT_BATTERY_THRESHOLD)
+            .coerceIn(5, 50)
+
+    fun setBatteryThresholdPercent(context: Context, percent: Int) {
+        prefs(context).edit().putInt(KEY_BATTERY_THRESHOLD_PERCENT, percent.coerceIn(5, 50)).apply()
     }
 }

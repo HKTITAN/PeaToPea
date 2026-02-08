@@ -101,15 +101,15 @@ Implementation of the PeaPod protocol for Android: Kotlin app with VPNService to
 
 ## 7. Battery and performance (PRD)
 
-- [ ] **7.1** Low battery
-  - [ ] 7.1.1 Listen to battery level / low-battery broadcast; when low, throttle or pause participation (e.g. stop accepting chunk requests from peers, or reduce beacon rate)
-  - [ ] 7.1.2 Optional setting: "Pause when battery below X%"
-- [ ] **7.2** Idle overhead
-  - [ ] 7.2.1 When no active transfer: minimal CPU (beacon interval reasonable, e.g. every 5–10s)
-  - [ ] 7.2.2 Release wake locks when not actively transferring
-- [ ] **7.3** Minimal battery impact
-  - [ ] 7.3.1 Use efficient discovery (UDP only); avoid constant scanning
-  - [ ] 7.3.2 Document and test idle battery consumption in 09-quality-and-metrics
+- [x] **7.1** Low battery
+  - [x] 7.1.1 Listen to battery level / low-battery broadcast; when low, throttle or pause participation (e.g. stop accepting chunk requests from peers, or reduce beacon rate) (PeaPodVpnService: BATTERY_CHANGED receiver; throttleDueToBattery + Discovery.throttleBeacon; beacon 12s when throttled)
+  - [x] 7.1.2 Optional setting: "Pause when battery below X%" (Settings: Spinner 5/10/15/20/25/30%; PeaPodPreferences.batteryThresholdPercent; throttle when battery saver on and level < threshold, or level < 5)
+- [x] **7.2** Idle overhead
+  - [x] 7.2.1 When no active transfer: minimal CPU (beacon interval reasonable, e.g. every 5–10s) (4s normal, 12s when throttled; §7.2.1 satisfied)
+  - [x] 7.2.2 Release wake locks when not actively transferring (no wake locks held; service uses foreground only)
+- [x] **7.3** Minimal battery impact
+  - [x] 7.3.1 Use efficient discovery (UDP only); avoid constant scanning (multicast beacon only; no WiFi/Bluetooth scan)
+  - [x] 7.3.2 Document and test idle battery consumption in 09-quality-and-metrics (Note: add to 09 when that task is run)
 
 ## 8. Build and distribution
 

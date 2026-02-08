@@ -3,13 +3,18 @@ package dev.peapod.android
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.net.VpnService
+import android.os.BatteryManager
 import android.os.Build
-import android.os.IBinder
 import android.os.Handler
+import android.os.IBinder
 import android.os.Looper
 import android.os.ParcelFileDescriptor
+import androidx.core.content.ContextCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import kotlin.concurrent.thread
@@ -29,10 +34,13 @@ class PeaPodVpnService : VpnService() {
         @Volatile var vpnActive = false
         /** For UI: current peer count when VPN active (updated with notification). */
         @Volatile var peerCountForUi = 0
+        /** When true, discovery uses longer beacon interval (§7.1). */
+        @Volatile var throttleDueToBattery = false
     }
 
     private var tunnelFd: ParcelFileDescriptor? = null
     private var coreHandle: Long = 0L
+    private var batteryReceiver: BroadcastReceiver? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -73,6 +81,7 @@ class PeaPodVpnService : VpnService() {
         }
         Discovery.start(coreHandle, Discovery.LOCAL_TRANSPORT_PORT)
         Transport.start(coreHandle)
+        registerBatteryReceiver()
         startTunnelReadLoop()
         vpnActive = true
         peerCountForUi = Discovery.peerCount()
@@ -112,11 +121,38 @@ class PeaPodVpnService : VpnService() {
             PeaCore.nativeDestroy(coreHandle)
             coreHandle = 0L
         }
+        unregisterBatteryReceiver()
         tunnelFd?.close()
         tunnelFd = null
         vpnActive = false
         peerCountForUi = 0
+        throttleDueToBattery = false
+        Discovery.throttleBeacon = false
         stopForeground(STOP_FOREGROUND_REMOVE)
+    }
+
+    private fun registerBatteryReceiver() {
+        if (batteryReceiver != null) return
+        batteryReceiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                if (intent?.action != Intent.ACTION_BATTERY_CHANGED || context !is PeaPodVpnService) return
+                val level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
+                val scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, 100)
+                val percent = if (scale > 0) level * 100 / scale else 100
+                val threshold = PeaPodPreferences.batteryThresholdPercent(context)
+                val saverOn = PeaPodPreferences.batterySaver(context)
+                throttleDueToBattery = percent < 5 || (saverOn && percent < threshold)
+                Discovery.throttleBeacon = throttleDueToBattery
+            }
+        }
+        ContextCompat.registerReceiver(this, batteryReceiver, IntentFilter(Intent.ACTION_BATTERY_CHANGED), ContextCompat.RECEIVER_NOT_EXPORTED)
+    }
+
+    private fun unregisterBatteryReceiver() {
+        batteryReceiver?.let {
+            try { unregisterReceiver(it) } catch (_: Exception) {}
+            batteryReceiver = null
+        }
     }
 
     private fun createNotificationChannel() {
