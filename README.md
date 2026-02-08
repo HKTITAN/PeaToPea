@@ -24,7 +24,8 @@ Licensed under the [MIT License](LICENSE). For Rust dependency licenses: `cargo 
 - `pea-core/` — PeaPod protocol reference implementation (Rust library).
 - `pea-windows/`, `pea-linux/` — Stub binaries for Windows and Linux implementations (in progress).
 - `pea-android/` — Android app (Gradle/Kotlin); min SDK 24, target SDK 34. See [pea-android/README.md](pea-android/README.md).
-- `pea-ios/`, `pea-macos/` — Placeholders for iOS and macOS implementations.
+- `pea-ios/` — Swift Package placeholder for iOS (Xcode 15+, [pea-ios/README.md](pea-ios/README.md)).
+- `pea-macos/` — Swift Package placeholder for macOS (Xcode 15+, [pea-macos/README.md](pea-macos/README.md)).
 
 ## Build and test
 

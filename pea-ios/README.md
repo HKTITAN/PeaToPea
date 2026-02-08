@@ -1,0 +1,37 @@
+# PeaPod iOS
+
+iOS protocol implementation for PeaPod (Network Extension, discovery, transport). Uses pea-core (Rust) via static lib or XCFramework when built.
+
+## Environment
+
+- **Xcode**: 15.0 or later (Swift 5.9, iOS 17 SDK). Install from the Mac App Store or [developer.apple.com](https://developer.apple.com/xcode/).
+- **Rust targets** (from repo root):
+  ```bash
+  rustup target add aarch64-apple-ios x86_64-apple-ios   # device + simulator
+  ```
+
+## Building pea-core for iOS
+
+From the **repo root**, build pea-core as a static library for device and/or simulator:
+
+```bash
+# Device (arm64)
+cargo build -p pea-core --target aarch64-apple-ios --release
+
+# Simulator (arm64 Mac or x86_64)
+cargo build -p pea-core --target x86_64-apple-ios --release
+# or aarch64-apple-ios-sim when available
+```
+
+Then either:
+
+- **Static lib**: Use `target/<triple>/release/libpea_core.a` in your Xcode project and link from the app or extension target.
+- **XCFramework**: Build a universal binary and wrap in an XCFramework so one artifact works for device and simulator; document the exact `lipo`/`xcodebuild -create-xcframework` steps in .tasks/05-ios when implementing.
+
+## Scaffold
+
+This directory is a Swift Package placeholder. Replace or add an Xcode project (`.xcodeproj`) for the app and Network Extension when implementing per [.tasks/05-ios.md](../.tasks/05-ios.md).
+
+## Tasks
+
+See [.tasks/05-ios.md](../.tasks/05-ios.md) for the full iOS implementation checklist.

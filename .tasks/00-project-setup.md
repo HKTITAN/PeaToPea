@@ -48,13 +48,13 @@ Repo structure, tooling, and CI. Complete before building protocol implementatio
 
 ## 5. iOS/macOS toolchain
 
-- [ ] **5.1** Apple development
-  - [ ] 5.1.1 Document Xcode version requirement
-  - [ ] 5.1.2 Create placeholder or scaffold for `pea-ios/` (Xcode project or Swift Package)
-  - [ ] 5.1.3 Create placeholder or scaffold for `pea-macos/` (Xcode project)
-- [ ] **5.2** Rust for Apple
-  - [ ] 5.2.1 Add Rust targets: `aarch64-apple-ios`, `x86_64-apple-ios`, `aarch64-apple-darwin`, `x86_64-apple-darwin`
-  - [ ] 5.2.2 Document how core is built as static lib or XCFramework
+- [x] **5.1** Apple development
+  - [x] 5.1.1 Document Xcode version requirement (15+ in pea-ios/ and pea-macos/ READMEs)
+  - [x] 5.1.2 Create placeholder or scaffold for `pea-ios/` (Xcode project or Swift Package)
+  - [x] 5.1.3 Create placeholder or scaffold for `pea-macos/` (Xcode project)
+- [x] **5.2** Rust for Apple
+  - [x] 5.2.1 Add Rust targets: `aarch64-apple-ios`, `x86_64-apple-ios`, `aarch64-apple-darwin`, `x86_64-apple-darwin` (in main README and platform READMEs)
+  - [x] 5.2.2 Document how core is built as static lib or XCFramework (pea-ios/README, pea-macos/README)
 
 ## 6. CI (continuous integration)
 
