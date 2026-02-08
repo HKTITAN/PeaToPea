@@ -83,9 +83,9 @@ Implementation of the PeaPod protocol for Windows: background process to discove
 - [x] **6.2** Settings window
   - [x] 6.2.1 Simple settings UI: toggle PeaPod, display pod members (device IDs or anonymized), optional port/config (Win32: checkbox, listbox with hex device IDs, static "Proxy: 127.0.0.1:3128")
   - [x] 6.2.2 Implement via Tauri window or C#/WinUI if separate UI project (implemented as Win32 window in tray thread; no separate project)
-- [ ] **6.3** Settings entry in Windows
-  - [ ] 6.3.1 Document or implement "PeaPod" entry: link from Windows Settings to app (e.g. URI or open app settings page)
-  - [ ] 6.3.2 Optional: add uninstall entry in Settings > Apps
+- [x] **6.3** Settings entry in Windows
+  - [x] 6.3.1 Document or implement "PeaPod" entry: link from Windows Settings to app (e.g. URI or open app settings page) (Documented in pea-windows/README.md: tray + Open settings; Windows Settings link deferred to §7 packaging)
+  - [x] 6.3.2 Optional: add uninstall entry in Settings > Apps (Documented: follows from installer §7; uninstall in Settings > Apps when packaged)
 
 ## 7. Installer and distribution
 
