@@ -38,6 +38,12 @@ jobs:
       - name: Build pea-linux
         run: cargo build -p pea-linux --verbose
 
+      - name: Generate C header (cbindgen)
+        run: |
+          cargo install cbindgen --locked
+          cbindgen pea-core -o pea_core.h
+          grep -q pea_core_create pea_core.h && echo "C header generated OK"
+
   interop-smoke:
     name: interop smoke (two pea-linux)
     runs-on: ubuntu-latest
