@@ -7,11 +7,68 @@ mod transport;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
+fn print_help() {
+    println!("pea-linux {} — PeaPod protocol daemon for Linux", VERSION);
+    println!();
+    println!("USAGE:");
+    println!("    pea-linux [OPTIONS]");
+    println!();
+    println!("OPTIONS:");
+    println!("    -h, --help       Print this help message and exit");
+    println!("    -V, --version    Print version and exit");
+    println!();
+    println!("DESCRIPTION:");
+    println!("    Starts the PeaPod daemon: local HTTP proxy, LAN peer discovery,");
+    println!("    and encrypted transport. Nearby devices running PeaPod form a");
+    println!("    mesh and pool their internet connections.");
+    println!();
+    println!("    Proxy       127.0.0.1:3128   (HTTP/HTTPS proxy)");
+    println!("    Discovery   UDP 45678         (LAN multicast 239.255.60.60)");
+    println!("    Transport   TCP 45679         (encrypted peer-to-peer)");
+    println!();
+    println!("    Stop with Ctrl+C or SIGTERM.");
+    println!();
+    println!("CONFIGURATION:");
+    println!("    Config file (optional, first found wins):");
+    println!("      ~/.config/peapod/config.toml");
+    println!("      /etc/peapod/config.toml");
+    println!();
+    println!("    Example config.toml:");
+    println!("      proxy_port = 3128");
+    println!("      discovery_port = 45678");
+    println!("      transport_port = 45679");
+    println!();
+    println!("ENVIRONMENT VARIABLES (override config file):");
+    println!("    PEAPOD_PROXY_PORT       Proxy listen port (default: 3128)");
+    println!("    PEAPOD_DISCOVERY_PORT   Discovery UDP port (default: 45678)");
+    println!("    PEAPOD_TRANSPORT_PORT   Transport TCP port (default: 45679)");
+    println!();
+    println!("SYSTEMD:");
+    println!("    systemctl --user enable peapod    Enable auto-start on login");
+    println!("    systemctl --user start peapod     Start now");
+    println!("    systemctl --user status peapod    Check status");
+    println!("    systemctl --user stop peapod      Stop");
+    println!();
+    println!("MORE INFO:");
+    println!("    https://github.com/HKTITAN/PeaToPea");
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    for arg in std::env::args().skip(1) {
-        if arg == "--version" || arg == "-V" {
-            println!("pea-linux {}", VERSION);
-            return Ok(());
+    if let Some(arg) = std::env::args().nth(1) {
+        match arg.as_str() {
+            "--version" | "-V" => {
+                println!("pea-linux {}", VERSION);
+                return Ok(());
+            }
+            "--help" | "-h" => {
+                print_help();
+                return Ok(());
+            }
+            other => {
+                eprintln!("pea-linux: unknown option '{}'\n", other);
+                print_help();
+                std::process::exit(1);
+            }
         }
     }
 
