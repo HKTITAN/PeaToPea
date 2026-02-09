@@ -15,6 +15,57 @@ mod system_proxy;
 mod tray;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let version = env!("CARGO_PKG_VERSION");
+
+    // Parse CLI arguments before entering platform-specific code.
+    if let Some(arg) = std::env::args().nth(1) {
+        match arg.as_str() {
+            "--version" | "-V" => {
+                println!("pea-windows {}", version);
+                return Ok(());
+            }
+            "--help" | "-h" => {
+                println!("pea-windows {} — PeaPod protocol for Windows", version);
+                println!();
+                println!("USAGE:");
+                println!("    pea-windows [OPTIONS]");
+                println!();
+                println!("OPTIONS:");
+                println!("    -h, --help           Print this help message and exit");
+                println!("    -V, --version        Print version and exit");
+                println!(
+                    "    --restore-proxy      Restore system proxy to pre-PeaPod state (used by uninstaller)"
+                );
+                println!();
+                println!("DESCRIPTION:");
+                println!(
+                    "    Starts the PeaPod Windows app: local HTTP proxy, LAN peer discovery,"
+                );
+                println!("    encrypted transport, and a system tray icon for controls.");
+                println!();
+                println!("    Proxy       127.0.0.1:3128   (HTTP/HTTPS proxy)");
+                println!("    Discovery   UDP 45678        (LAN multicast 239.255.60.60)");
+                println!("    Transport   TCP 45679        (encrypted peer-to-peer)");
+                println!();
+                println!("SYSTEM TRAY:");
+                println!("    Right-click the tray icon to:");
+                println!("      - Enable / Disable the proxy");
+                println!("      - Open settings (pod members, auto-start)");
+                println!("      - Exit PeaPod");
+                println!();
+                println!("MORE INFO:");
+                println!("    https://github.com/HKTITAN/PeaToPea");
+                return Ok(());
+            }
+            "--restore-proxy" => { /* handled below */ }
+            other => {
+                eprintln!("pea-windows: unknown option '{}'\n", other);
+                eprintln!("Run 'pea-windows --help' for usage information.");
+                std::process::exit(1);
+            }
+        }
+    }
+
     #[cfg(windows)]
     {
         // Uninstaller runs "pea-windows.exe --restore-proxy" to restore system proxy before removing files.

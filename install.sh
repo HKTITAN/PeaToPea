@@ -151,6 +151,91 @@ install_rust() {
     ok "Rust installed: $(rustc --version)"
 }
 
+install_build_deps() {
+    # A C compiler/linker is needed by some Rust crates (e.g. ring, cc)
+    if command -v cc >/dev/null 2>&1 || command -v gcc >/dev/null 2>&1; then
+        ok "C compiler found."
+        return 0
+    fi
+
+    warn "No C compiler (cc/gcc) found. Some Rust crates require one."
+
+    if [ "$OS" = "macos" ]; then
+        info "Installing Xcode Command Line Tools (provides clang)..."
+        if confirm "Install Xcode Command Line Tools?"; then
+            xcode-select --install 2>/dev/null || true
+            info "If a dialog appeared, follow the prompts then re-run this installer."
+            exit 0
+        else
+            error "A C compiler is required to build PeaPod. Aborting."
+            exit 1
+        fi
+    fi
+
+    # Linux - try to auto-install via package manager
+    if [ "$OS" = "linux" ]; then
+        if command -v apt-get >/dev/null 2>&1; then
+            info "Detected apt. Installing build-essential..."
+            if confirm "Install build-essential (gcc, make, etc.)?"; then
+                sudo apt-get update -qq && sudo apt-get install -y build-essential
+            else
+                error "A C compiler is required to build PeaPod. Install gcc or build-essential and re-run."
+                exit 1
+            fi
+        elif command -v dnf >/dev/null 2>&1; then
+            info "Detected dnf. Installing Development Tools..."
+            if confirm "Install gcc and make?"; then
+                sudo dnf install -y gcc make
+            else
+                error "A C compiler is required to build PeaPod. Install gcc and re-run."
+                exit 1
+            fi
+        elif command -v yum >/dev/null 2>&1; then
+            info "Detected yum. Installing Development Tools..."
+            if confirm "Install gcc and make?"; then
+                sudo yum install -y gcc make
+            else
+                error "A C compiler is required to build PeaPod. Install gcc and re-run."
+                exit 1
+            fi
+        elif command -v pacman >/dev/null 2>&1; then
+            info "Detected pacman. Installing base-devel..."
+            if confirm "Install base-devel (gcc, make, etc.)?"; then
+                sudo pacman -Sy --noconfirm base-devel
+            else
+                error "A C compiler is required to build PeaPod. Install gcc and re-run."
+                exit 1
+            fi
+        elif command -v zypper >/dev/null 2>&1; then
+            info "Detected zypper. Installing gcc and make..."
+            if confirm "Install gcc and make?"; then
+                sudo zypper install -y gcc make
+            else
+                error "A C compiler is required to build PeaPod. Install gcc and re-run."
+                exit 1
+            fi
+        elif command -v apk >/dev/null 2>&1; then
+            info "Detected apk. Installing build-base..."
+            if confirm "Install build-base (gcc, make, musl-dev)?"; then
+                sudo apk add build-base
+            else
+                error "A C compiler is required to build PeaPod. Install gcc and re-run."
+                exit 1
+            fi
+        else
+            error "No supported package manager found. Please install gcc manually and re-run."
+            exit 1
+        fi
+
+        if command -v cc >/dev/null 2>&1 || command -v gcc >/dev/null 2>&1; then
+            ok "C compiler installed."
+        else
+            error "Failed to install C compiler. Please install gcc manually and re-run."
+            exit 1
+        fi
+    fi
+}
+
 clone_repo() {
     TMPDIR="${TMPDIR:-/tmp}"
     BUILD_DIR="$TMPDIR/peapod-build-$$"
@@ -338,19 +423,26 @@ cleanup() {
 
 uninstall() {
     banner
+    detect_os
+
+    if ! confirm "Uninstall PeaPod?"; then
+        info "Uninstall cancelled."
+        exit 0
+    fi
+
     info "Uninstalling PeaPod..."
 
     PREFIX="${PEAPOD_PREFIX:-/usr/local}"
     INSTALL_PATH="$PREFIX/bin/pea-linux"
 
     # Stop services
-    if [ "$(uname -s)" = "Linux" ]; then
+    if [ "$OS" = "linux" ]; then
         systemctl --user stop peapod.service 2>/dev/null || true
         systemctl --user disable peapod.service 2>/dev/null || true
         rm -f "$HOME/.config/systemd/user/peapod.service"
         systemctl --user daemon-reload 2>/dev/null || true
         ok "Systemd service removed."
-    elif [ "$(uname -s)" = "Darwin" ]; then
+    elif [ "$OS" = "macos" ]; then
         PLIST_FILE="$HOME/Library/LaunchAgents/com.peapod.daemon.plist"
         launchctl unload "$PLIST_FILE" 2>/dev/null || true
         rm -f "$PLIST_FILE"
@@ -365,10 +457,176 @@ uninstall() {
             sudo rm -f "$INSTALL_PATH"
         fi
         ok "Binary removed: $INSTALL_PATH"
+    else
+        warn "Binary not found at $INSTALL_PATH (already removed?)."
     fi
 
     info "Config at ~/.config/peapod/ was not removed (your settings are preserved)."
     ok "PeaPod has been uninstalled."
+    exit 0
+}
+
+# ── Update ──────────────────────────────────────────────────────────
+
+update() {
+    banner
+    detect_os
+    info "Updating PeaPod to the latest version..."
+
+    PREFIX="${PEAPOD_PREFIX:-/usr/local}"
+    INSTALL_PATH="$PREFIX/bin/pea-linux"
+
+    if [ ! -f "$INSTALL_PATH" ]; then
+        error "PeaPod is not installed at $INSTALL_PATH. Run the installer first."
+        exit 1
+    fi
+
+    # Show current version if binary supports --version
+    CURRENT_VER=$("$INSTALL_PATH" --version 2>/dev/null || echo "unknown")
+    info "Current version: $CURRENT_VER"
+
+    if ! confirm "Download and build the latest version?"; then
+        info "Update cancelled."
+        exit 0
+    fi
+
+    # Ensure Rust is available
+    # shellcheck source=/dev/null
+    . "$HOME/.cargo/env" 2>/dev/null || true
+    install_rust
+
+    install_build_deps
+
+    need_cmd curl
+    need_cmd git
+    clone_repo
+    trap cleanup EXIT
+
+    build_binary
+
+    # Stop running instance before replacing
+    if [ "$OS" = "linux" ]; then
+        systemctl --user stop peapod.service 2>/dev/null || true
+    elif [ "$OS" = "macos" ]; then
+        PLIST_FILE="$HOME/Library/LaunchAgents/com.peapod.daemon.plist"
+        launchctl unload "$PLIST_FILE" 2>/dev/null || true
+    fi
+
+    install_binary
+
+    # Restart service if it was running
+    if [ "$OS" = "linux" ]; then
+        if systemctl --user is-enabled peapod.service >/dev/null 2>&1; then
+            systemctl --user start peapod.service 2>/dev/null || true
+            ok "PeaPod service restarted."
+        fi
+    elif [ "$OS" = "macos" ]; then
+        PLIST_FILE="$HOME/Library/LaunchAgents/com.peapod.daemon.plist"
+        if [ -f "$PLIST_FILE" ]; then
+            launchctl load "$PLIST_FILE" 2>/dev/null || true
+            ok "PeaPod launch agent restarted."
+        fi
+    fi
+
+    NEW_VER=$("$INSTALL_PATH" --version 2>/dev/null || echo "unknown")
+    printf "\n"
+    ok "PeaPod updated: $CURRENT_VER -> $NEW_VER"
+    exit 0
+}
+
+# ── Modify ──────────────────────────────────────────────────────────
+
+modify() {
+    banner
+    detect_os
+    info "Modify PeaPod installation"
+
+    PREFIX="${PEAPOD_PREFIX:-/usr/local}"
+    INSTALL_PATH="$PREFIX/bin/pea-linux"
+
+    if [ ! -f "$INSTALL_PATH" ]; then
+        error "PeaPod is not installed at $INSTALL_PATH. Run the installer first."
+        exit 1
+    fi
+
+    printf "\n"
+    printf "  %sWhat would you like to change?%s\n" "$BOLD" "$RESET"
+    printf "\n"
+    printf "  1) Toggle auto-start on login\n"
+    printf "  2) Reinstall / repair the systemd service or launchd agent\n"
+    printf "  3) Remove config (reset to defaults)\n"
+    printf "  4) Cancel\n"
+    printf "\n"
+    printf "  Choice [1-4]: "
+    read -r choice
+
+    case "$choice" in
+        1)
+            if [ "$OS" = "linux" ]; then
+                if systemctl --user is-enabled peapod.service >/dev/null 2>&1; then
+                    info "Auto-start is currently ENABLED."
+                    if confirm "Disable auto-start?"; then
+                        systemctl --user disable peapod.service 2>/dev/null || true
+                        ok "Auto-start disabled. PeaPod will not start on login."
+                    fi
+                else
+                    info "Auto-start is currently DISABLED."
+                    if confirm "Enable auto-start?"; then
+                        if [ ! -f "$HOME/.config/systemd/user/peapod.service" ]; then
+                            info "Service file missing. Reinstalling..."
+                            install_service_linux
+                        else
+                            systemctl --user enable peapod.service 2>/dev/null || true
+                        fi
+                        ok "Auto-start enabled. PeaPod will start on login."
+                    fi
+                fi
+            elif [ "$OS" = "macos" ]; then
+                PLIST_FILE="$HOME/Library/LaunchAgents/com.peapod.daemon.plist"
+                if [ -f "$PLIST_FILE" ]; then
+                    info "Launch agent is currently INSTALLED."
+                    if confirm "Remove launch agent (disable auto-start)?"; then
+                        launchctl unload "$PLIST_FILE" 2>/dev/null || true
+                        rm -f "$PLIST_FILE"
+                        ok "Auto-start disabled."
+                    fi
+                else
+                    info "Launch agent is currently NOT installed."
+                    if confirm "Install launch agent (enable auto-start)?"; then
+                        install_service_macos
+                    fi
+                fi
+            fi
+            ;;
+        2)
+            if [ "$OS" = "linux" ]; then
+                info "Reinstalling systemd service..."
+                systemctl --user stop peapod.service 2>/dev/null || true
+                install_service_linux
+            elif [ "$OS" = "macos" ]; then
+                info "Reinstalling launch agent..."
+                PLIST_FILE="$HOME/Library/LaunchAgents/com.peapod.daemon.plist"
+                launchctl unload "$PLIST_FILE" 2>/dev/null || true
+                install_service_macos
+            fi
+            ;;
+        3)
+            CONFIG_DIR="$HOME/.config/peapod"
+            if [ -d "$CONFIG_DIR" ]; then
+                if confirm "Remove $CONFIG_DIR and reset to defaults?"; then
+                    rm -rf "$CONFIG_DIR"
+                    create_config_dir
+                    ok "Config reset to defaults."
+                fi
+            else
+                info "No config directory found. Creating defaults..."
+                create_config_dir
+            fi
+            ;;
+        4|*)
+            info "No changes made."
+            ;;
+    esac
     exit 0
 }
 
@@ -381,13 +639,17 @@ main() {
     for arg in "$@"; do
         case "$arg" in
             --uninstall) uninstall ;;
+            --update)    update ;;
+            --modify)    modify ;;
             --yes|-y)    PEAPOD_NO_CONFIRM=1 ;;
             --local)     LOCAL_BUILD=1 ;;
             --help|-h)
-                printf "Usage: install.sh [--yes] [--local] [--uninstall] [--help]\n"
+                printf "Usage: install.sh [--yes] [--local] [--uninstall] [--update] [--modify] [--help]\n"
                 printf "  --yes         Skip confirmation prompts\n"
                 printf "  --local       Build from the current directory (skip git clone)\n"
                 printf "  --uninstall   Remove PeaPod from this system\n"
+                printf "  --update      Update PeaPod to the latest version\n"
+                printf "  --modify      Change PeaPod settings (auto-start, service, config)\n"
                 printf "  --help        Show this help\n"
                 exit 0
                 ;;
@@ -406,6 +668,8 @@ main() {
     detect_os
 
     install_rust
+
+    install_build_deps
 
     if [ "$LOCAL_BUILD" = "1" ]; then
         if [ ! -f "Cargo.toml" ]; then
@@ -446,8 +710,10 @@ main() {
     printf "  %s│    systemctl --user status peapod   Check status     │%s\n" "$GREEN" "$RESET"
     fi
     printf "  %s│                                                      │%s\n" "$GREEN" "$RESET"
-    printf "  %s│  Uninstall:                                          │%s\n" "$GREEN" "$RESET"
-    printf "  %s│    curl -sSf <install-url> | sh -s -- --uninstall    │%s\n" "$GREEN" "$RESET"
+    printf "  %s│  Manage:                                             │%s\n" "$GREEN" "$RESET"
+    printf "  %s│    install.sh --update    Update to latest version   │%s\n" "$GREEN" "$RESET"
+    printf "  %s│    install.sh --modify    Change settings            │%s\n" "$GREEN" "$RESET"
+    printf "  %s│    install.sh --uninstall Remove PeaPod              │%s\n" "$GREEN" "$RESET"
     printf "  %s│                                                      │%s\n" "$GREEN" "$RESET"
     printf "  %s└──────────────────────────────────────────────────────┘%s\n" "$GREEN" "$RESET"
     printf "\n"

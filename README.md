@@ -49,6 +49,22 @@ curl -sSf https://raw.githubusercontent.com/HKTITAN/PeaToPea/main/install.sh | s
 iwr -useb https://raw.githubusercontent.com/HKTITAN/PeaToPea/main/install.ps1 | iex
 ```
 
+The installers handle everything automatically:
+- Show you exactly what PeaPod is and what it does
+- Ask for confirmation before each step (skip with `--yes`)
+- Install the Rust toolchain if needed (on Windows, automatically uses the GNU toolchain if Visual Studio Build Tools are not installed)
+- Install build dependencies if needed (gcc/build-essential on Linux, Xcode CLI tools on macOS)
+- Build from source and install the binary
+- Set up the system service (systemd on Linux, launch agent on macOS, startup shortcut on Windows)
+
+**Prerequisites** (installed automatically by the scripts if missing):
+
+| Platform | Requirement | Notes |
+|----------|-------------|-------|
+| Linux | Rust, gcc, git, curl | Rust and gcc auto-installed; git/curl must be pre-installed |
+| macOS | Rust, Xcode CLI Tools | Rust auto-installed; Xcode CLT prompted; git/curl included with macOS |
+| Windows | Rust, Git | Rust auto-installed (uses GNU toolchain if no Visual Studio); Git must be pre-installed |
+
 **Install from a local clone** (skip `git clone`, build from the repo you already have):
 
 ```bash
@@ -61,12 +77,31 @@ iwr -useb https://raw.githubusercontent.com/HKTITAN/PeaToPea/main/install.ps1 | 
 .\install.ps1 --local --yes
 ```
 
-The installers will:
-- Show you exactly what PeaPod is and what it does
-- Ask for confirmation before each step (skip with `--yes`)
-- Install the Rust toolchain (if needed)
-- Build from source and install the binary
-- Set up the system service (systemd on Linux, launch agent on macOS, startup shortcut on Windows)
+**Android / iOS / macOS native:** See the platform-specific READMEs: [Android](pea-android/README.md), [iOS](pea-ios/README.md), [macOS](pea-macos/README.md).
+
+**Update to latest version:**
+
+```bash
+# Linux / macOS
+curl -sSf https://raw.githubusercontent.com/HKTITAN/PeaToPea/main/install.sh | sh -s -- --update
+```
+
+```powershell
+# Windows
+iwr -useb https://raw.githubusercontent.com/HKTITAN/PeaToPea/main/install.ps1 | iex -- --update
+```
+
+**Modify settings** (toggle auto-start, proxy, repair):
+
+```bash
+# Linux / macOS
+curl -sSf https://raw.githubusercontent.com/HKTITAN/PeaToPea/main/install.sh | sh -s -- --modify
+```
+
+```powershell
+# Windows
+iwr -useb https://raw.githubusercontent.com/HKTITAN/PeaToPea/main/install.ps1 | iex -- --modify
+```
 
 **Uninstall:**
 

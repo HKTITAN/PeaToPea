@@ -2,6 +2,8 @@
 
 iOS protocol implementation for PeaPod (Network Extension, discovery, transport). Uses pea-core (Rust) via static lib or XCFramework when built.
 
+**Note:** The iOS app is a placeholder. To build pea-core for iOS, you need macOS with Xcode and the Rust iOS targets installed. There is no one-line installer for iOS — build via Xcode.
+
 ## Environment
 
 - **Xcode**: 15.0 or later (Swift 5.9, iOS 17 SDK). Install from the Mac App Store or [developer.apple.com](https://developer.apple.com/xcode/).

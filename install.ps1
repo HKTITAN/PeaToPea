@@ -94,12 +94,45 @@ function Test-Command {
 
 # ── Install steps ───────────────────────────────────────────────────
 
+function Test-MSVCAvailable {
+    # Check for cl.exe or link.exe from Visual Studio Build Tools
+    if (Test-Command "cl") { return $true }
+    if (Test-Command "link") {
+        # Distinguish MSVC link.exe from Cygwin/other link.exe
+        $linkOut = & link 2>&1 | Out-String
+        if ($linkOut -match "Microsoft") { return $true }
+    }
+    # Check via vswhere (Visual Studio locator)
+    $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+    if (Test-Path $vswhere) {
+        $vsPath = & $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath 2>$null
+        if ($vsPath) { return $true }
+    }
+    return $false
+}
+
 function Install-Rust {
+    $hasMSVC = Test-MSVCAvailable
+
     if (Test-Command "rustc") {
         $ver = & rustc --version
         Write-Ok "Rust already installed: $ver"
+
+        # If Rust is installed with MSVC target but no MSVC build tools, add the GNU target
+        if (-not $hasMSVC) {
+            $defaultHost = & rustc -vV 2>$null | Select-String "host:" | ForEach-Object { $_.Line -replace "host:\s*", "" }
+            if ($defaultHost -and $defaultHost -match "msvc") {
+                Write-Warn "Rust is using the MSVC toolchain but Visual Studio Build Tools are not installed."
+                Write-Info "Adding the GNU target (x86_64-pc-windows-gnu) so PeaPod can build without Visual Studio..."
+                & rustup target add x86_64-pc-windows-gnu
+                & rustup toolchain install stable-x86_64-pc-windows-gnu
+                $script:RustTarget = "x86_64-pc-windows-gnu"
+                Write-Ok "GNU toolchain added. Builds will use x86_64-pc-windows-gnu."
+            }
+        }
         return
     }
+
     Write-Info "Rust is not installed."
     if (-not (Confirm-Action "Install the Rust toolchain?")) {
         Write-Err "Rust is required to build PeaPod. Aborting."
@@ -109,8 +142,16 @@ function Install-Rust {
     $rustupUrl = "https://win.rustup.rs/x86_64"
     $rustupPath = "$env:TEMP\rustup-init.exe"
     Invoke-WebRequest -Uri $rustupUrl -OutFile $rustupPath -UseBasicParsing
-    Write-Info "Running rustup installer (this may take a minute)..."
-    & $rustupPath -y --quiet
+
+    if ($hasMSVC) {
+        Write-Info "Visual Studio Build Tools detected. Installing Rust with MSVC toolchain..."
+        & $rustupPath -y --quiet
+    } else {
+        Write-Info "Visual Studio Build Tools not found. Installing Rust with GNU toolchain (no Visual Studio required)..."
+        & $rustupPath -y --quiet --default-host x86_64-pc-windows-gnu
+        $script:RustTarget = "x86_64-pc-windows-gnu"
+    }
+
     # Refresh PATH
     $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH", "User") + ";" + $env:PATH
     if (Test-Command "rustc") {
@@ -146,12 +187,22 @@ function Build-Binary {
     Write-Info "Building PeaPod (release mode)... this may take a few minutes."
     Push-Location $script:BuildDir
     try {
-        & cargo build -p pea-windows --release
-        if ($LASTEXITCODE -ne 0) {
-            Write-Err "Build failed. See output above for details."
-            exit 1
+        if ($script:RustTarget) {
+            Write-Info "Building for target: $($script:RustTarget)"
+            & cargo build -p pea-windows --release --target $script:RustTarget
+            if ($LASTEXITCODE -ne 0) {
+                Write-Err "Build failed. See output above for details."
+                exit 1
+            }
+            $script:Binary = Join-Path $script:BuildDir "target\$($script:RustTarget)\release\pea-windows.exe"
+        } else {
+            & cargo build -p pea-windows --release
+            if ($LASTEXITCODE -ne 0) {
+                Write-Err "Build failed. See output above for details."
+                exit 1
+            }
+            $script:Binary = Join-Path $script:BuildDir "target\release\pea-windows.exe"
         }
-        $script:Binary = Join-Path $script:BuildDir "target\release\pea-windows.exe"
         if (-not (Test-Path $script:Binary)) {
             Write-Err "Build failed - binary not found."
             exit 1
@@ -213,6 +264,10 @@ function Cleanup {
 
 function Invoke-Uninstall {
     Show-Banner
+    if (-not (Confirm-Action "Uninstall PeaPod?")) {
+        Write-Info "Uninstall cancelled."
+        exit 0
+    }
     Write-Info "Uninstalling PeaPod..."
 
     $installDir = if ($env:PEAPOD_PREFIX) { $env:PEAPOD_PREFIX } else { Join-Path $env:LOCALAPPDATA "PeaPod" }
@@ -241,6 +296,8 @@ function Invoke-Uninstall {
     if (Test-Path $binPath) {
         Remove-Item $binPath -Force
         Write-Ok "Binary removed: $binPath"
+    } else {
+        Write-Warn "Binary not found at $binPath (already removed?)."
     }
 
     # Remove from PATH
@@ -261,23 +318,164 @@ function Invoke-Uninstall {
     exit 0
 }
 
+# ── Update ──────────────────────────────────────────────────────────
+
+function Invoke-Update {
+    Show-Banner
+    Write-Info "Updating PeaPod to the latest version..."
+
+    $installDir = if ($env:PEAPOD_PREFIX) { $env:PEAPOD_PREFIX } else { Join-Path $env:LOCALAPPDATA "PeaPod" }
+    $binPath = Join-Path $installDir "pea-windows.exe"
+
+    if (-not (Test-Path $binPath)) {
+        Write-Err "PeaPod is not installed at $binPath. Run the installer first."
+        exit 1
+    }
+
+    # Show current version
+    $currentVer = try { & $binPath --version 2>$null } catch { "unknown" }
+    Write-Info "Current version: $currentVer"
+
+    if (-not (Confirm-Action "Download and build the latest version?")) {
+        Write-Info "Update cancelled."
+        exit 0
+    }
+
+    Install-Rust
+    Install-Git
+    Clone-Repo
+
+    try {
+        Build-Binary
+
+        # Stop running instance before replacing
+        Get-Process -Name "pea-windows" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+
+        # Replace binary
+        Copy-Item $script:Binary $binPath -Force
+        Write-Ok "Binary updated: $binPath"
+    } finally {
+        Cleanup
+    }
+
+    $newVer = try { & $binPath --version 2>$null } catch { "unknown" }
+    Write-Host ""
+    Write-Ok "PeaPod updated: $currentVer -> $newVer"
+
+    if (Confirm-Action "Start PeaPod now?") {
+        Start-Process $binPath
+        Write-Ok "PeaPod is running in the system tray."
+    }
+    exit 0
+}
+
+# ── Modify ──────────────────────────────────────────────────────────
+
+function Invoke-Modify {
+    Show-Banner
+    Write-Info "Modify PeaPod installation"
+
+    $installDir = if ($env:PEAPOD_PREFIX) { $env:PEAPOD_PREFIX } else { Join-Path $env:LOCALAPPDATA "PeaPod" }
+    $binPath = Join-Path $installDir "pea-windows.exe"
+
+    if (-not (Test-Path $binPath)) {
+        Write-Err "PeaPod is not installed at $binPath. Run the installer first."
+        exit 1
+    }
+
+    Write-Host ""
+    Write-Host "  What would you like to change?" -ForegroundColor White
+    Write-Host ""
+    Write-Host "  1) Toggle auto-start on login"
+    Write-Host "  2) Toggle system proxy"
+    Write-Host "  3) Repair installation (re-add to PATH)"
+    Write-Host "  4) Cancel"
+    Write-Host ""
+    $choice = Read-Host "  Choice [1-4]"
+
+    switch ($choice) {
+        "1" {
+            $startupDir = [System.Environment]::GetFolderPath("Startup")
+            $shortcutPath = Join-Path $startupDir "PeaPod.lnk"
+
+            if (Test-Path $shortcutPath) {
+                Write-Info "Auto-start is currently ENABLED."
+                if (Confirm-Action "Disable auto-start?") {
+                    Remove-Item $shortcutPath -Force
+                    Write-Ok "Auto-start disabled. PeaPod will not start on login."
+                }
+            } else {
+                Write-Info "Auto-start is currently DISABLED."
+                if (Confirm-Action "Enable auto-start?") {
+                    $script:InstallDir = $installDir
+                    Setup-Autostart
+                }
+            }
+        }
+        "2" {
+            $regPath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Internet Settings"
+            $proxyEnabled = (Get-ItemProperty -Path $regPath -Name ProxyEnable -ErrorAction SilentlyContinue).ProxyEnable
+
+            if ($proxyEnabled -eq 1) {
+                Write-Info "System proxy is currently ENABLED."
+                if (Confirm-Action "Disable system proxy?") {
+                    Set-ItemProperty -Path $regPath -Name ProxyEnable -Value 0
+                    Write-Ok "System proxy disabled."
+                }
+            } else {
+                Write-Info "System proxy is currently DISABLED."
+                if (Confirm-Action "Enable system proxy (127.0.0.1:3128)?") {
+                    Set-ItemProperty -Path $regPath -Name ProxyEnable -Value 1
+                    Set-ItemProperty -Path $regPath -Name ProxyServer -Value "127.0.0.1:3128"
+                    Write-Ok "System proxy enabled (127.0.0.1:3128)."
+                }
+            }
+        }
+        "3" {
+            $userPath = [System.Environment]::GetEnvironmentVariable("PATH", "User")
+            if ($userPath -notlike "*$installDir*") {
+                [System.Environment]::SetEnvironmentVariable("PATH", "$userPath;$installDir", "User")
+                $env:PATH = "$env:PATH;$installDir"
+                Write-Ok "Added $installDir to PATH."
+            } else {
+                Write-Ok "$installDir is already in PATH."
+            }
+
+            if (-not (Test-Path $binPath)) {
+                Write-Warn "Binary missing at $binPath. Run the installer to rebuild."
+            } else {
+                Write-Ok "Installation looks good: $binPath"
+            }
+        }
+        default {
+            Write-Info "No changes made."
+        }
+    }
+    exit 0
+}
+
 # ── Main ────────────────────────────────────────────────────────────
 
 $script:LocalBuild = $false
+$script:RustTarget = $null
 
 function Main {
     # Handle flags
     foreach ($arg in $args) {
         switch ($arg) {
             "--uninstall" { Invoke-Uninstall }
+            "--update"    { Invoke-Update }
+            "--modify"    { Invoke-Modify }
             "--yes"       { $env:PEAPOD_NO_CONFIRM = "1" }
             "-y"          { $env:PEAPOD_NO_CONFIRM = "1" }
             "--local"     { $script:LocalBuild = $true }
             "--help"      {
-                Write-Host "Usage: install.ps1 [--yes] [--local] [--uninstall] [--help]"
+                Write-Host "Usage: install.ps1 [--yes] [--local] [--uninstall] [--update] [--modify] [--help]"
                 Write-Host "  --yes         Skip confirmation prompts"
                 Write-Host "  --local       Build from the current directory (skip git clone)"
                 Write-Host "  --uninstall   Remove PeaPod from this system"
+                Write-Host "  --update      Update PeaPod to the latest version"
+                Write-Host "  --modify      Change PeaPod settings (auto-start, proxy, PATH)"
                 Write-Host "  --help        Show this help"
                 exit 0
             }
@@ -330,8 +528,10 @@ function Main {
     Write-Host "  |    pea-windows              Start (tray icon)            |" -ForegroundColor Green
     Write-Host "  |    pea-windows --version    Show version                 |" -ForegroundColor Green
     Write-Host "  |                                                          |" -ForegroundColor Green
-    Write-Host "  |  Uninstall:                                              |" -ForegroundColor Green
-    Write-Host "  |    iwr -useb <url>/install.ps1 | iex -- --uninstall     |" -ForegroundColor Green
+    Write-Host "  |  Manage:                                                 |" -ForegroundColor Green
+    Write-Host "  |    install.ps1 --update     Update to latest version     |" -ForegroundColor Green
+    Write-Host "  |    install.ps1 --modify     Change settings              |" -ForegroundColor Green
+    Write-Host "  |    install.ps1 --uninstall  Remove PeaPod                |" -ForegroundColor Green
     Write-Host "  |                                                          |" -ForegroundColor Green
     Write-Host "  +---------------------------------------------------------+" -ForegroundColor Green
     Write-Host ""
