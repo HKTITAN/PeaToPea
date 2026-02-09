@@ -44,8 +44,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 println!("    encrypted transport, and a system tray icon for controls.");
                 println!();
                 println!("    Proxy       127.0.0.1:3128   (HTTP/HTTPS proxy)");
-                println!("    Discovery   UDP 45678         (LAN multicast 239.255.60.60)");
-                println!("    Transport   TCP 45679         (encrypted peer-to-peer)");
+                println!("    Discovery   UDP 45678        (LAN multicast 239.255.60.60)");
+                println!("    Transport   TCP 45679        (encrypted peer-to-peer)");
                 println!();
                 println!("SYSTEM TRAY:");
                 println!("    Right-click the tray icon to:");

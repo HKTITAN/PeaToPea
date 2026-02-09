@@ -23,8 +23,8 @@ fn print_help() {
     println!("    mesh and pool their internet connections.");
     println!();
     println!("    Proxy       127.0.0.1:3128   (HTTP/HTTPS proxy)");
-    println!("    Discovery   UDP 45678         (LAN multicast 239.255.60.60)");
-    println!("    Transport   TCP 45679         (encrypted peer-to-peer)");
+    println!("    Discovery   UDP 45678        (LAN multicast 239.255.60.60)");
+    println!("    Transport   TCP 45679        (encrypted peer-to-peer)");
     println!();
     println!("    Stop with Ctrl+C or SIGTERM.");
     println!();
