@@ -10,7 +10,7 @@ use std::sync::Mutex;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 use windows::core::w;
 use windows::core::PCWSTR;
-use windows::Win32::Foundation::{HMENU, HWND, LPARAM, LRESULT, WPARAM};
+use windows::Win32::Foundation::{HINSTANCE, HMENU, HWND, LPARAM, LRESULT, WPARAM};
 use windows::Win32::System::LibraryLoader::GetModuleHandleW;
 use windows::Win32::UI::Input::KeyboardAndMouse::GetCursorPos;
 use windows::Win32::UI::Shell::{
@@ -66,7 +66,7 @@ static STATE_RX: Mutex<Option<UnboundedReceiver<TrayStateUpdate>>> = Mutex::new(
 /// Latest state (including peer_ids) for the settings window to read.
 static LATEST_STATE: Mutex<Option<TrayStateUpdate>> = Mutex::new(None);
 static mut NID_PTR: *mut NOTIFYICONDATAW = null_mut();
-static mut SETTINGS_HWND: HWND = HWND(0);
+static mut SETTINGS_HWND: HWND = HWND(std::ptr::null_mut());
 
 unsafe extern "system" fn wnd_proc(
     hwnd: HWND,
@@ -93,7 +93,7 @@ unsafe extern "system" fn wnd_proc(
                 hwnd,
                 None,
             );
-            DestroyMenu(menu);
+            let _ = DestroyMenu(menu);
         }
         return LRESULT(0);
     }
@@ -109,8 +109,9 @@ unsafe extern "system" fn wnd_proc(
                 4 => TrayCommand::Exit,
                 _ => return DefWindowProcW(hwnd, msg, wparam, lparam),
             };
+            let is_exit = matches!(cmd, TrayCommand::Exit);
             let _ = tx.send(cmd);
-            if matches!(cmd, TrayCommand::Exit) {
+            if is_exit {
                 PostQuitMessage(0);
             }
         }
@@ -157,7 +158,7 @@ unsafe extern "system" fn wnd_proc(
 
 unsafe fn create_or_show_settings_window(tray_hwnd: HWND) {
     use windows::Win32::UI::WindowsAndMessaging::IsWindow;
-    if SETTINGS_HWND.0 != 0 && IsWindow(SETTINGS_HWND).as_bool() {
+    if !SETTINGS_HWND.0.is_null() && IsWindow(SETTINGS_HWND).as_bool() {
         let _ = ShowWindow(SETTINGS_HWND, SW_SHOW);
         SetForegroundWindow(SETTINGS_HWND);
         refresh_settings_peer_list();
@@ -172,14 +173,14 @@ unsafe fn create_or_show_settings_window(tray_hwnd: HWND) {
         WINDOW_EX_STYLE::default(),
         class_name,
         w!("PeaPod Settings"),
-        WINDOW_STYLE(WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU),
+        WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
         100,
         100,
         380,
         280,
         Some(tray_hwnd),
         None,
-        Some(instance.into()),
+        Some(HINSTANCE(instance.0)),
         None,
     );
     if let Ok(hwnd) = sw {
@@ -191,13 +192,13 @@ unsafe fn create_or_show_settings_window(tray_hwnd: HWND) {
 }
 
 unsafe fn refresh_settings_peer_list() {
-    if SETTINGS_HWND.0 == 0 {
+    if SETTINGS_HWND.0.is_null() {
         return;
     }
-    let list = GetDlgItem(SETTINGS_HWND, IDC_LIST_PEERS);
-    if list.0 == 0 {
-        return;
-    }
+    let list = match GetDlgItem(SETTINGS_HWND, IDC_LIST_PEERS) {
+        Ok(h) => h,
+        Err(_) => return,
+    };
     let _ = SendMessageW(list, LB_RESETCONTENT, WPARAM(0), LPARAM(0));
     if let Ok(guard) = LATEST_STATE.lock() {
         if let Some(ref s) = *guard {
@@ -223,6 +224,7 @@ unsafe extern "system" fn settings_wnd_proc(
 ) -> LRESULT {
     if msg == WM_CREATE {
         let instance = GetModuleHandleW(None).unwrap();
+        let hinstance = HINSTANCE(instance.0);
         let _ = CreateWindowExW(
             WINDOW_EX_STYLE::default(),
             w!("BUTTON"),
@@ -234,7 +236,7 @@ unsafe extern "system" fn settings_wnd_proc(
             24,
             hwnd,
             Some(HMENU(IDC_CHECK_ENABLED as _)),
-            Some(instance.into()),
+            Some(hinstance),
             None,
         );
         let _ = CreateWindowExW(
@@ -248,21 +250,21 @@ unsafe extern "system" fn settings_wnd_proc(
             24,
             hwnd,
             Some(HMENU(IDC_CHECK_AUTOSTART as _)),
-            Some(instance.into()),
+            Some(hinstance),
             None,
         );
         let _ = CreateWindowExW(
             WINDOW_EX_STYLE::default(),
             w!("STATIC"),
             w!("Proxy: 127.0.0.1:3128"),
-            WINDOW_STYLE(WS_CHILD | WS_VISIBLE),
+            WS_CHILD | WS_VISIBLE,
             16,
             68,
             300,
             20,
             hwnd,
             Some(HMENU(IDC_STATIC_PROXY as _)),
-            Some(instance.into()),
+            Some(hinstance),
             None,
         );
         let _ = CreateWindowExW(
@@ -276,13 +278,12 @@ unsafe extern "system" fn settings_wnd_proc(
             168,
             hwnd,
             Some(HMENU(IDC_LIST_PEERS as _)),
-            Some(instance.into()),
+            Some(hinstance),
             None,
         );
         if let Ok(guard) = LATEST_STATE.lock() {
             if let Some(ref s) = *guard {
-                let check = GetDlgItem(hwnd, IDC_CHECK_ENABLED);
-                if check.0 != 0 {
+                if let Ok(check) = GetDlgItem(hwnd, IDC_CHECK_ENABLED) {
                     let _ = SendMessageW(
                         check,
                         BM_SETCHECK,
@@ -294,8 +295,7 @@ unsafe extern "system" fn settings_wnd_proc(
                         LPARAM(0),
                     );
                 }
-                let autostart = GetDlgItem(hwnd, IDC_CHECK_AUTOSTART);
-                if autostart.0 != 0 {
+                if let Ok(autostart) = GetDlgItem(hwnd, IDC_CHECK_AUTOSTART) {
                     let _ = SendMessageW(
                         autostart,
                         BM_SETCHECK,
@@ -316,8 +316,7 @@ unsafe extern "system" fn settings_wnd_proc(
             refresh_settings_peer_list();
             if let Ok(guard) = LATEST_STATE.lock() {
                 if let Some(ref s) = *guard {
-                    let check = GetDlgItem(hwnd, IDC_CHECK_ENABLED);
-                    if check.0 != 0 {
+                    if let Ok(check) = GetDlgItem(hwnd, IDC_CHECK_ENABLED) {
                         let _ = SendMessageW(
                             check,
                             BM_SETCHECK,
@@ -329,8 +328,7 @@ unsafe extern "system" fn settings_wnd_proc(
                             LPARAM(0),
                         );
                     }
-                    let autostart = GetDlgItem(hwnd, IDC_CHECK_AUTOSTART);
-                    if autostart.0 != 0 {
+                    if let Ok(autostart) = GetDlgItem(hwnd, IDC_CHECK_AUTOSTART) {
                         let _ = SendMessageW(
                             autostart,
                             BM_SETCHECK,
@@ -350,32 +348,34 @@ unsafe extern "system" fn settings_wnd_proc(
     if msg == WM_COMMAND {
         let id = (wparam.0 & 0xFFFF) as i32;
         if id == IDC_CHECK_ENABLED {
-            let check = GetDlgItem(hwnd, IDC_CHECK_ENABLED);
-            let state = SendMessageW(check, BM_GETCHECK, WPARAM(0), LPARAM(0));
-            let enabled = state.0 == BST_CHECKED as _;
-            let tx_ptr = CMD_TX.load(Ordering::Acquire);
-            if !tx_ptr.is_null() {
-                let tx = &*(tx_ptr as *const UnboundedSender<TrayCommand>);
-                let _ = tx.send(if enabled {
-                    TrayCommand::Enable
-                } else {
-                    TrayCommand::Disable
-                });
+            if let Ok(check) = GetDlgItem(hwnd, IDC_CHECK_ENABLED) {
+                let state = SendMessageW(check, BM_GETCHECK, WPARAM(0), LPARAM(0));
+                let enabled = state.0 == BST_CHECKED as _;
+                let tx_ptr = CMD_TX.load(Ordering::Acquire);
+                if !tx_ptr.is_null() {
+                    let tx = &*(tx_ptr as *const UnboundedSender<TrayCommand>);
+                    let _ = tx.send(if enabled {
+                        TrayCommand::Enable
+                    } else {
+                        TrayCommand::Disable
+                    });
+                }
             }
         } else if id == IDC_CHECK_AUTOSTART {
-            let check = GetDlgItem(hwnd, IDC_CHECK_AUTOSTART);
-            let state = SendMessageW(check, BM_GETCHECK, WPARAM(0), LPARAM(0));
-            let enabled = state.0 == BST_CHECKED as _;
-            let tx_ptr = CMD_TX.load(Ordering::Acquire);
-            if !tx_ptr.is_null() {
-                let tx = &*(tx_ptr as *const UnboundedSender<TrayCommand>);
-                let _ = tx.send(TrayCommand::SetAutostart(enabled));
+            if let Ok(check) = GetDlgItem(hwnd, IDC_CHECK_AUTOSTART) {
+                let state = SendMessageW(check, BM_GETCHECK, WPARAM(0), LPARAM(0));
+                let enabled = state.0 == BST_CHECKED as _;
+                let tx_ptr = CMD_TX.load(Ordering::Acquire);
+                if !tx_ptr.is_null() {
+                    let tx = &*(tx_ptr as *const UnboundedSender<TrayCommand>);
+                    let _ = tx.send(TrayCommand::SetAutostart(enabled));
+                }
             }
         }
         return LRESULT(0);
     }
     if msg == WM_DESTROY {
-        SETTINGS_HWND = HWND(0);
+        SETTINGS_HWND = HWND(std::ptr::null_mut());
         return LRESULT(0);
     }
     DefWindowProcW(hwnd, msg, wparam, lparam)
@@ -395,12 +395,13 @@ pub fn run_tray(
             *guard = Some(state_rx);
         }
         let instance = GetModuleHandleW(None)?;
+        let hinstance = HINSTANCE(instance.0);
         let class_name = w!("PeaPodTrayWindow");
         let wc = WNDCLASSEXW {
             cbSize: std::mem::size_of::<WNDCLASSEXW>() as u32,
             style: CS_HREDRAW | CS_VREDRAW,
             lpfnWndProc: Some(wnd_proc),
-            hInstance: instance.into(),
+            hInstance: hinstance,
             lpszClassName: class_name,
             ..Default::default()
         };
@@ -410,7 +411,7 @@ pub fn run_tray(
             cbSize: std::mem::size_of::<WNDCLASSEXW>() as u32,
             style: CS_HREDRAW | CS_VREDRAW,
             lpfnWndProc: Some(settings_wnd_proc),
-            hInstance: instance.into(),
+            hInstance: hinstance,
             lpszClassName: settings_class,
             ..Default::default()
         };
@@ -426,7 +427,7 @@ pub fn run_tray(
             0,
             None,
             None,
-            Some(instance.into()),
+            Some(hinstance),
             None,
         )?;
         // IDI_APPLICATION = 32512; use as resource id for default app icon
@@ -437,14 +438,14 @@ pub fn run_tray(
             uID: TRAY_ID,
             uFlags: NIF_ICON | NIF_MESSAGE | NIF_TIP,
             uCallbackMessage: WM_TRAYICON,
-            hIcon: icon.into(),
+            hIcon: icon,
             ..Default::default()
         };
         let tip = "PeaPod – enabled\r\nPod: 0 device(s)";
         let tip_wide: Vec<u16> = tip.encode_utf16().chain(std::iter::once(0)).collect();
         nid.szTip[..tip_wide.len().min(128)].copy_from_slice(&tip_wide[..tip_wide.len().min(128)]);
         NID_PTR = &mut nid;
-        Shell_NotifyIconW(NIM_ADD, &nid)?;
+        let _ = Shell_NotifyIconW(NIM_ADD, &nid);
         let _ = hwnd_tx.send(hwnd);
 
         let mut msg = std::mem::zeroed();
@@ -453,7 +454,7 @@ pub fn run_tray(
             DispatchMessageW(&msg);
         }
         NID_PTR = null_mut();
-        Shell_NotifyIconW(NIM_DELETE, &nid)?;
+        let _ = Shell_NotifyIconW(NIM_DELETE, &nid);
         CMD_TX.store(null_mut(), Ordering::Release);
         if let Ok(mut guard) = STATE_RX.lock() {
             *guard = None;

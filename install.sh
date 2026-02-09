@@ -196,6 +196,15 @@ install_binary() {
 
     info "Installing $BIN_NAME to $INSTALL_PATH"
 
+    if [ ! -d "$BIN_DIR" ]; then
+        if mkdir -p "$BIN_DIR" 2>/dev/null; then
+            true
+        else
+            info "Need elevated permissions to create $BIN_DIR"
+            sudo mkdir -p "$BIN_DIR"
+        fi
+    fi
+
     if [ -w "$BIN_DIR" ]; then
         cp "$BUILD_DIR/$BINARY" "$INSTALL_PATH"
         chmod 755 "$INSTALL_PATH"
@@ -317,6 +326,9 @@ CFGEOF
 }
 
 cleanup() {
+    if [ "${LOCAL_BUILD:-0}" = "1" ]; then
+        return
+    fi
     if [ -n "$BUILD_DIR" ] && [ -d "$BUILD_DIR" ]; then
         rm -rf "$BUILD_DIR"
     fi
@@ -362,15 +374,19 @@ uninstall() {
 
 # ── Main ────────────────────────────────────────────────────────────
 
+LOCAL_BUILD=0
+
 main() {
-    # Handle --uninstall flag
+    # Handle flags
     for arg in "$@"; do
         case "$arg" in
             --uninstall) uninstall ;;
             --yes|-y)    PEAPOD_NO_CONFIRM=1 ;;
+            --local)     LOCAL_BUILD=1 ;;
             --help|-h)
-                printf "Usage: install.sh [--yes] [--uninstall] [--help]\n"
+                printf "Usage: install.sh [--yes] [--local] [--uninstall] [--help]\n"
                 printf "  --yes         Skip confirmation prompts\n"
+                printf "  --local       Build from the current directory (skip git clone)\n"
                 printf "  --uninstall   Remove PeaPod from this system\n"
                 printf "  --help        Show this help\n"
                 exit 0
@@ -388,13 +404,23 @@ main() {
 
     printf "\n"
     detect_os
-    need_cmd curl
-    need_cmd git
 
     install_rust
-    clone_repo
 
-    trap cleanup EXIT
+    if [ "$LOCAL_BUILD" = "1" ]; then
+        if [ ! -f "Cargo.toml" ]; then
+            error "Not in the PeaPod repo root (Cargo.toml not found). Run from the repo root or remove --local."
+            exit 1
+        fi
+        BUILD_DIR="$(pwd)"
+        ok "Building from local checkout: $BUILD_DIR"
+    else
+        need_cmd curl
+        need_cmd git
+        clone_repo
+        trap cleanup EXIT
+    fi
+
     build_binary
     install_binary
     create_config_dir

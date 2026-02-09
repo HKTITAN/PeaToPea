@@ -263,16 +263,20 @@ function Invoke-Uninstall {
 
 # ── Main ────────────────────────────────────────────────────────────
 
+$script:LocalBuild = $false
+
 function Main {
-    # Handle --uninstall flag
+    # Handle flags
     foreach ($arg in $args) {
         switch ($arg) {
             "--uninstall" { Invoke-Uninstall }
             "--yes"       { $env:PEAPOD_NO_CONFIRM = "1" }
             "-y"          { $env:PEAPOD_NO_CONFIRM = "1" }
+            "--local"     { $script:LocalBuild = $true }
             "--help"      {
-                Write-Host "Usage: install.ps1 [--yes] [--uninstall] [--help]"
+                Write-Host "Usage: install.ps1 [--yes] [--local] [--uninstall] [--help]"
                 Write-Host "  --yes         Skip confirmation prompts"
+                Write-Host "  --local       Build from the current directory (skip git clone)"
                 Write-Host "  --uninstall   Remove PeaPod from this system"
                 Write-Host "  --help        Show this help"
                 exit 0
@@ -291,16 +295,28 @@ function Main {
     Write-Host ""
     Write-Info "Detected: Windows $([System.Environment]::OSVersion.Version)"
 
-    Install-Git
     Install-Rust
-    Clone-Repo
+
+    if ($script:LocalBuild) {
+        if (-not (Test-Path "Cargo.toml")) {
+            Write-Err "Not in the PeaPod repo root (Cargo.toml not found). Run from the repo root or remove --local."
+            exit 1
+        }
+        $script:BuildDir = (Get-Location).Path
+        Write-Ok "Building from local checkout: $script:BuildDir"
+    } else {
+        Install-Git
+        Clone-Repo
+    }
 
     try {
         Build-Binary
         Install-Binary
         Setup-Autostart
     } finally {
-        Cleanup
+        if (-not $script:LocalBuild) {
+            Cleanup
+        }
     }
 
     Write-Host ""

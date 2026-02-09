@@ -49,9 +49,21 @@ curl -sSf https://raw.githubusercontent.com/HKTITAN/PeaToPea/main/install.sh | s
 iwr -useb https://raw.githubusercontent.com/HKTITAN/PeaToPea/main/install.ps1 | iex
 ```
 
+**Install from a local clone** (skip `git clone`, build from the repo you already have):
+
+```bash
+# Linux / macOS — from the repo root
+./install.sh --local --yes
+```
+
+```powershell
+# Windows (PowerShell) — from the repo root
+.\install.ps1 --local --yes
+```
+
 The installers will:
 - Show you exactly what PeaPod is and what it does
-- Ask for confirmation before each step
+- Ask for confirmation before each step (skip with `--yes`)
 - Install the Rust toolchain (if needed)
 - Build from source and install the binary
 - Set up the system service (systemd on Linux, launch agent on macOS, startup shortcut on Windows)
@@ -77,9 +89,11 @@ cargo build -p pea-core
 cargo test -p pea-core
 
 # Or use make:
+make dev      # Build, test, and lint (quick verification)
 make build    # Build all crates
 make test     # Run all tests
 make lint     # Run fmt + clippy
+make run      # Build and run pea-linux (debug)
 make install  # Build release + install to /usr/local/bin
 make help     # Show all commands
 ```
