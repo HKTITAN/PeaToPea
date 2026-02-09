@@ -52,7 +52,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             use windows::Win32::UI::WindowsAndMessaging::PostMessageW;
 
             let (connect_tx, connect_rx) = tokio::sync::mpsc::unbounded_channel();
-            let peer_senders: std::sync::Arc<tokio::sync::Mutex<std::collections::HashMap<pea_core::DeviceId, tokio::sync::mpsc::UnboundedSender<Vec<u8>>>>> = std::sync::Arc::new(tokio::sync::Mutex::new(std::collections::HashMap::new()));
+            let peer_senders = std::sync::Arc::new(tokio::sync::Mutex::new(
+                std::collections::HashMap::<pea_core::DeviceId, tokio::sync::mpsc::UnboundedSender<Vec<u8>>>::new(),
+            ));
             let transfer_waiters: transport::TransferWaiters =
                 std::sync::Arc::new(tokio::sync::Mutex::new(std::collections::HashMap::new()));
             let (tray_tx, mut tray_rx) = tokio::sync::mpsc::unbounded_channel::<tray::TrayCommand>();
@@ -204,7 +206,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
         #[cfg(not(windows))]
         {
-            let peer_senders: std::sync::Arc<tokio::sync::Mutex<std::collections::HashMap<pea_core::DeviceId, tokio::sync::mpsc::UnboundedSender<Vec<u8>>>>> = std::sync::Arc::new(tokio::sync::Mutex::new(std::collections::HashMap::new()));
+            let peer_senders = std::sync::Arc::new(tokio::sync::Mutex::new(
+                std::collections::HashMap::<pea_core::DeviceId, tokio::sync::mpsc::UnboundedSender<Vec<u8>>>::new(),
+            ));
             let transfer_waiters: transport::TransferWaiters =
                 std::sync::Arc::new(tokio::sync::Mutex::new(std::collections::HashMap::new()));
             proxy::run_proxy(bind, core, peer_senders, transfer_waiters).await.ok();
