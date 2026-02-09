@@ -5,7 +5,6 @@ use std::ffi::c_void;
 use std::os::raw::c_int;
 use std::slice;
 
-use crate::chunk::ChunkId;
 use crate::identity::{decrypt_wire, encrypt_wire, DeviceId, PublicKey};
 use crate::protocol::{Message, PROTOCOL_VERSION};
 use crate::wire::decode_frame;
@@ -106,7 +105,11 @@ pub extern "C" fn pea_core_decode_discovery_frame(
     out_public_key_32: *mut u8,
     out_listen_port: *mut u16,
 ) -> c_int {
-    if bytes.is_null() || out_device_id_16.is_null() || out_public_key_32.is_null() || out_listen_port.is_null() {
+    if bytes.is_null()
+        || out_device_id_16.is_null()
+        || out_public_key_32.is_null()
+        || out_listen_port.is_null()
+    {
         return -1;
     }
     let slice = unsafe { slice::from_raw_parts(bytes, len) };
@@ -145,7 +148,11 @@ const HANDSHAKE_SIZE: usize = 1 + 16 + 32;
 
 /// Fill out_buf with handshake bytes (49: version + device_id + public_key). Returns 0 on success, -1 on error.
 #[no_mangle]
-pub extern "C" fn pea_core_handshake_bytes(h: *mut c_void, out_buf: *mut u8, out_buf_len: usize) -> c_int {
+pub extern "C" fn pea_core_handshake_bytes(
+    h: *mut c_void,
+    out_buf: *mut u8,
+    out_buf_len: usize,
+) -> c_int {
     if h.is_null() || out_buf.is_null() || out_buf_len < HANDSHAKE_SIZE {
         return -1;
     }
@@ -171,7 +178,7 @@ pub extern "C" fn pea_core_session_key(
     let pk = unsafe { slice::from_raw_parts(peer_public_key_32, 32) };
     let mut arr = [0u8; 32];
     arr.copy_from_slice(pk);
-    let peer_public = PublicKey(arr);
+    let peer_public = PublicKey::from_bytes(arr);
     let key = core.session_key(&peer_public);
     unsafe {
         out_session_key_32.copy_from_nonoverlapping(key.as_ptr(), 32);
@@ -317,8 +324,8 @@ pub extern "C" fn pea_core_peer_joined(
         id.copy_from_slice(slice::from_raw_parts(device_id_16, 16));
         pk.copy_from_slice(slice::from_raw_parts(public_key_32, 32));
     }
-    let peer_id = DeviceId(id);
-    let public_key = PublicKey(pk);
+    let peer_id = DeviceId::from_bytes(id);
+    let public_key = PublicKey::from_bytes(pk);
     core.on_peer_joined(peer_id, &public_key);
     0
 }
@@ -339,7 +346,7 @@ pub extern "C" fn pea_core_peer_left(
     unsafe {
         id.copy_from_slice(slice::from_raw_parts(device_id_16, 16));
     }
-    let actions = core.on_peer_left(DeviceId(id));
+    let actions = core.on_peer_left(DeviceId::from_bytes(id));
     if actions.is_empty() || out_buf.is_null() {
         return 0;
     }
@@ -348,15 +355,18 @@ pub extern "C" fn pea_core_peer_left(
 
 /// Serialize outbound actions to out_buf: 4 bytes count (LE), then each (16 peer_id, 4 len LE, payload).
 /// Returns number of bytes written, or -1 on error.
-fn write_outbound_actions(actions: &[crate::OutboundAction], out_buf: *mut u8, out_buf_len: usize) -> c_int {
+fn write_outbound_actions(
+    actions: &[crate::OutboundAction],
+    out_buf: *mut u8,
+    out_buf_len: usize,
+) -> c_int {
     if out_buf.is_null() {
         return -1;
     }
     let mut need = 4;
     for a in actions {
-        if let crate::OutboundAction::SendMessage(_, ref bytes) = a {
-            need += 16 + 4 + bytes.len();
-        }
+        let crate::OutboundAction::SendMessage(_, ref bytes) = a;
+        need += 16 + 4 + bytes.len();
     }
     if out_buf_len < need {
         return -1;
@@ -365,15 +375,14 @@ fn write_outbound_actions(actions: &[crate::OutboundAction], out_buf: *mut u8, o
     buf[0..4].copy_from_slice(&(actions.len() as u32).to_le_bytes());
     let mut off = 4;
     for a in actions {
-        if let crate::OutboundAction::SendMessage(peer_id, bytes) = a {
-            buf[off..off + 16].copy_from_slice(peer_id.as_bytes());
-            off += 16;
-            let len = bytes.len() as u32;
-            buf[off..off + 4].copy_from_slice(&len.to_le_bytes());
-            off += 4;
-            buf[off..off + bytes.len()].copy_from_slice(bytes);
-            off += bytes.len();
-        }
+        let crate::OutboundAction::SendMessage(peer_id, bytes) = a;
+        buf[off..off + 16].copy_from_slice(peer_id.as_bytes());
+        off += 16;
+        let len = bytes.len() as u32;
+        buf[off..off + 4].copy_from_slice(&len.to_le_bytes());
+        off += 4;
+        buf[off..off + bytes.len()].copy_from_slice(bytes);
+        off += bytes.len();
     }
     off as c_int
 }
@@ -398,7 +407,7 @@ pub extern "C" fn pea_core_on_message_received(
     unsafe {
         id.copy_from_slice(slice::from_raw_parts(peer_id_16, 16));
     }
-    let peer_id = DeviceId(id);
+    let peer_id = DeviceId::from_bytes(id);
     let frame = unsafe { slice::from_raw_parts(msg, msg_len) };
     let (actions, completed) = match core.on_message_received(peer_id, frame) {
         Ok(x) => x,
@@ -407,9 +416,8 @@ pub extern "C" fn pea_core_on_message_received(
     let body_len = completed.as_ref().map(|(_, b)| b.len()).unwrap_or(0);
     let mut need = 4 + body_len;
     for a in &actions {
-        if let crate::OutboundAction::SendMessage(_, ref bytes) = a {
-            need += 16 + 4 + bytes.len();
-        }
+        let crate::OutboundAction::SendMessage(_, ref bytes) = a;
+        need += 16 + 4 + bytes.len();
     }
     if out_buf.is_null() || out_buf_len < need {
         return -1;

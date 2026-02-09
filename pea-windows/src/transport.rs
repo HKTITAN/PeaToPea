@@ -7,10 +7,10 @@ use std::sync::Arc;
 use pea_core::identity::{derive_session_key, PublicKey};
 use pea_core::wire::{decode_frame, encode_frame};
 use pea_core::{DeviceId, Keypair, Message, OutboundAction, PeaPodCore, PROTOCOL_VERSION};
+use std::time::Duration;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::{mpsc, Mutex};
-use std::time::Duration;
 
 use crate::discovery;
 
@@ -23,23 +23,21 @@ async fn fetch_range(url: &str, start: u64, end: u64) -> std::io::Result<Vec<u8>
     let client = reqwest::Client::builder()
         .timeout(Duration::from_secs(30))
         .build()
-        .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
+        .map_err(std::io::Error::other)?;
     let range_header = format!("bytes={}-{}", start, end_inclusive);
     let resp = client
         .get(url)
         .header("Range", range_header)
         .send()
         .await
-        .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
-    let bytes = resp
-        .bytes()
-        .await
-        .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
+        .map_err(std::io::Error::other)?;
+    let bytes = resp.bytes().await.map_err(std::io::Error::other)?;
     Ok(bytes.to_vec())
 }
 
 /// Shared: when a transfer completes (reassembled body ready), transport sends it here so the proxy can respond.
-pub type TransferWaiters = Arc<Mutex<std::collections::HashMap<[u8; 16], tokio::sync::oneshot::Sender<Vec<u8>>>>>;
+pub type TransferWaiters =
+    Arc<Mutex<std::collections::HashMap<[u8; 16], tokio::sync::oneshot::Sender<Vec<u8>>>>>;
 
 /// Run transport: listen for incoming TCP, accept connections; connect outbound when peer is pushed to `connect_rx`.
 /// `peer_senders` is shared with the proxy so it can send ChunkRequests. `transfer_waiters`: proxy registers (transfer_id, tx); transport sends body on tx when transfer completes.
@@ -60,10 +58,9 @@ pub async fn run_transport(
             let actions = tick_core.lock().await.tick();
             let senders = tick_senders.lock().await;
             for action in actions {
-                if let OutboundAction::SendMessage(peer, bytes) = action {
-                    if let Some(tx) = senders.get(&peer) {
-                        let _ = tx.send(bytes);
-                    }
+                let OutboundAction::SendMessage(peer, bytes) = action;
+                if let Some(tx) = senders.get(&peer) {
+                    let _ = tx.send(bytes);
                 }
             }
         }
@@ -74,23 +71,18 @@ pub async fn run_transport(
     let accept_senders = peer_senders.clone();
     let accept_waiters = transfer_waiters.clone();
     tokio::spawn(async move {
-        loop {
-            match listener.accept().await {
-                Ok((stream, _)) => {
-                    let core = accept_core.clone();
-                    let keypair = accept_keypair.clone();
-                    let senders = accept_senders.clone();
-                    let waiters = accept_waiters.clone();
-                    tokio::spawn(async move {
-                        if let Ok((peer_id, session_key)) =
-                            handshake_accept(&stream, keypair.as_ref()).await
-                        {
-                            run_connection(stream, peer_id, session_key, core, senders, waiters).await;
-                        }
-                    });
+        while let Ok((mut stream, _)) = listener.accept().await {
+            let core = accept_core.clone();
+            let keypair = accept_keypair.clone();
+            let senders = accept_senders.clone();
+            let waiters = accept_waiters.clone();
+            tokio::spawn(async move {
+                if let Ok((peer_id, session_key)) =
+                    handshake_accept(&mut stream, keypair.as_ref()).await
+                {
+                    run_connection(stream, peer_id, session_key, core, senders, waiters).await;
                 }
-                Err(_) => break,
-            }
+            });
         }
     });
 
@@ -100,9 +92,9 @@ pub async fn run_transport(
         let senders = peer_senders.clone();
         let waiters = transfer_waiters.clone();
         tokio::spawn(async move {
-            if let Ok(stream) = TcpStream::connect(addr).await {
+            if let Ok(mut stream) = TcpStream::connect(addr).await {
                 if let Ok((peer_id, session_key)) =
-                    handshake_connect(&stream, keypair.as_ref()).await
+                    handshake_connect(&mut stream, keypair.as_ref()).await
                 {
                     run_connection(stream, peer_id, session_key, core, senders, waiters).await;
                 }
@@ -113,7 +105,7 @@ pub async fn run_transport(
 }
 
 async fn handshake_accept(
-    stream: &TcpStream,
+    stream: &mut TcpStream,
     keypair: &Keypair,
 ) -> std::io::Result<(DeviceId, [u8; 32])> {
     let mut buf = [0u8; HANDSHAKE_SIZE];
@@ -130,8 +122,8 @@ async fn handshake_accept(
     device_id.copy_from_slice(&buf[1..17]);
     let mut public_key = [0u8; 32];
     public_key.copy_from_slice(&buf[17..49]);
-    let peer_id = DeviceId(device_id);
-    let peer_public = PublicKey(public_key);
+    let peer_id = DeviceId::from_bytes(device_id);
+    let peer_public = PublicKey::from_bytes(public_key);
 
     let secret = keypair.shared_secret(&peer_public);
     let session_key = derive_session_key(&secret);
@@ -143,7 +135,7 @@ async fn handshake_accept(
 }
 
 async fn handshake_connect(
-    stream: &TcpStream,
+    stream: &mut TcpStream,
     keypair: &Keypair,
 ) -> std::io::Result<(DeviceId, [u8; 32])> {
     let (mut r, mut w) = stream.split();
@@ -162,8 +154,8 @@ async fn handshake_connect(
     device_id.copy_from_slice(&buf[1..17]);
     let mut public_key = [0u8; 32];
     public_key.copy_from_slice(&buf[17..49]);
-    let peer_id = DeviceId(device_id);
-    let peer_public = PublicKey(public_key);
+    let peer_id = DeviceId::from_bytes(device_id);
+    let peer_public = PublicKey::from_bytes(public_key);
     let secret = keypair.shared_secret(&peer_public);
     let session_key = derive_session_key(&secret);
     Ok((peer_id, session_key))
@@ -224,52 +216,49 @@ async fn run_connection(
             Err(_) => break,
         };
         read_nonce = read_nonce.saturating_add(1);
-        if let Ok((msg, _)) = decode_frame(&plain) {
-            if let Message::ChunkRequest {
+        if let Ok((
+            Message::ChunkRequest {
                 transfer_id,
                 start,
                 end,
                 url: Some(ref url),
-            } = msg
-            {
-                if let Ok(body) = fetch_range(url, *start, *end).await {
-                    let hash = pea_core::integrity::hash_chunk(&body);
-                    let chunk_data = Message::ChunkData {
-                        transfer_id: *transfer_id,
-                        start: *start,
-                        end: *end,
-                        hash,
-                        payload: body,
-                    };
-                    if let Ok(frame) = encode_frame(&chunk_data) {
-                        let senders = writer_senders.lock().await;
-                        if let Some(tx) = senders.get(&peer_id) {
-                            let _ = tx.send(frame);
-                        }
+            },
+            _,
+        )) = decode_frame(&plain)
+        {
+            if let Ok(body) = fetch_range(url, start, end).await {
+                let hash = pea_core::integrity::hash_chunk(&body);
+                let chunk_data = Message::ChunkData {
+                    transfer_id,
+                    start,
+                    end,
+                    hash,
+                    payload: body,
+                };
+                if let Ok(frame) = encode_frame(&chunk_data) {
+                    let senders = writer_senders.lock().await;
+                    if let Some(tx) = senders.get(&peer_id) {
+                        let _ = tx.send(frame);
                     }
                 }
-                continue;
             }
+            continue;
         }
         let mut c = core.lock().await;
-        match c.on_message_received(peer_id, &plain) {
-            Ok((actions, completed)) => {
-                for action in actions {
-                    if let OutboundAction::SendMessage(to_peer, bytes) = action {
-                        let senders = writer_senders.lock().await;
-                        if let Some(tx) = senders.get(&to_peer) {
-                            let _ = tx.send(bytes);
-                        }
-                    }
-                }
-                if let Some((tid, body)) = completed {
-                    let mut w = transfer_waiters.lock().await;
-                    if let Some(tx) = w.remove(&tid) {
-                        let _ = tx.send(body);
-                    }
+        if let Ok((actions, completed)) = c.on_message_received(peer_id, &plain) {
+            for action in actions {
+                let OutboundAction::SendMessage(to_peer, bytes) = action;
+                let senders = writer_senders.lock().await;
+                if let Some(tx) = senders.get(&to_peer) {
+                    let _ = tx.send(bytes);
                 }
             }
-            Err(_) => {}
+            if let Some((tid, body)) = completed {
+                let mut w = transfer_waiters.lock().await;
+                if let Some(tx) = w.remove(&tid) {
+                    let _ = tx.send(body);
+                }
+            }
         }
     }
     let mut senders = peer_senders.lock().await;

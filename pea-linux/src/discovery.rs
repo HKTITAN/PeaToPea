@@ -6,8 +6,8 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use pea_core::wire::{decode_frame, encode_frame};
-use pea_core::{DeviceId, Keypair, Message, PeaPodCore, PROTOCOL_VERSION};
 use pea_core::PublicKey;
+use pea_core::{DeviceId, Keypair, Message, PeaPodCore, PROTOCOL_VERSION};
 use tokio::net::UdpSocket;
 use tokio::sync::Mutex;
 
@@ -16,7 +16,9 @@ const BEACON_INTERVAL: Duration = Duration::from_secs(4);
 const PEER_TIMEOUT: Duration = Duration::from_secs(16);
 
 struct PeerState {
+    #[allow(dead_code)]
     public_key: PublicKey,
+    #[allow(dead_code)]
     addr: SocketAddr,
     last_seen: Instant,
 }
@@ -43,11 +45,17 @@ pub async fn run_discovery(
         beacon_loop(send_socket, keypair, discovery_port, transport_port).await
     });
     let recv_task = tokio::spawn(async move {
-        recv_loop(recv_socket, peers_recv, core_recv, keypair_recv, transport_port, connect_tx_recv).await
+        recv_loop(
+            recv_socket,
+            peers_recv,
+            core_recv,
+            keypair_recv,
+            transport_port,
+            connect_tx_recv,
+        )
+        .await
     });
-    let timeout_task = tokio::spawn(async move {
-        peer_timeout_loop(peers.clone(), core).await
-    });
+    let timeout_task = tokio::spawn(async move { peer_timeout_loop(peers.clone(), core).await });
 
     let _ = tokio::try_join!(beacon_task, recv_task, timeout_task);
     Ok(())
@@ -55,9 +63,12 @@ pub async fn run_discovery(
 
 async fn make_multicast_socket(discovery_port: u16) -> std::io::Result<UdpSocket> {
     let std_sock = std::net::UdpSocket::bind(("0.0.0.0", discovery_port))?;
-    let multicast: std::net::Ipv4Addr = MULTICAST_GROUP
-        .parse()
-        .map_err(|e: std::net::AddrParseError| std::io::Error::new(std::io::ErrorKind::InvalidInput, e))?;
+    let multicast: std::net::Ipv4Addr =
+        MULTICAST_GROUP
+            .parse()
+            .map_err(|e: std::net::AddrParseError| {
+                std::io::Error::new(std::io::ErrorKind::InvalidInput, e)
+            })?;
     std_sock.join_multicast_v4(&multicast, &"0.0.0.0".parse().unwrap())?;
     std_sock.set_multicast_ttl_v4(1)?;
     tokio::net::UdpSocket::from_std(std_sock)
@@ -79,7 +90,11 @@ async fn beacon_loop(
     };
     let frame = encode_frame(&beacon)
         .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;
-    let dest: SocketAddr = format!("{}:{}", MULTICAST_GROUP, discovery_port).parse()?;
+    let dest: SocketAddr = format!("{}:{}", MULTICAST_GROUP, discovery_port)
+        .parse()
+        .map_err(|e: std::net::AddrParseError| {
+            std::io::Error::new(std::io::ErrorKind::InvalidInput, e)
+        })?;
     loop {
         let _ = socket.send_to(&frame, dest).await;
         tokio::time::sleep(BEACON_INTERVAL).await;
@@ -126,11 +141,14 @@ async fn recv_loop(
                             let is_new = {
                                 let mut p = peers.lock().await;
                                 let is_new = !p.contains_key(device_id);
-                                p.insert(*device_id, PeerState {
-                                    public_key: public_key.clone(),
-                                    addr: SocketAddr::new(from.ip(), *listen_port),
-                                    last_seen: Instant::now(),
-                                });
+                                p.insert(
+                                    *device_id,
+                                    PeerState {
+                                        public_key: public_key.clone(),
+                                        addr: SocketAddr::new(from.ip(), *listen_port),
+                                        last_seen: Instant::now(),
+                                    },
+                                );
                                 is_new
                             };
                             if is_new {
@@ -156,11 +174,14 @@ async fn recv_loop(
                             let is_new = {
                                 let mut p = peers.lock().await;
                                 let is_new = !p.contains_key(device_id);
-                                p.insert(*device_id, PeerState {
-                                    public_key: public_key.clone(),
-                                    addr: SocketAddr::new(from.ip(), *listen_port),
-                                    last_seen: Instant::now(),
-                                });
+                                p.insert(
+                                    *device_id,
+                                    PeerState {
+                                        public_key: public_key.clone(),
+                                        addr: SocketAddr::new(from.ip(), *listen_port),
+                                        last_seen: Instant::now(),
+                                    },
+                                );
                                 is_new
                             };
                             if is_new {

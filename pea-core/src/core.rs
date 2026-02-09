@@ -124,7 +124,10 @@ impl PeaPodCore {
     }
 
     /// Build DiscoveryResponse frame (sent to beacon sender). Same wire shape, different variant.
-    pub fn discovery_response_frame(&self, listen_port: u16) -> Result<Vec<u8>, wire::FrameEncodeError> {
+    pub fn discovery_response_frame(
+        &self,
+        listen_port: u16,
+    ) -> Result<Vec<u8>, wire::FrameEncodeError> {
         let resp = Message::DiscoveryResponse {
             protocol_version: PROTOCOL_VERSION,
             device_id: self.keypair.device_id(),
@@ -150,12 +153,10 @@ impl PeaPodCore {
 
     /// Called when the host has an eligible request. Returns [`Action::Accelerate`] with chunk assignment
     /// (host then fetches self chunks and sends ChunkRequest to peers) or [`Action::Fallback`].
-    pub fn on_incoming_request(
-        &mut self,
-        _url: &str,
-        range: Option<(u64, u64)>,
-    ) -> Action {
-        let total_length = range.map(|(s, e)| e.saturating_sub(s).saturating_add(1)).unwrap_or(0);
+    pub fn on_incoming_request(&mut self, _url: &str, range: Option<(u64, u64)>) -> Action {
+        let total_length = range
+            .map(|(s, e)| e.saturating_sub(s).saturating_add(1))
+            .unwrap_or(0);
         if total_length == 0 {
             return Action::Fallback;
         }
@@ -168,7 +169,8 @@ impl PeaPodCore {
             .chain(self.peers.iter().copied())
             .collect();
         let weights = self.worker_weights(&workers);
-        let assignment = scheduler::assign_chunks_to_peers_weighted(&chunk_ids, &workers, weights.as_deref());
+        let assignment =
+            scheduler::assign_chunks_to_peers_weighted(&chunk_ids, &workers, weights.as_deref());
         let state = TransferState::new(transfer_id, total_length, chunk_ids.clone());
         self.active_transfer = Some(ActiveTransfer {
             state,
@@ -195,7 +197,14 @@ impl PeaPodCore {
             Some(a) if a.state.transfer_id == transfer_id => a,
             _ => return Err(ChunkError::UnknownTransfer),
         };
-        match chunk::on_chunk_data_received(&mut active.state, transfer_id, start, end, hash, payload) {
+        match chunk::on_chunk_data_received(
+            &mut active.state,
+            transfer_id,
+            start,
+            end,
+            hash,
+            payload,
+        ) {
             chunk::ChunkReceiveResult::Complete(bytes) => {
                 self.active_transfer = None;
                 Ok(Some(bytes))
@@ -259,16 +268,13 @@ impl PeaPodCore {
         let remaining: Vec<DeviceId> = std::iter::once(self.keypair.device_id())
             .chain(self.peers.iter().copied())
             .collect();
-        let new_assignments = scheduler::reassign_after_peer_left(
-            &active.assignment,
-            peer_left,
-            &remaining,
-        );
+        let new_assignments =
+            scheduler::reassign_after_peer_left(&active.assignment, peer_left, &remaining);
         active.assignment.retain(|(_, p)| *p != peer_left);
         let mut actions = Vec::new();
         for (chunk_id, new_peer) in new_assignments {
             active.assignment.push((chunk_id, new_peer));
-            let msg = chunk::chunk_request_message(chunk_id);
+            let msg = chunk::chunk_request_message(chunk_id, None);
             if let Ok(bytes) = wire::encode_frame(&msg) {
                 actions.push(OutboundAction::SendMessage(new_peer, bytes));
             }
@@ -283,6 +289,7 @@ impl PeaPodCore {
 
     /// Process a received message (host decrypts and passes frame bytes).
     /// Returns (outbound actions, optional completed transfer body when ChunkData completes the transfer).
+    #[allow(clippy::type_complexity)]
     pub fn on_message_received(
         &mut self,
         peer_id: DeviceId,
@@ -306,21 +313,19 @@ impl PeaPodCore {
                 end,
                 hash,
                 payload,
-            } => {
-                match self.on_chunk_received(transfer_id, start, end, hash, payload) {
-                    Ok(Some(body)) => completed = Some((transfer_id, body)),
-                    Ok(None) => {}
-                    Err(ChunkError::IntegrityFailed) => {
-                        let chunk_id = ChunkId {
-                            transfer_id,
-                            start,
-                            end,
-                        };
-                        actions.extend(self.reassign_single_chunk(chunk_id));
-                    }
-                    Err(ChunkError::UnknownTransfer) => {}
+            } => match self.on_chunk_received(transfer_id, start, end, hash, payload) {
+                Ok(Some(body)) => completed = Some((transfer_id, body)),
+                Ok(None) => {}
+                Err(ChunkError::IntegrityFailed) => {
+                    let chunk_id = ChunkId {
+                        transfer_id,
+                        start,
+                        end,
+                    };
+                    actions.extend(self.reassign_single_chunk(chunk_id));
                 }
-            }
+                Err(ChunkError::UnknownTransfer) => {}
+            },
             Message::Nack {
                 transfer_id,
                 start,
@@ -333,7 +338,9 @@ impl PeaPodCore {
                 };
                 actions.extend(self.reassign_single_chunk(chunk_id));
             }
-            Message::Beacon { .. } | Message::DiscoveryResponse { .. } | Message::Join { .. }
+            Message::Beacon { .. }
+            | Message::DiscoveryResponse { .. }
+            | Message::Join { .. }
             | Message::ChunkRequest { .. } => {}
         }
         Ok((actions, completed))
@@ -417,6 +424,7 @@ pub enum Action {
 }
 
 /// Instruction for the host: send a message to a peer (e.g. ChunkRequest, Heartbeat, Leave).
+#[derive(Debug)]
 pub enum OutboundAction {
     /// Send the given bytes to the peer over the local transport (host encrypts if required).
     SendMessage(DeviceId, Vec<u8>),
@@ -454,13 +462,8 @@ mod tests {
         for &chunk_id in &chunk_ids {
             let payload: Vec<u8> = (chunk_id.start..chunk_id.end).map(|j| j as u8).collect();
             let hash = integrity::hash_chunk(&payload);
-            let r = core.on_chunk_received(
-                transfer_id,
-                chunk_id.start,
-                chunk_id.end,
-                hash,
-                payload,
-            );
+            let r =
+                core.on_chunk_received(transfer_id, chunk_id.start, chunk_id.end, hash, payload);
             if let Ok(Some(bytes)) = r {
                 assert_eq!(bytes.len(), 100);
                 for (j, &b) in bytes.iter().enumerate() {

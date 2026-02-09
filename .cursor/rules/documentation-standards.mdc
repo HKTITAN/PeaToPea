@@ -1,0 +1,40 @@
+---
+description: "Documentation standards: how to write and maintain docs for PeaPod (humans and AI agents)"
+alwaysApply: false
+globs: ["docs/**/*.md", "*.md", "pea-*/README.md"]
+---
+
+# Documentation Standards
+
+PeaPod documentation serves two audiences: **human developers** and **AI coding agents**. Write for both.
+
+## Structure
+- **docs/ARCHITECTURE.md** — System design, layer placement, component relationships, data flow diagrams. Update when adding components or changing interactions.
+- **docs/PROTOCOL.md** — Wire format spec. Update when adding/changing message types or encoding.
+- **docs/API.md** — pea-core public API reference. Update when adding/changing public methods.
+- **Each crate has a README.md** — Build, run, configuration, platform-specific details.
+- **CHANGELOG.md** — Version history. Use Added/Changed/Fixed/Removed categories.
+- **CONTRIBUTING.md** — Developer workflow, branching, commit style.
+
+## Writing for AI agents
+- Be **explicit about invariants**: "pea-core has no I/O", "all platforms use the same wire format", "DeviceId is 16 bytes".
+- Include **concrete examples**: Show exact function signatures, not just descriptions.
+- Use **Mermaid diagrams** for all architecture and sequence diagrams (renders on GitHub, parseable by agents).
+- Link to source files when referencing code: `[pea-core/src/protocol.rs](../pea-core/src/protocol.rs)`.
+- State **what NOT to do** as well as what to do: "Do not put I/O in pea-core", "Do not use unwrap in library code".
+
+## Writing for humans
+- Start each doc with a one-line summary of what it covers.
+- Use tables for structured data (message types, API methods, platform matrix).
+- Keep paragraphs short (3-5 lines max).
+- Include "Cross-references" section linking to related docs.
+
+## Diagrams
+- Use **Mermaid** (`\`\`\`mermaid`) for all diagrams. Do not use ASCII art.
+- Supported diagram types: `sequenceDiagram` (data flow, handshakes), `graph` (component relationships), `block-beta` (layer diagrams), `packet-beta` (frame layouts).
+- Keep diagrams self-contained — a reader should understand the diagram without reading surrounding text.
+
+## Maintenance
+- When you change code that affects the protocol or architecture, update the corresponding doc in the same commit.
+- When adding a new crate or platform, create a `README.md` following the pattern of existing crate READMEs.
+- Run `make help` to verify the Makefile documents current commands.

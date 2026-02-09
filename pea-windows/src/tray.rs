@@ -8,17 +8,17 @@ use std::sync::atomic::{AtomicPtr, Ordering};
 use std::sync::Mutex;
 
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
+use windows::core::w;
 use windows::core::PCWSTR;
 use windows::Win32::Foundation::{HMENU, HWND, LPARAM, LRESULT, WPARAM};
 use windows::Win32::System::LibraryLoader::GetModuleHandleW;
 use windows::Win32::UI::Input::KeyboardAndMouse::GetCursorPos;
 use windows::Win32::UI::Shell::{
-    Shell_NotifyIconW, NIM_ADD, NIM_DELETE, NIM_MODIFY, NIF_ICON, NIF_MESSAGE, NIF_TIP,
+    Shell_NotifyIconW, NIF_ICON, NIF_MESSAGE, NIF_TIP, NIM_ADD, NIM_DELETE, NIM_MODIFY,
     NOTIFYICONDATAW,
 };
-use windows::Win32::UI::WindowsAndMessaging::*;
-use windows::core::w;
 use windows::Win32::UI::WindowsAndMessaging::LoadIconW;
+use windows::Win32::UI::WindowsAndMessaging::*;
 
 pub enum TrayCommand {
     Enable,
@@ -286,7 +286,11 @@ unsafe extern "system" fn settings_wnd_proc(
                     let _ = SendMessageW(
                         check,
                         BM_SETCHECK,
-                        if s.enabled { WPARAM(BST_CHECKED as _) } else { WPARAM(0) },
+                        if s.enabled {
+                            WPARAM(BST_CHECKED as _)
+                        } else {
+                            WPARAM(0)
+                        },
                         LPARAM(0),
                     );
                 }
@@ -295,7 +299,11 @@ unsafe extern "system" fn settings_wnd_proc(
                     let _ = SendMessageW(
                         autostart,
                         BM_SETCHECK,
-                        if s.autostart_enabled { WPARAM(BST_CHECKED as _) } else { WPARAM(0) },
+                        if s.autostart_enabled {
+                            WPARAM(BST_CHECKED as _)
+                        } else {
+                            WPARAM(0)
+                        },
                         LPARAM(0),
                     );
                 }
@@ -313,7 +321,11 @@ unsafe extern "system" fn settings_wnd_proc(
                         let _ = SendMessageW(
                             check,
                             BM_SETCHECK,
-                            if s.enabled { WPARAM(BST_CHECKED as _) } else { WPARAM(0) },
+                            if s.enabled {
+                                WPARAM(BST_CHECKED as _)
+                            } else {
+                                WPARAM(0)
+                            },
                             LPARAM(0),
                         );
                     }
@@ -322,7 +334,11 @@ unsafe extern "system" fn settings_wnd_proc(
                         let _ = SendMessageW(
                             autostart,
                             BM_SETCHECK,
-                            if s.autostart_enabled { WPARAM(BST_CHECKED as _) } else { WPARAM(0) },
+                            if s.autostart_enabled {
+                                WPARAM(BST_CHECKED as _)
+                            } else {
+                                WPARAM(0)
+                            },
                             LPARAM(0),
                         );
                     }
@@ -340,7 +356,11 @@ unsafe extern "system" fn settings_wnd_proc(
             let tx_ptr = CMD_TX.load(Ordering::Acquire);
             if !tx_ptr.is_null() {
                 let tx = &*(tx_ptr as *const UnboundedSender<TrayCommand>);
-                let _ = tx.send(if enabled { TrayCommand::Enable } else { TrayCommand::Disable });
+                let _ = tx.send(if enabled {
+                    TrayCommand::Enable
+                } else {
+                    TrayCommand::Disable
+                });
             }
         } else if id == IDC_CHECK_AUTOSTART {
             let check = GetDlgItem(hwnd, IDC_CHECK_AUTOSTART);
@@ -370,10 +390,7 @@ pub fn run_tray(
     hwnd_tx: tokio::sync::oneshot::Sender<HWND>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     unsafe {
-        CMD_TX.store(
-            &cmd_tx as *const _ as *mut _,
-            Ordering::Release,
-        );
+        CMD_TX.store(&cmd_tx as *const _ as *mut _, Ordering::Release);
         if let Ok(mut guard) = STATE_RX.lock() {
             *guard = Some(state_rx);
         }
@@ -413,10 +430,7 @@ pub fn run_tray(
             None,
         )?;
         // IDI_APPLICATION = 32512; use as resource id for default app icon
-        let icon = LoadIconW(
-            None,
-            windows::core::PCWSTR(32512usize as *const u16),
-        )?;
+        let icon = LoadIconW(None, windows::core::PCWSTR(32512usize as *const u16))?;
         let mut nid = NOTIFYICONDATAW {
             cbSize: std::mem::size_of::<NOTIFYICONDATAW>() as u32,
             hWnd: hwnd,

@@ -25,7 +25,9 @@ const BEACON_INTERVAL: Duration = Duration::from_secs(4);
 const PEER_TIMEOUT: Duration = Duration::from_secs(16);
 
 struct PeerState {
+    #[allow(dead_code)]
     public_key: PublicKey,
+    #[allow(dead_code)]
     addr: SocketAddr,
     last_seen: Instant,
 }
@@ -49,29 +51,36 @@ pub async fn run_discovery(
     let keypair_recv = keypair.clone();
     let connect_tx_recv = connect_tx.clone();
 
-    let beacon_task = tokio::spawn(async move {
-        beacon_loop(send_socket, keypair, listen_port).await
-    });
+    let beacon_task =
+        tokio::spawn(async move { beacon_loop(send_socket, keypair, listen_port).await });
     let recv_task = tokio::spawn(async move {
-        recv_loop(recv_socket, peers_recv, core_recv, keypair_recv, connect_tx_recv).await
+        recv_loop(
+            recv_socket,
+            peers_recv,
+            core_recv,
+            keypair_recv,
+            connect_tx_recv,
+        )
+        .await
     });
-    let timeout_task = tokio::spawn(async move {
-        peer_timeout_loop(peers.clone(), core).await
-    });
+    let timeout_task = tokio::spawn(async move { peer_timeout_loop(peers.clone(), core).await });
 
     let _ = tokio::try_join!(beacon_task, recv_task, timeout_task);
     Ok(())
 }
 
-fn make_multicast_socket() -> impl std::future::Future<Output = std::io::Result<UdpSocket>> {
-    async move {
-        let std_sock = std::net::UdpSocket::bind(("0.0.0.0", DISCOVERY_PORT))?;
-        let multicast: std::net::Ipv4Addr = MULTICAST_GROUP.parse().map_err(|e: std::net::AddrParseError| std::io::Error::new(std::io::ErrorKind::InvalidInput, e))?;
-        std_sock.join_multicast_v4(&multicast, &"0.0.0.0".parse().unwrap())?;
-        std_sock.set_multicast_ttl_v4(1)?;
-        let sock = tokio::net::UdpSocket::from_std(std_sock)?;
-        Ok(sock)
-    }
+async fn make_multicast_socket() -> std::io::Result<UdpSocket> {
+    let std_sock = std::net::UdpSocket::bind(("0.0.0.0", DISCOVERY_PORT))?;
+    let multicast: std::net::Ipv4Addr =
+        MULTICAST_GROUP
+            .parse()
+            .map_err(|e: std::net::AddrParseError| {
+                std::io::Error::new(std::io::ErrorKind::InvalidInput, e)
+            })?;
+    std_sock.join_multicast_v4(&multicast, &"0.0.0.0".parse().unwrap())?;
+    std_sock.set_multicast_ttl_v4(1)?;
+    let sock = tokio::net::UdpSocket::from_std(std_sock)?;
+    Ok(sock)
 }
 
 async fn beacon_loop(
@@ -87,8 +96,13 @@ async fn beacon_loop(
         public_key,
         listen_port,
     };
-    let frame = encode_frame(&beacon).map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;
-    let dest: SocketAddr = format!("{}:{}", MULTICAST_GROUP, DISCOVERY_PORT).parse()?;
+    let frame = encode_frame(&beacon)
+        .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;
+    let dest: SocketAddr = format!("{}:{}", MULTICAST_GROUP, DISCOVERY_PORT)
+        .parse()
+        .map_err(|e: std::net::AddrParseError| {
+            std::io::Error::new(std::io::ErrorKind::InvalidInput, e)
+        })?;
     loop {
         let _ = socket.send_to(&frame, dest).await;
         tokio::time::sleep(BEACON_INTERVAL).await;
@@ -110,7 +124,8 @@ async fn recv_loop(
         device_id: my_id,
         public_key: my_public,
         listen_port: LOCAL_TRANSPORT_PORT,
-    }).map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;
+    })
+    .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;
 
     loop {
         match socket.recv_from(&mut buf).await {
@@ -133,11 +148,14 @@ async fn recv_loop(
                             let is_new = {
                                 let mut p = peers.lock().await;
                                 let is_new = !p.contains_key(device_id);
-                                p.insert(*device_id, PeerState {
-                                    public_key: public_key.clone(),
-                                    addr: SocketAddr::new(from.ip(), *listen_port),
-                                    last_seen: Instant::now(),
-                                });
+                                p.insert(
+                                    *device_id,
+                                    PeerState {
+                                        public_key: public_key.clone(),
+                                        addr: SocketAddr::new(from.ip(), *listen_port),
+                                        last_seen: Instant::now(),
+                                    },
+                                );
                                 is_new
                             };
                             if is_new {
@@ -164,11 +182,14 @@ async fn recv_loop(
                             let is_new = {
                                 let mut p = peers.lock().await;
                                 let is_new = !p.contains_key(device_id);
-                                p.insert(*device_id, PeerState {
-                                    public_key: public_key.clone(),
-                                    addr: SocketAddr::new(from.ip(), *listen_port),
-                                    last_seen: Instant::now(),
-                                });
+                                p.insert(
+                                    *device_id,
+                                    PeerState {
+                                        public_key: public_key.clone(),
+                                        addr: SocketAddr::new(from.ip(), *listen_port),
+                                        last_seen: Instant::now(),
+                                    },
+                                );
                                 is_new
                             };
                             if is_new {

@@ -102,9 +102,11 @@ mod tests {
 
     #[test]
     fn assign_zero_peers_empty() {
-        let chunks = vec![
-            ChunkId { transfer_id: [0; 16], start: 0, end: 100 },
-        ];
+        let chunks = vec![ChunkId {
+            transfer_id: [0; 16],
+            start: 0,
+            end: 100,
+        }];
         let peers: Vec<DeviceId> = vec![];
         let out = assign_chunks_to_peers(&chunks, &peers);
         assert_eq!(out.len(), 0);
@@ -114,8 +116,16 @@ mod tests {
     fn assign_to_single_peer() {
         let kp = Keypair::generate();
         let chunks = vec![
-            ChunkId { transfer_id: [0; 16], start: 0, end: 100 },
-            ChunkId { transfer_id: [0; 16], start: 100, end: 200 },
+            ChunkId {
+                transfer_id: [0; 16],
+                start: 0,
+                end: 100,
+            },
+            ChunkId {
+                transfer_id: [0; 16],
+                start: 100,
+                end: 200,
+            },
         ];
         let peers = vec![kp.device_id()];
         let out = assign_chunks_to_peers(&chunks, &peers);
@@ -128,9 +138,21 @@ mod tests {
         let a = Keypair::generate();
         let b = Keypair::generate();
         let chunks = vec![
-            ChunkId { transfer_id: [0; 16], start: 0, end: 100 },
-            ChunkId { transfer_id: [0; 16], start: 100, end: 200 },
-            ChunkId { transfer_id: [0; 16], start: 200, end: 300 },
+            ChunkId {
+                transfer_id: [0; 16],
+                start: 0,
+                end: 100,
+            },
+            ChunkId {
+                transfer_id: [0; 16],
+                start: 100,
+                end: 200,
+            },
+            ChunkId {
+                transfer_id: [0; 16],
+                start: 200,
+                end: 300,
+            },
         ];
         let peers = vec![a.device_id(), b.device_id()];
         let out = assign_chunks_to_peers(&chunks, &peers);
@@ -164,8 +186,16 @@ mod tests {
         let a = Keypair::generate();
         let b = Keypair::generate();
         let chunks = vec![
-            ChunkId { transfer_id: [0; 16], start: 0, end: 100 },
-            ChunkId { transfer_id: [0; 16], start: 100, end: 200 },
+            ChunkId {
+                transfer_id: [0; 16],
+                start: 0,
+                end: 100,
+            },
+            ChunkId {
+                transfer_id: [0; 16],
+                start: 100,
+                end: 200,
+            },
         ];
         let peers = vec![a.device_id(), b.device_id()];
         let assignment = assign_chunks_to_peers(&chunks, &peers);

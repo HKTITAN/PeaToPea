@@ -11,6 +11,20 @@ This document specifies the wire format, discovery, and connection handshake so 
 - **Max frame size**: 16 MiB (16 × 1024 × 1024 bytes). Frames larger than this are rejected.
 - **Endianness**: Length is little-endian. Bincode uses little-endian for multi-byte integers.
 
+```mermaid
+packet-beta
+  0-31: "Length (u32 LE) — 4 bytes"
+  32-95: "Payload (bincode-serialized Message) — variable, max 16 MiB"
+```
+
+After the TCP handshake, all frames are encrypted:
+
+```mermaid
+packet-beta
+  0-31: "Length (u32 LE) — 4 bytes"
+  32-95: "ChaCha20-Poly1305 ciphertext (nonce = implicit counter)"
+```
+
 ### 1.2 Message types and fields
 
 All message variants and their fields (as in pea-core `protocol::Message`):
@@ -69,9 +83,34 @@ Implementations in other languages (Kotlin, Swift, etc.) must use the same field
 ### 3.1 First message on TCP
 
 - After a TCP connection is established, the first application-layer message is a **handshake**.
-- Handshake content: **protocol_version** (u8) + **device_id** (16 bytes) + **public_key** (32 bytes). Encoding may be the same length-prefixed format or a dedicated handshake frame.
+- Handshake content: **protocol_version** (u8) + **device_id** (16 bytes) + **public_key** (32 bytes) = 49 bytes total.
 - Both sides send their handshake; each derives a **session key** from the two keypairs (e.g. X25519 key exchange). All subsequent messages are encrypted with this session key.
-- If **protocol_version** is not supported, the connection is rejected and closed (no crash; log and optionally show “Peer is using a different PeaPod version” in UI).
+- If **protocol_version** is not supported, the connection is rejected and closed (no crash; log and optionally show "Peer is using a different PeaPod version" in UI).
+
+```mermaid
+sequenceDiagram
+    participant A as Device A
+    participant B as Device B
+
+    A->>B: TCP connect
+    A->>B: Handshake [version 1B | device_id 16B | public_key 32B]
+    B->>A: Handshake [version 1B | device_id 16B | public_key 32B]
+
+    Note over A,B: Both compute: shared_secret = X25519(my_secret, peer_pubkey), session_key = SHA-256(shared_secret)
+
+    A->>B: Encrypted frame (ChaCha20-Poly1305, nonce=0)
+    B->>A: Encrypted frame (ChaCha20-Poly1305, nonce=0)
+    Note over A,B: Nonce increments per message per direction
+```
+
+Handshake frame layout (49 bytes, sent raw before encryption begins):
+
+```mermaid
+packet-beta
+  0-7: "version (u8)"
+  8-135: "device_id (16 bytes)"
+  136-391: "public_key (32 bytes)"
+```
 
 ### 3.2 Encryption of subsequent messages
 

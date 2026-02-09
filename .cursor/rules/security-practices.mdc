@@ -1,0 +1,38 @@
+---
+description: "Security practices for PeaPod: crypto, input validation, dependency auditing"
+alwaysApply: true
+---
+
+# Security Practices
+
+PeaPod handles cryptographic identity and encrypted peer communication. Follow these rules:
+
+## Cryptography
+- **X25519** for key exchange (via `x25519-dalek`). Do not use RSA or custom DH.
+- **ChaCha20-Poly1305** for AEAD encryption (via `chacha20poly1305`). Do not use AES-GCM without justification.
+- **SHA-256** for chunk integrity hashing (via `sha2`).
+- **Never** roll custom crypto. Use only the crates listed above.
+- **Nonce management**: Use a per-direction counter. Check for overflow (saturating_add). Never reuse a nonce with the same key.
+- **Key material**: Generate fresh keypairs at first run. Do not hardcode or log secret keys.
+
+## Input validation
+- **Frame length**: Reject frames > 16 MiB (`MAX_FRAME_LEN`). Check before allocating buffers.
+- **Protocol version**: Reject peers with unsupported versions. Do not crash — log and close connection.
+- **Device ID**: Validate 16-byte length. Do not trust peer-provided IDs without verification.
+- **Chunk ranges**: Validate `start < end`, `end <= total_length`. Reject out-of-bounds chunks.
+
+## Dependencies
+- CI runs `cargo audit` on every push. Fix or document any findings before merging.
+- Pin major versions in `Cargo.toml` (e.g. `"1"` not `"*"`).
+- Prefer well-maintained, audited crates. Check download counts and last update.
+- When adding a new dependency, verify it has no known advisories.
+
+## Network security
+- **LAN only**: Discovery uses multicast with TTL=1. Do not route discovery traffic beyond the subnet.
+- **No telemetry**: PeaPod does not phone home, collect data, or contact external servers (except normal WAN traffic through the user's own connections).
+- **Proxy safety**: The local proxy only binds to `127.0.0.1`. Do not bind to `0.0.0.0` for the proxy port.
+
+## Secrets in code
+- Never commit API keys, tokens, passwords, or private keys.
+- `.gitignore` should exclude any local config files that might contain secrets.
+- Use environment variables for any sensitive configuration (e.g. signing keys for release builds).
