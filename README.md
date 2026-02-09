@@ -27,7 +27,7 @@ Licensed under the [MIT License](LICENSE). For Rust dependency licenses: `cargo 
 ## Repo layout
 
 - [.tasks/](.tasks/README.md) — Task breakdown and checklists for the full project.
-- `pea-core/` — PeaPod protocol reference implementation (Rust library). Wire format and discovery are specified in [docs/PROTOCOL.md](docs/PROTOCOL.md).
+- `pea-core/` — PeaPod protocol reference implementation (Rust library). Build/test: see [pea-core/README.md](pea-core/README.md). Wire format and discovery are specified in [docs/PROTOCOL.md](docs/PROTOCOL.md).
 - **Implementations (per OS):**
   - [pea-windows/](pea-windows/README.md) — Windows: proxy, discovery, transport, tray. Build/run: see [pea-windows/README.md](pea-windows/README.md).
   - [pea-android/](pea-android/README.md) — Android app (Gradle/Kotlin, VPNService). Build/run: see [pea-android/README.md](pea-android/README.md).

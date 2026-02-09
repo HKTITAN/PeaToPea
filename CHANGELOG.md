@@ -4,9 +4,23 @@ All notable changes to the PeaPod project are documented here. Format: version (
 
 ## [Unreleased]
 
-- **pea-core:** cbindgen.toml for C header generation (iOS/macOS); CI step generates and verifies pea_core.h.
-- **Documentation:** QUALITY.md — how to measure metrics (throughput, pod formation, linear scaling, battery), optional coverage (cargo-tarpaulin), store listing/privacy policy guidance. RELEASE.md — full pod test step, .deb test step. INTEROP.md — two-process smoke script; optional CI job. iOS/macOS READMEs — next steps for Xcode project; scripts/build-pea-core-apple.sh to build pea-core for iOS and macOS. CONTRIBUTING — optional interop script. scripts/README.md — describes interop and Apple build scripts. .tasks README — remaining work summary; 05/06 task files — Notes section with scaffold support summary.
-- (Ongoing work: see [.tasks/](.tasks/README.md).)
+### Added
+- **Install scripts:** Interactive one-line installers for Linux/macOS (`install.sh`) and Windows (`install.ps1`) with disclaimers, confirmation prompts, service setup, and `--uninstall` support.
+- **Makefile:** Standard build/test/lint/install/uninstall targets (`make help` for the full list).
+- **pea-core README:** Added `pea-core/README.md` — API overview, build/test instructions, C FFI, cross-compilation.
+
+### Fixed
+- **pea-core:** Fixed compilation errors — added `Debug` derives, fixed ChaCha20 nonce types, added `from_bytes()` constructors for `PublicKey`/`DeviceId`, fixed missing function arguments.
+- **pea-linux:** Fixed all 16 clippy warnings — `io_other_error`, `while_let_loop`, `collapsible_match`, `single_match`, `question_mark`, `type_complexity`, `unwrap_or_default`, `too_many_arguments`, `dead_code`.
+- **pea-windows:** Fixed all 33 clippy warnings — same categories as pea-linux plus `async fn` syntax simplification.
+- **CI:** Fixed `dtolnay/rust-action@stable` → `dtolnay/rust-toolchain@stable` (correct action name).
+
+### Changed
+- **Documentation:** Updated README with install section and Makefile usage.
+- **pea-core:** cbindgen.toml for C header generation (iOS/macOS); CI step generates and verifies `pea_core.h`.
+- **Documentation:** QUALITY.md, RELEASE.md, INTEROP.md, iOS/macOS READMEs, CONTRIBUTING, scripts/README.md — see previous entries.
+
+(Ongoing work: see [.tasks/](.tasks/README.md).)
 
 ## 0.1.0 (initial)
 
