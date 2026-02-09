@@ -59,11 +59,11 @@ The installers handle everything automatically:
 
 **Prerequisites** (installed automatically by the scripts if missing):
 
-| Platform | Requirement | Auto-installed? |
-|----------|-------------|-----------------|
-| Linux | Rust, gcc/build-essential, git, curl | Rust: yes, gcc: yes (apt/dnf/yum/pacman/zypper/apk), git/curl: no (must be pre-installed) |
-| macOS | Rust, Xcode Command Line Tools, git, curl | Rust: yes, Xcode CLT: prompted, git/curl: included with macOS |
-| Windows | Rust, Git | Rust: yes (GNU toolchain if no Visual Studio), Git: no (must be pre-installed) |
+| Platform | Requirement | Notes |
+|----------|-------------|-------|
+| Linux | Rust, gcc, git, curl | Rust and gcc auto-installed; git/curl must be pre-installed |
+| macOS | Rust, Xcode CLI Tools | Rust auto-installed; Xcode CLT prompted; git/curl included with macOS |
+| Windows | Rust, Git | Rust auto-installed (uses GNU toolchain if no Visual Studio); Git must be pre-installed |
 
 **Install from a local clone** (skip `git clone`, build from the repo you already have):
 

@@ -172,7 +172,7 @@ install_build_deps() {
         fi
     fi
 
-    # Linux — try to auto-install via package manager
+    # Linux - try to auto-install via package manager
     if [ "$OS" = "linux" ]; then
         if command -v apt-get >/dev/null 2>&1; then
             info "Detected apt. Installing build-essential..."
