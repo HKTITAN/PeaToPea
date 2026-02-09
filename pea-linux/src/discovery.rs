@@ -16,7 +16,9 @@ const BEACON_INTERVAL: Duration = Duration::from_secs(4);
 const PEER_TIMEOUT: Duration = Duration::from_secs(16);
 
 struct PeerState {
+    #[allow(dead_code)]
     public_key: PublicKey,
+    #[allow(dead_code)]
     addr: SocketAddr,
     last_seen: Instant,
 }

@@ -41,7 +41,7 @@ impl Default for Config {
 
 /// Load config: merge default, then config file (if present), then env vars.
 pub fn load() -> Config {
-    let mut c = load_file().unwrap_or_else(Config::default);
+    let mut c = load_file().unwrap_or_default();
     if let Ok(s) = std::env::var("PEAPOD_PROXY_PORT") {
         if let Ok(p) = s.parse::<u16>() {
             c.proxy_port = p;

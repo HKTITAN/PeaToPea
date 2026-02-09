@@ -76,8 +76,7 @@ async fn shutdown_signal() -> Result<(), Box<dyn std::error::Error>> {
     #[cfg(unix)]
     {
         use tokio::signal::unix::{signal, SignalKind};
-        let mut sigterm = signal(SignalKind::terminate())
-            .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
+        let mut sigterm = signal(SignalKind::terminate()).map_err(std::io::Error::other)?;
         tokio::select! {
             _ = tokio::signal::ctrl_c() => {}
             _ = sigterm.recv() => {}
