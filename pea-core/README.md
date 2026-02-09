@@ -15,6 +15,20 @@ pea-core is a pure-logic Rust library with **no I/O**. It handles:
 
 The host (platform code) performs all actual I/O — sockets, discovery, proxy interception — and calls into pea-core for protocol decisions.
 
+```mermaid
+graph LR
+    subgraph Host["Host (Platform)"]
+        IO["Sockets, HTTP,<br/>UDP, TCP, proxy,<br/>VPN, file I/O"]
+    end
+
+    subgraph Core["pea-core (pure logic, no I/O)"]
+        API["on_incoming_request → Action<br/>on_chunk_received → Option body<br/>on_peer_joined / on_peer_left<br/>on_message_received → Actions<br/>tick → Actions"]
+    end
+
+    IO -->|"events<br/>(request, chunk, peer, message)"| Core
+    Core -->|"actions<br/>(chunk plan, send msg, body)"| IO
+```
+
 ## Build
 
 From the **repo root** (requires [Rust](https://rustup.rs)):
