@@ -40,8 +40,8 @@ pub fn decode_frame(bytes: &[u8]) -> Result<(Message, usize), FrameDecodeError> 
     if bytes.len() < LEN_SIZE + len {
         return Err(FrameDecodeError::NeedMore);
     }
-    let msg: Message = bincode::deserialize(&bytes[LEN_SIZE..LEN_SIZE + len])
-        .map_err(FrameDecodeError::Decode)?;
+    let msg: Message =
+        bincode::deserialize(&bytes[LEN_SIZE..LEN_SIZE + len]).map_err(FrameDecodeError::Decode)?;
     Ok((msg, LEN_SIZE + len))
 }
 
@@ -79,8 +79,18 @@ mod tests {
         let (decoded, n) = decode_frame(&frame).unwrap();
         assert_eq!(n, frame.len());
         match (&msg, &decoded) {
-            (Message::Beacon { protocol_version: v1, device_id: d1, .. },
-             Message::Beacon { protocol_version: v2, device_id: d2, .. }) => {
+            (
+                Message::Beacon {
+                    protocol_version: v1,
+                    device_id: d1,
+                    ..
+                },
+                Message::Beacon {
+                    protocol_version: v2,
+                    device_id: d2,
+                    ..
+                },
+            ) => {
                 assert_eq!(v1, v2);
                 assert_eq!(d1, d2);
             }
@@ -92,14 +102,22 @@ mod tests {
     fn partial_read_need_more() {
         let msg = sample_beacon();
         let frame = encode_frame(&msg).unwrap();
-        assert!(matches!(decode_frame(&frame[..2]), Err(FrameDecodeError::NeedMore)));
-        assert!(matches!(decode_frame(&frame[..super::LEN_SIZE]), Err(FrameDecodeError::NeedMore)));
+        assert!(matches!(
+            decode_frame(&frame[..2]),
+            Err(FrameDecodeError::NeedMore)
+        ));
+        assert!(matches!(
+            decode_frame(&frame[..super::LEN_SIZE]),
+            Err(FrameDecodeError::NeedMore)
+        ));
     }
 
     #[test]
     fn multiple_messages() {
         let a = sample_beacon();
-        let b = Message::Heartbeat { device_id: Keypair::generate().device_id() };
+        let b = Message::Heartbeat {
+            device_id: Keypair::generate().device_id(),
+        };
         let fa = encode_frame(&a).unwrap();
         let fb = encode_frame(&b).unwrap();
         let mut buf = Vec::new();

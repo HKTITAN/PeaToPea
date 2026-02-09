@@ -5,8 +5,8 @@ use std::net::SocketAddr;
 use std::sync::Arc;
 use std::time::Duration;
 
-use pea_core::wire::encode_frame;
 use pea_core::chunk::chunk_request_message;
+use pea_core::wire::encode_frame;
 use pea_core::{Action, ChunkId, PeaPodCore};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::{TcpListener, TcpStream};
@@ -191,7 +191,8 @@ async fn tunnel_connect(client: &mut TcpStream, buf: &[u8]) -> std::io::Result<(
 async fn forward_raw(client: &mut TcpStream, request: &[u8]) -> std::io::Result<()> {
     let mut headers = [httparse::EMPTY_HEADER; 32];
     let mut req = httparse::Request::new(&mut headers);
-    req.parse(request).map_err(|_| std::io::ErrorKind::InvalidData)?;
+    req.parse(request)
+        .map_err(|_| std::io::ErrorKind::InvalidData)?;
     let host = req
         .headers
         .iter()
@@ -258,13 +259,9 @@ async fn accelerate_response(
             let payload = bytes.to_vec();
             let hash = pea_core::integrity::hash_chunk(&payload);
             let mut c = core.lock().await;
-            if let Ok(Some(full_body)) = c.on_chunk_received(
-                transfer_id,
-                chunk_id.start,
-                chunk_id.end,
-                hash,
-                payload,
-            ) {
+            if let Ok(Some(full_body)) =
+                c.on_chunk_received(transfer_id, chunk_id.start, chunk_id.end, hash, payload)
+            {
                 let _ = transfer_waiters.lock().await.remove(&transfer_id);
                 let len = full_body.len();
                 let status = "HTTP/1.1 200 OK\r\n";

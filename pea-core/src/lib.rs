@@ -21,19 +21,20 @@ pub mod protocol;
 pub mod wire;
 
 /// C ABI for staticlib linking (Android NDK, etc.).
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub mod ffi;
 
-pub use identity::{DeviceId, Keypair, PublicKey};
-pub use protocol::{Message, PROTOCOL_VERSION};
-pub use wire::{decode_frame, encode_frame, FrameDecodeError, FrameEncodeError};
+pub use chunk::ChunkId;
 pub use core::{
     Action, ChunkError, ChunkReceiveOutcome, Config, OnMessageError, OutboundAction, PeaPodCore,
     PeerMetrics,
 };
-pub use chunk::ChunkId;
+pub use identity::{DeviceId, Keypair, PublicKey};
+pub use protocol::{Message, PROTOCOL_VERSION};
+pub use wire::{decode_frame, encode_frame, FrameDecodeError, FrameEncodeError};
 
 // Stub modules for chunk manager, scheduler, integrity (full impl later).
 pub mod chunk;
-pub mod scheduler;
-pub mod integrity;
 pub mod core;
+pub mod integrity;
+pub mod scheduler;

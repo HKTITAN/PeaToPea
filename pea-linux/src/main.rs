@@ -1,8 +1,8 @@
 // PeaPod Linux: proxy, discovery, transport daemon per .tasks/04-linux.md.
 
 mod config;
-mod proxy;
 mod discovery;
+mod proxy;
 mod transport;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -25,7 +25,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let bind: std::net::SocketAddr = format!("127.0.0.1:{}", cfg.proxy_port).parse()?;
     let (connect_tx, connect_rx) = tokio::sync::mpsc::unbounded_channel();
-    let peer_senders = std::sync::Arc::new(tokio::sync::Mutex::new(std::collections::HashMap::new()));
+    let peer_senders =
+        std::sync::Arc::new(tokio::sync::Mutex::new(std::collections::HashMap::new()));
     let transfer_waiters: transport::TransferWaiters =
         std::sync::Arc::new(tokio::sync::Mutex::new(std::collections::HashMap::new()));
 
@@ -65,7 +66,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             )
             .await;
         });
-        shutdown_signal().await?;
+        shutdown_signal().await
     })?;
     Ok(())
 }
