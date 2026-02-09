@@ -2,6 +2,8 @@
 
 Android protocol implementation for PeaPod (VPNService, discovery, transport). Uses pea-core (Rust) via JNI when NDK is configured.
 
+**Note:** There is no one-line installer for Android. Build the APK using Android Studio or Gradle (see [Build](#build) below).
+
 ## Environment
 
 - **Android Studio** or **SDK + NDK** (see [Build](#build)).

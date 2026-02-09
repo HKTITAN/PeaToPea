@@ -2,6 +2,16 @@
 
 macOS protocol implementation for PeaPod (Network Extension, discovery, menu bar). Uses pea-core (Rust) via static lib or XCFramework when built.
 
+## Quick install
+
+The one-line installer builds and installs the PeaPod daemon on macOS:
+
+```bash
+curl -sSf https://raw.githubusercontent.com/HKTITAN/PeaToPea/main/install.sh | sh
+```
+
+The installer will prompt you to install Xcode Command Line Tools if they are not present (provides the clang compiler). On macOS, the installer currently builds `pea-linux` (the cross-platform daemon) since the native macOS app is still a placeholder.
+
 ## Environment
 
 - **Xcode**: 15.0 or later (Swift 5.9, macOS 14 SDK). Install from the Mac App Store or [developer.apple.com](https://developer.apple.com/xcode/).

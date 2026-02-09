@@ -49,6 +49,22 @@ curl -sSf https://raw.githubusercontent.com/HKTITAN/PeaToPea/main/install.sh | s
 iwr -useb https://raw.githubusercontent.com/HKTITAN/PeaToPea/main/install.ps1 | iex
 ```
 
+The installers handle everything automatically:
+- Show you exactly what PeaPod is and what it does
+- Ask for confirmation before each step (skip with `--yes`)
+- Install the Rust toolchain if needed (on Windows, automatically uses the GNU toolchain if Visual Studio Build Tools are not installed)
+- Install build dependencies if needed (gcc/build-essential on Linux, Xcode CLI tools on macOS)
+- Build from source and install the binary
+- Set up the system service (systemd on Linux, launch agent on macOS, startup shortcut on Windows)
+
+**Prerequisites** (installed automatically by the scripts if missing):
+
+| Platform | Requirement | Auto-installed? |
+|----------|-------------|-----------------|
+| Linux | Rust, gcc/build-essential, git, curl | Rust: yes, gcc: yes (apt/dnf/yum/pacman/zypper/apk), git/curl: no (must be pre-installed) |
+| macOS | Rust, Xcode Command Line Tools, git, curl | Rust: yes, Xcode CLT: prompted, git/curl: included with macOS |
+| Windows | Rust, Git | Rust: yes (GNU toolchain if no Visual Studio), Git: no (must be pre-installed) |
+
 **Install from a local clone** (skip `git clone`, build from the repo you already have):
 
 ```bash
@@ -61,12 +77,7 @@ iwr -useb https://raw.githubusercontent.com/HKTITAN/PeaToPea/main/install.ps1 | 
 .\install.ps1 --local --yes
 ```
 
-The installers will:
-- Show you exactly what PeaPod is and what it does
-- Ask for confirmation before each step (skip with `--yes`)
-- Install the Rust toolchain (if needed)
-- Build from source and install the binary
-- Set up the system service (systemd on Linux, launch agent on macOS, startup shortcut on Windows)
+**Android / iOS / macOS native:** See the platform-specific READMEs: [Android](pea-android/README.md), [iOS](pea-ios/README.md), [macOS](pea-macos/README.md).
 
 **Uninstall:**
 

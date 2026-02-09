@@ -2,6 +2,16 @@
 
 Windows protocol implementation: system proxy (or WinDivert), discovery, local transport, system tray. Uses [pea-core](../pea-core) for protocol logic.
 
+## Quick install
+
+The one-line installer handles everything (Rust, build tools, building from source):
+
+```powershell
+iwr -useb https://raw.githubusercontent.com/HKTITAN/PeaToPea/main/install.ps1 | iex
+```
+
+The installer automatically detects whether Visual Studio Build Tools are installed. If they are not, it installs the Rust GNU toolchain (`x86_64-pc-windows-gnu`) which includes its own linker — no Visual Studio required.
+
 ## Build and run
 
 From the **repo root** (requires [Rust](https://rustup.rs) and a Windows host):

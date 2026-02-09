@@ -2,6 +2,16 @@
 
 PeaPod protocol implementation for Linux: daemon (proxy, discovery, local transport). Same wire format and discovery as pea-windows and 07-protocol-and-interop.
 
+## Quick install
+
+The one-line installer handles everything (Rust, build tools, building from source, systemd service):
+
+```bash
+curl -sSf https://raw.githubusercontent.com/HKTITAN/PeaToPea/main/install.sh | sh
+```
+
+The installer detects your package manager (apt, dnf, yum, pacman, zypper, apk) and installs build dependencies (gcc, make) if they are missing.
+
 ## Build
 
 From the repo root:
