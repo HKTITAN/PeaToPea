@@ -25,7 +25,9 @@ const BEACON_INTERVAL: Duration = Duration::from_secs(4);
 const PEER_TIMEOUT: Duration = Duration::from_secs(16);
 
 struct PeerState {
+    #[allow(dead_code)]
     public_key: PublicKey,
+    #[allow(dead_code)]
     addr: SocketAddr,
     last_seen: Instant,
 }
@@ -67,20 +69,18 @@ pub async fn run_discovery(
     Ok(())
 }
 
-fn make_multicast_socket() -> impl std::future::Future<Output = std::io::Result<UdpSocket>> {
-    async move {
-        let std_sock = std::net::UdpSocket::bind(("0.0.0.0", DISCOVERY_PORT))?;
-        let multicast: std::net::Ipv4Addr =
-            MULTICAST_GROUP
-                .parse()
-                .map_err(|e: std::net::AddrParseError| {
-                    std::io::Error::new(std::io::ErrorKind::InvalidInput, e)
-                })?;
-        std_sock.join_multicast_v4(&multicast, &"0.0.0.0".parse().unwrap())?;
-        std_sock.set_multicast_ttl_v4(1)?;
-        let sock = tokio::net::UdpSocket::from_std(std_sock)?;
-        Ok(sock)
-    }
+async fn make_multicast_socket() -> std::io::Result<UdpSocket> {
+    let std_sock = std::net::UdpSocket::bind(("0.0.0.0", DISCOVERY_PORT))?;
+    let multicast: std::net::Ipv4Addr =
+        MULTICAST_GROUP
+            .parse()
+            .map_err(|e: std::net::AddrParseError| {
+                std::io::Error::new(std::io::ErrorKind::InvalidInput, e)
+            })?;
+    std_sock.join_multicast_v4(&multicast, &"0.0.0.0".parse().unwrap())?;
+    std_sock.set_multicast_ttl_v4(1)?;
+    let sock = tokio::net::UdpSocket::from_std(std_sock)?;
+    Ok(sock)
 }
 
 async fn beacon_loop(

@@ -40,8 +40,11 @@ fn is_eligible(method: &[u8], _path: &[u8]) -> bool {
     method.eq_ignore_ascii_case(b"GET")
 }
 
+/// Parsed request data: method, path, host, range.
+type ParsedRequest = (Vec<u8>, Vec<u8>, Option<String>, Option<(u64, u64)>);
+
 /// Parse the first line and headers; return (method, path, host, range).
-fn parse_request(buf: &[u8]) -> Option<(Vec<u8>, Vec<u8>, Option<String>, Option<(u64, u64)>)> {
+fn parse_request(buf: &[u8]) -> Option<ParsedRequest> {
     let mut headers = [httparse::EMPTY_HEADER; 32];
     let mut req = httparse::Request::new(&mut headers);
     let status = req.parse(buf).ok()?;
@@ -75,10 +78,7 @@ fn parse_range_header(s: &str) -> Option<(u64, u64)> {
     } else {
         Some(end.parse::<u64>().ok()?)
     };
-    let end = match end {
-        Some(e) => e,
-        None => return None, // bytes=0- open-ended; we don't know length, fallback
-    };
+    let end = end?; // bytes=0- open-ended; we don't know length, fallback
     if end < start {
         return None;
     }
@@ -218,6 +218,7 @@ async fn forward_raw(client: &mut TcpStream, request: &[u8]) -> std::io::Result<
 }
 
 /// Execute accelerate path: fetch self chunks via HTTP, request peer chunks over transport; wait for reassembled body and send response.
+#[allow(clippy::too_many_arguments)]
 async fn accelerate_response(
     stream: &mut TcpStream,
     core: Arc<Mutex<PeaPodCore>>,
@@ -238,7 +239,7 @@ async fn accelerate_response(
     let http_client = reqwest::Client::builder()
         .timeout(Duration::from_secs(30))
         .build()
-        .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
+        .map_err(std::io::Error::other)?;
 
     for (chunk_id, peer_id) in &assignment {
         if *peer_id == self_id {
@@ -249,11 +250,8 @@ async fn accelerate_response(
                 .header("Range", range_header)
                 .send()
                 .await
-                .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
-            let bytes = resp
-                .bytes()
-                .await
-                .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
+                .map_err(std::io::Error::other)?;
+            let bytes = resp.bytes().await.map_err(std::io::Error::other)?;
             let payload = bytes.to_vec();
             let hash = pea_core::integrity::hash_chunk(&payload);
             let mut c = core.lock().await;

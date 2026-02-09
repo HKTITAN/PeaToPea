@@ -1,8 +1,10 @@
 // PeaPod Windows: proxy, discovery, transport, tray per .tasks/02-windows.md.
 #![cfg_attr(windows, windows_subsystem = "windows")]
 
+#[allow(dead_code)]
 mod discovery;
 mod proxy;
+#[allow(dead_code)]
 mod transport;
 
 #[cfg(windows)]
