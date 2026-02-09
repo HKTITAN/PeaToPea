@@ -6,7 +6,7 @@ PREFIX       ?= /usr/local
 BIN_DIR      := $(PREFIX)/bin
 SERVICE_DIR  := $(HOME)/.config/systemd/user
 
-.PHONY: help build test lint fmt clippy audit clean install uninstall service release
+.PHONY: help build test lint fmt clippy audit clean install uninstall service release dev run
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*##' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'
@@ -33,6 +33,11 @@ audit: ## Run cargo-audit for dependency vulnerabilities
 
 clean: ## Remove build artifacts
 	$(CARGO) clean
+
+dev: build test lint ## Build, test, and lint (quick verification)
+
+run: build ## Build and run pea-linux (debug)
+	$(CARGO) run -p pea-linux
 
 install: release ## Install pea-linux binary and systemd service
 	@echo "Installing pea-linux to $(BIN_DIR)..."
