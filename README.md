@@ -35,6 +35,39 @@ Licensed under the [MIT License](LICENSE). For Rust dependency licenses: `cargo 
   - [pea-ios/](pea-ios/README.md) — iOS (Swift, Network Extension). Placeholder; see [pea-ios/README.md](pea-ios/README.md).
   - [pea-macos/](pea-macos/README.md) — macOS (Swift, menu bar, Network Extension). Placeholder; see [pea-macos/README.md](pea-macos/README.md).
 
+## Install
+
+**One-line install** — interactive, with disclaimers, tells you what it installs:
+
+```bash
+# Linux / macOS
+curl -sSf https://raw.githubusercontent.com/HKTITAN/PeaToPea/main/install.sh | sh
+```
+
+```powershell
+# Windows (PowerShell)
+iwr -useb https://raw.githubusercontent.com/HKTITAN/PeaToPea/main/install.ps1 | iex
+```
+
+The installers will:
+- Show you exactly what PeaPod is and what it does
+- Ask for confirmation before each step
+- Install the Rust toolchain (if needed)
+- Build from source and install the binary
+- Set up the system service (systemd on Linux, launch agent on macOS, startup shortcut on Windows)
+
+**Uninstall:**
+
+```bash
+# Linux / macOS
+curl -sSf https://raw.githubusercontent.com/HKTITAN/PeaToPea/main/install.sh | sh -s -- --uninstall
+```
+
+```powershell
+# Windows
+iwr -useb https://raw.githubusercontent.com/HKTITAN/PeaToPea/main/install.ps1 | iex -- --uninstall
+```
+
 ## Build and test
 
 From the repo root (requires [Rust](https://rustup.rs)):
@@ -42,6 +75,13 @@ From the repo root (requires [Rust](https://rustup.rs)):
 ```bash
 cargo build -p pea-core
 cargo test -p pea-core
+
+# Or use make:
+make build    # Build all crates
+make test     # Run all tests
+make lint     # Run fmt + clippy
+make install  # Build release + install to /usr/local/bin
+make help     # Show all commands
 ```
 
 **Build and run per platform:** See each implementation’s README for prerequisites and steps: [Windows](pea-windows/README.md), [Android](pea-android/README.md), [Linux](pea-linux/README.md), [iOS](pea-ios/README.md), [macOS](pea-macos/README.md). On Linux, an optional [interop smoke script](docs/INTEROP.md#automated-interop-optional) runs two pea-linux instances and one proxy request (`./scripts/interop-two-linux.sh`).
