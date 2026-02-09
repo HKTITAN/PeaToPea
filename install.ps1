@@ -94,12 +94,45 @@ function Test-Command {
 
 # ── Install steps ───────────────────────────────────────────────────
 
+function Test-MSVCAvailable {
+    # Check for cl.exe or link.exe from Visual Studio Build Tools
+    if (Test-Command "cl") { return $true }
+    if (Test-Command "link") {
+        # Distinguish MSVC link.exe from Cygwin/other link.exe
+        $linkOut = & link 2>&1 | Out-String
+        if ($linkOut -match "Microsoft") { return $true }
+    }
+    # Check via vswhere (Visual Studio locator)
+    $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+    if (Test-Path $vswhere) {
+        $vsPath = & $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath 2>$null
+        if ($vsPath) { return $true }
+    }
+    return $false
+}
+
 function Install-Rust {
+    $hasMSVC = Test-MSVCAvailable
+
     if (Test-Command "rustc") {
         $ver = & rustc --version
         Write-Ok "Rust already installed: $ver"
+
+        # If Rust is installed with MSVC target but no MSVC build tools, add the GNU target
+        if (-not $hasMSVC) {
+            $defaultHost = & rustc -vV 2>$null | Select-String "host:" | ForEach-Object { $_.Line -replace "host:\s*", "" }
+            if ($defaultHost -and $defaultHost -match "msvc") {
+                Write-Warn "Rust is using the MSVC toolchain but Visual Studio Build Tools are not installed."
+                Write-Info "Adding the GNU target (x86_64-pc-windows-gnu) so PeaPod can build without Visual Studio..."
+                & rustup target add x86_64-pc-windows-gnu
+                & rustup toolchain install stable-x86_64-pc-windows-gnu
+                $script:RustTarget = "x86_64-pc-windows-gnu"
+                Write-Ok "GNU toolchain added. Builds will use x86_64-pc-windows-gnu."
+            }
+        }
         return
     }
+
     Write-Info "Rust is not installed."
     if (-not (Confirm-Action "Install the Rust toolchain?")) {
         Write-Err "Rust is required to build PeaPod. Aborting."
@@ -109,8 +142,16 @@ function Install-Rust {
     $rustupUrl = "https://win.rustup.rs/x86_64"
     $rustupPath = "$env:TEMP\rustup-init.exe"
     Invoke-WebRequest -Uri $rustupUrl -OutFile $rustupPath -UseBasicParsing
-    Write-Info "Running rustup installer (this may take a minute)..."
-    & $rustupPath -y --quiet
+
+    if ($hasMSVC) {
+        Write-Info "Visual Studio Build Tools detected. Installing Rust with MSVC toolchain..."
+        & $rustupPath -y --quiet
+    } else {
+        Write-Info "Visual Studio Build Tools not found. Installing Rust with GNU toolchain (no Visual Studio required)..."
+        & $rustupPath -y --quiet --default-host x86_64-pc-windows-gnu
+        $script:RustTarget = "x86_64-pc-windows-gnu"
+    }
+
     # Refresh PATH
     $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH", "User") + ";" + $env:PATH
     if (Test-Command "rustc") {
@@ -146,12 +187,22 @@ function Build-Binary {
     Write-Info "Building PeaPod (release mode)... this may take a few minutes."
     Push-Location $script:BuildDir
     try {
-        & cargo build -p pea-windows --release
-        if ($LASTEXITCODE -ne 0) {
-            Write-Err "Build failed. See output above for details."
-            exit 1
+        if ($script:RustTarget) {
+            Write-Info "Building for target: $($script:RustTarget)"
+            & cargo build -p pea-windows --release --target $script:RustTarget
+            if ($LASTEXITCODE -ne 0) {
+                Write-Err "Build failed. See output above for details."
+                exit 1
+            }
+            $script:Binary = Join-Path $script:BuildDir "target\$($script:RustTarget)\release\pea-windows.exe"
+        } else {
+            & cargo build -p pea-windows --release
+            if ($LASTEXITCODE -ne 0) {
+                Write-Err "Build failed. See output above for details."
+                exit 1
+            }
+            $script:Binary = Join-Path $script:BuildDir "target\release\pea-windows.exe"
         }
-        $script:Binary = Join-Path $script:BuildDir "target\release\pea-windows.exe"
         if (-not (Test-Path $script:Binary)) {
             Write-Err "Build failed - binary not found."
             exit 1
@@ -264,6 +315,7 @@ function Invoke-Uninstall {
 # ── Main ────────────────────────────────────────────────────────────
 
 $script:LocalBuild = $false
+$script:RustTarget = $null
 
 function Main {
     # Handle flags

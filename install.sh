@@ -151,6 +151,91 @@ install_rust() {
     ok "Rust installed: $(rustc --version)"
 }
 
+install_build_deps() {
+    # A C compiler/linker is needed by some Rust crates (e.g. ring, cc)
+    if command -v cc >/dev/null 2>&1 || command -v gcc >/dev/null 2>&1; then
+        ok "C compiler found."
+        return 0
+    fi
+
+    warn "No C compiler (cc/gcc) found. Some Rust crates require one."
+
+    if [ "$OS" = "macos" ]; then
+        info "Installing Xcode Command Line Tools (provides clang)..."
+        if confirm "Install Xcode Command Line Tools?"; then
+            xcode-select --install 2>/dev/null || true
+            info "If a dialog appeared, follow the prompts then re-run this installer."
+            exit 0
+        else
+            error "A C compiler is required to build PeaPod. Aborting."
+            exit 1
+        fi
+    fi
+
+    # Linux — try to auto-install via package manager
+    if [ "$OS" = "linux" ]; then
+        if command -v apt-get >/dev/null 2>&1; then
+            info "Detected apt. Installing build-essential..."
+            if confirm "Install build-essential (gcc, make, etc.)?"; then
+                sudo apt-get update -qq && sudo apt-get install -y build-essential
+            else
+                error "A C compiler is required to build PeaPod. Install gcc or build-essential and re-run."
+                exit 1
+            fi
+        elif command -v dnf >/dev/null 2>&1; then
+            info "Detected dnf. Installing Development Tools..."
+            if confirm "Install gcc and make?"; then
+                sudo dnf install -y gcc make
+            else
+                error "A C compiler is required to build PeaPod. Install gcc and re-run."
+                exit 1
+            fi
+        elif command -v yum >/dev/null 2>&1; then
+            info "Detected yum. Installing Development Tools..."
+            if confirm "Install gcc and make?"; then
+                sudo yum install -y gcc make
+            else
+                error "A C compiler is required to build PeaPod. Install gcc and re-run."
+                exit 1
+            fi
+        elif command -v pacman >/dev/null 2>&1; then
+            info "Detected pacman. Installing base-devel..."
+            if confirm "Install base-devel (gcc, make, etc.)?"; then
+                sudo pacman -Sy --noconfirm base-devel
+            else
+                error "A C compiler is required to build PeaPod. Install gcc and re-run."
+                exit 1
+            fi
+        elif command -v zypper >/dev/null 2>&1; then
+            info "Detected zypper. Installing gcc and make..."
+            if confirm "Install gcc and make?"; then
+                sudo zypper install -y gcc make
+            else
+                error "A C compiler is required to build PeaPod. Install gcc and re-run."
+                exit 1
+            fi
+        elif command -v apk >/dev/null 2>&1; then
+            info "Detected apk. Installing build-base..."
+            if confirm "Install build-base (gcc, make, musl-dev)?"; then
+                sudo apk add build-base
+            else
+                error "A C compiler is required to build PeaPod. Install gcc and re-run."
+                exit 1
+            fi
+        else
+            error "No supported package manager found. Please install gcc manually and re-run."
+            exit 1
+        fi
+
+        if command -v cc >/dev/null 2>&1 || command -v gcc >/dev/null 2>&1; then
+            ok "C compiler installed."
+        else
+            error "Failed to install C compiler. Please install gcc manually and re-run."
+            exit 1
+        fi
+    fi
+}
+
 clone_repo() {
     TMPDIR="${TMPDIR:-/tmp}"
     BUILD_DIR="$TMPDIR/peapod-build-$$"
@@ -406,6 +491,8 @@ main() {
     detect_os
 
     install_rust
+
+    install_build_deps
 
     if [ "$LOCAL_BUILD" = "1" ]; then
         if [ ! -f "Cargo.toml" ]; then
