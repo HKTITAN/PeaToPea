@@ -79,6 +79,30 @@ The installers handle everything automatically:
 
 **Android / iOS / macOS native:** See the platform-specific READMEs: [Android](pea-android/README.md), [iOS](pea-ios/README.md), [macOS](pea-macos/README.md).
 
+**Update to latest version:**
+
+```bash
+# Linux / macOS
+curl -sSf https://raw.githubusercontent.com/HKTITAN/PeaToPea/main/install.sh | sh -s -- --update
+```
+
+```powershell
+# Windows
+iwr -useb https://raw.githubusercontent.com/HKTITAN/PeaToPea/main/install.ps1 | iex -- --update
+```
+
+**Modify settings** (toggle auto-start, proxy, repair):
+
+```bash
+# Linux / macOS
+curl -sSf https://raw.githubusercontent.com/HKTITAN/PeaToPea/main/install.sh | sh -s -- --modify
+```
+
+```powershell
+# Windows
+iwr -useb https://raw.githubusercontent.com/HKTITAN/PeaToPea/main/install.ps1 | iex -- --modify
+```
+
 **Uninstall:**
 
 ```bash
