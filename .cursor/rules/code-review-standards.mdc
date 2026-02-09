@@ -1,0 +1,36 @@
+---
+description: "Code review standards: what to check before committing or approving changes"
+alwaysApply: true
+---
+
+# Code Review Standards
+
+When reviewing or writing code for PeaPod, check:
+
+## Correctness
+- Does the change do what it claims? Verify logic, not just syntax.
+- Are error paths handled? No silent failures — log or propagate errors.
+- Are edge cases covered? Empty peers, single peer, max frame size, zero-length chunks, connection drops.
+
+## Security
+- **No secrets in code**: No hardcoded keys, passwords, tokens, or credentials.
+- **Crypto**: Use only audited libraries (x25519-dalek, chacha20poly1305, sha2). No custom crypto.
+- **Input validation**: Validate frame lengths (max 16 MiB), protocol versions, peer IDs before processing.
+- **Nonce safety**: Per-message counter nonce, never reuse. Check nonce overflow handling.
+
+## Architecture
+- **pea-core has no I/O**: No sockets, no file reads, no HTTP calls inside `pea-core/`. If you see `tokio`, `std::net`, `reqwest`, `std::fs` in pea-core, that's a bug.
+- **Platform code uses pea-core**: Platform implementations (`pea-linux`, `pea-windows`, etc.) should call pea-core for protocol logic, not reimplement it.
+
+## Rust quality
+- `cargo clippy -- -D warnings` must pass for all workspace members.
+- `cargo fmt --all -- --check` must pass.
+- `cargo test -p pea-core` must pass (18+ tests).
+- No `unwrap()` in library code without a comment explaining why it's safe.
+- Prefer `?` and typed errors (`thiserror`) over `unwrap` or `expect`.
+- Use `std::io::Error::other()` not `std::io::Error::new(ErrorKind::Other, e)`.
+
+## Documentation
+- Public types and functions should have doc comments (`///`).
+- Architecture-impacting changes should update `docs/ARCHITECTURE.md` or `docs/PROTOCOL.md`.
+- New features should be noted in `CHANGELOG.md` under `[Unreleased]`.
