@@ -31,7 +31,7 @@ This downloads the latest release binary, installs it to `/usr/local/bin`, and s
 Downloads a pre-built binary from GitHub Releases (no Rust or compiler needed):
 
 ```powershell
-iwr -useb https://raw.githubusercontent.com/HKTITAN/PeaToPea/main/install.ps1 | iex -- --binary
+& ([scriptblock]::Create((iwr -useb https://raw.githubusercontent.com/HKTITAN/PeaToPea/main/install.ps1))) --binary
 ```
 
 ### Manual binary install (Linux)

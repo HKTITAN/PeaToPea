@@ -48,7 +48,7 @@ curl -sSf https://raw.githubusercontent.com/HKTITAN/PeaToPea/main/install.sh | s
 
 ```powershell
 # Windows (PowerShell) — download pre-built binary
-iwr -useb https://raw.githubusercontent.com/HKTITAN/PeaToPea/main/install.ps1 | iex -- --binary
+& ([scriptblock]::Create((iwr -useb https://raw.githubusercontent.com/HKTITAN/PeaToPea/main/install.ps1))) --binary
 ```
 
 **Build from source** — interactive, with disclaimers, tells you what it installs:
