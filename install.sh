@@ -173,7 +173,7 @@ confirm() {
         return 0
     fi
     printf "  %s%s%s [y/N] " "$BOLD" "$1" "$RESET"
-    read -r answer
+    read -r answer < /dev/tty
     case "$answer" in
         [Yy]*) return 0 ;;
         *)     return 1 ;;
