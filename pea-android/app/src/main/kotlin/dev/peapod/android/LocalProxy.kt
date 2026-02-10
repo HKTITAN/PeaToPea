@@ -289,7 +289,7 @@ object LocalProxy {
         val bracket = host.indexOf(']')
         val colon = host.indexOf(':', if (bracket >= 0) bracket else 0)
         return if (colon >= 0) {
-            host.substring(0, colon) to host.substring(colon + 1).toIntOrNull() ?: 80
+            host.substring(0, colon) to (host.substring(colon + 1).toIntOrNull() ?: 80)
         } else {
             host to 80
         }

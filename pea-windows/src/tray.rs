@@ -10,9 +10,8 @@ use std::sync::Mutex;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 use windows::core::w;
 use windows::core::PCWSTR;
-use windows::Win32::Foundation::{HINSTANCE, HMENU, HWND, LPARAM, LRESULT, WPARAM};
+use windows::Win32::Foundation::{HINSTANCE, HWND, LPARAM, LRESULT, WPARAM};
 use windows::Win32::System::LibraryLoader::GetModuleHandleW;
-use windows::Win32::UI::Input::KeyboardAndMouse::GetCursorPos;
 use windows::Win32::UI::Shell::{
     Shell_NotifyIconW, NIF_ICON, NIF_MESSAGE, NIF_TIP, NIM_ADD, NIM_DELETE, NIM_MODIFY,
     NOTIFYICONDATAW,
@@ -66,7 +65,8 @@ static STATE_RX: Mutex<Option<UnboundedReceiver<TrayStateUpdate>>> = Mutex::new(
 /// Latest state (including peer_ids) for the settings window to read.
 static LATEST_STATE: Mutex<Option<TrayStateUpdate>> = Mutex::new(None);
 static mut NID_PTR: *mut NOTIFYICONDATAW = null_mut();
-static mut SETTINGS_HWND: HWND = HWND(std::ptr::null_mut());
+// SAFETY: Only accessed from the tray/UI thread.
+static mut SETTINGS_HWND: HWND = HWND(0 as *mut _);
 
 unsafe extern "system" fn wnd_proc(
     hwnd: HWND,
@@ -87,7 +87,7 @@ unsafe extern "system" fn wnd_proc(
             SetForegroundWindow(hwnd);
             let _ = TrackPopupMenuEx(
                 menu,
-                TPM_RIGHTALIGN | TPM_BOTTOMALIGN | TPM_NONACTIVATE,
+                (TPM_RIGHTALIGN | TPM_BOTTOMALIGN).0,
                 pt.x,
                 pt.y,
                 hwnd,
@@ -158,7 +158,7 @@ unsafe extern "system" fn wnd_proc(
 
 unsafe fn create_or_show_settings_window(tray_hwnd: HWND) {
     use windows::Win32::UI::WindowsAndMessaging::IsWindow;
-    if !SETTINGS_HWND.0.is_null() && IsWindow(SETTINGS_HWND).as_bool() {
+    if SETTINGS_HWND.0 != std::ptr::null_mut() && IsWindow(SETTINGS_HWND).as_bool() {
         let _ = ShowWindow(SETTINGS_HWND, SW_SHOW);
         SetForegroundWindow(SETTINGS_HWND);
         refresh_settings_peer_list();
@@ -178,9 +178,9 @@ unsafe fn create_or_show_settings_window(tray_hwnd: HWND) {
         100,
         380,
         280,
-        Some(tray_hwnd),
-        None,
-        Some(HINSTANCE(instance.0)),
+        tray_hwnd,
+        HMENU::default(),
+        HINSTANCE(instance.0),
         None,
     );
     if let Ok(hwnd) = sw {
@@ -192,7 +192,7 @@ unsafe fn create_or_show_settings_window(tray_hwnd: HWND) {
 }
 
 unsafe fn refresh_settings_peer_list() {
-    if SETTINGS_HWND.0.is_null() {
+    if SETTINGS_HWND.0 == std::ptr::null_mut() {
         return;
     }
     let list = match GetDlgItem(SETTINGS_HWND, IDC_LIST_PEERS) {
@@ -235,8 +235,8 @@ unsafe extern "system" fn settings_wnd_proc(
             200,
             24,
             hwnd,
-            Some(HMENU(IDC_CHECK_ENABLED as _)),
-            Some(hinstance),
+            HMENU(IDC_CHECK_ENABLED as _),
+            hinstance,
             None,
         );
         let _ = CreateWindowExW(
@@ -249,8 +249,8 @@ unsafe extern "system" fn settings_wnd_proc(
             260,
             24,
             hwnd,
-            Some(HMENU(IDC_CHECK_AUTOSTART as _)),
-            Some(hinstance),
+            HMENU(IDC_CHECK_AUTOSTART as _),
+            hinstance,
             None,
         );
         let _ = CreateWindowExW(
@@ -263,8 +263,8 @@ unsafe extern "system" fn settings_wnd_proc(
             300,
             20,
             hwnd,
-            Some(HMENU(IDC_STATIC_PROXY as _)),
-            Some(hinstance),
+            HMENU(IDC_STATIC_PROXY as _),
+            hinstance,
             None,
         );
         let _ = CreateWindowExW(
@@ -277,8 +277,8 @@ unsafe extern "system" fn settings_wnd_proc(
             340,
             168,
             hwnd,
-            Some(HMENU(IDC_LIST_PEERS as _)),
-            Some(hinstance),
+            HMENU(IDC_LIST_PEERS as _),
+            hinstance,
             None,
         );
         if let Ok(guard) = LATEST_STATE.lock() {
@@ -375,7 +375,7 @@ unsafe extern "system" fn settings_wnd_proc(
         return LRESULT(0);
     }
     if msg == WM_DESTROY {
-        SETTINGS_HWND = HWND(std::ptr::null_mut());
+        SETTINGS_HWND = HWND(0 as *mut _);
         return LRESULT(0);
     }
     DefWindowProcW(hwnd, msg, wparam, lparam)
@@ -425,13 +425,16 @@ pub fn run_tray(
             0,
             0,
             0,
-            None,
-            None,
-            Some(hinstance),
+            HWND::default(),
+            HMENU::default(),
+            hinstance,
             None,
         )?;
         // IDI_APPLICATION = 32512; use as resource id for default app icon
-        let icon = LoadIconW(None, windows::core::PCWSTR(32512usize as *const u16))?;
+        let icon = LoadIconW(
+            HINSTANCE::default(),
+            windows::core::PCWSTR(32512usize as *const u16),
+        )?;
         let mut nid = NOTIFYICONDATAW {
             cbSize: std::mem::size_of::<NOTIFYICONDATAW>() as u32,
             hWnd: hwnd,
@@ -449,7 +452,7 @@ pub fn run_tray(
         let _ = hwnd_tx.send(hwnd);
 
         let mut msg = std::mem::zeroed();
-        while GetMessageW(&mut msg, None, 0, 0).as_bool() {
+        while GetMessageW(&mut msg, HWND::default(), 0, 0).as_bool() {
             TranslateMessage(&msg);
             DispatchMessageW(&msg);
         }

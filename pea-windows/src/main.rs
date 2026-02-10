@@ -128,7 +128,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     let enabled = proxy_enabled_updater.load(std::sync::atomic::Ordering::Relaxed);
                     let senders = peer_senders_updater.lock().await;
                     let peer_count = senders.len() as u32;
-                    let peer_ids = senders.keys().map(|d| *d.as_bytes()).collect();
+                    let peer_ids: Vec<[u8; 16]> = senders.keys().map(|d| *d.as_bytes()).collect();
                     drop(senders);
                     let autostart_enabled = autostart::is_autostart_enabled().unwrap_or(false);
                     let _ = state_tx_updater.send(tray::TrayStateUpdate {
@@ -203,7 +203,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             }
                             tray::TrayCommand::OpenSettings => {
                                 let senders = peer_senders.lock().await;
-                                let peer_ids = senders.keys().map(|d| *d.as_bytes()).collect();
+                                let peer_ids: Vec<[u8; 16]> = senders.keys().map(|d| *d.as_bytes()).collect();
                                 let peer_count = peer_ids.len() as u32;
                                 let enabled = proxy_enabled.load(std::sync::atomic::Ordering::Relaxed);
                                 let autostart_enabled = autostart::is_autostart_enabled().unwrap_or(false);
@@ -232,7 +232,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         // Update tooltip immediately after Enable/Disable/SetAutostart
                         let enabled = proxy_enabled.load(std::sync::atomic::Ordering::Relaxed);
                         let senders = peer_senders.lock().await;
-                        let peer_ids = senders.keys().map(|d| *d.as_bytes()).collect();
+                        let peer_ids: Vec<[u8; 16]> = senders.keys().map(|d| *d.as_bytes()).collect();
                         let peer_count = senders.len() as u32;
                         let autostart_enabled = autostart::is_autostart_enabled().unwrap_or(false);
                         drop(senders);
