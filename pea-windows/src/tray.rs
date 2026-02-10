@@ -350,7 +350,7 @@ unsafe extern "system" fn settings_wnd_proc(
         if id == IDC_CHECK_ENABLED {
             if let Ok(check) = GetDlgItem(hwnd, IDC_CHECK_ENABLED) {
                 let state = SendMessageW(check, BM_GETCHECK, WPARAM(0), LPARAM(0));
-                let enabled = state.0 == BST_CHECKED as _;
+                let enabled = state.0 == BST_CHECKED as isize;
                 let tx_ptr = CMD_TX.load(Ordering::Acquire);
                 if !tx_ptr.is_null() {
                     let tx = &*(tx_ptr as *const UnboundedSender<TrayCommand>);
@@ -364,7 +364,7 @@ unsafe extern "system" fn settings_wnd_proc(
         } else if id == IDC_CHECK_AUTOSTART {
             if let Ok(check) = GetDlgItem(hwnd, IDC_CHECK_AUTOSTART) {
                 let state = SendMessageW(check, BM_GETCHECK, WPARAM(0), LPARAM(0));
-                let enabled = state.0 == BST_CHECKED as _;
+                let enabled = state.0 == BST_CHECKED as isize;
                 let tx_ptr = CMD_TX.load(Ordering::Acquire);
                 if !tx_ptr.is_null() {
                     let tx = &*(tx_ptr as *const UnboundedSender<TrayCommand>);
@@ -386,8 +386,8 @@ unsafe extern "system" fn settings_wnd_proc(
 /// Sends `hwnd` on `hwnd_tx` once the icon is created so main can post update messages.
 pub fn run_tray(
     cmd_tx: UnboundedSender<TrayCommand>,
-    mut state_rx: UnboundedReceiver<TrayStateUpdate>,
-    hwnd_tx: tokio::sync::oneshot::Sender<HWND>,
+    state_rx: UnboundedReceiver<TrayStateUpdate>,
+    hwnd_tx: tokio::sync::oneshot::Sender<usize>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     unsafe {
         CMD_TX.store(&cmd_tx as *const _ as *mut _, Ordering::Release);
@@ -449,7 +449,7 @@ pub fn run_tray(
         nid.szTip[..tip_wide.len().min(128)].copy_from_slice(&tip_wide[..tip_wide.len().min(128)]);
         NID_PTR = &mut nid;
         let _ = Shell_NotifyIconW(NIM_ADD, &nid);
-        let _ = hwnd_tx.send(hwnd);
+        let _ = hwnd_tx.send(hwnd.0 as usize);
 
         let mut msg = std::mem::zeroed();
         while GetMessageW(&mut msg, HWND::default(), 0, 0).as_bool() {
