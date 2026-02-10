@@ -292,6 +292,19 @@ function Cleanup {
     }
 }
 
+function Fallback-ToSourceBuild {
+    $script:BinaryInstall = $false
+    Install-Rust
+    Install-Git
+    Clone-Repo
+    try {
+        Build-Binary
+        Install-Binary
+    } finally {
+        Cleanup
+    }
+}
+
 function Download-Binary {
     $repo = "HKTITAN/PeaToPea"
     $assetName = "pea-windows-x86_64.exe"
@@ -337,16 +350,7 @@ function Download-Binary {
     if (-not $downloadUrl) {
         Write-Warn "Pre-built binary is not available."
         if (Confirm-Action "Would you like to build from source instead?") {
-            $script:BinaryInstall = $false
-            Install-Rust
-            Install-Git
-            Clone-Repo
-            try {
-                Build-Binary
-                Install-Binary
-            } finally {
-                Cleanup
-            }
+            Fallback-ToSourceBuild
             return
         } else {
             Write-Err "Installation cancelled. You can also try: install.ps1 (without --binary) to build from source."
@@ -363,16 +367,7 @@ function Download-Binary {
         Write-Err "Failed to download binary from $downloadUrl"
         Write-Warn "Pre-built binary download failed."
         if (Confirm-Action "Would you like to build from source instead?") {
-            $script:BinaryInstall = $false
-            Install-Rust
-            Install-Git
-            Clone-Repo
-            try {
-                Build-Binary
-                Install-Binary
-            } finally {
-                Cleanup
-            }
+            Fallback-ToSourceBuild
             return
         } else {
             Write-Err "Installation cancelled. You can also try: install.ps1 (without --binary) to build from source."

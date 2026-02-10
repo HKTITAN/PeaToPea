@@ -300,6 +300,17 @@ install_build_deps() {
     fi
 }
 
+fallback_to_source_build() {
+    BINARY_INSTALL=0
+    install_rust
+    install_build_deps
+    install_git_curl
+    clone_repo
+    trap cleanup EXIT
+    build_binary
+    install_binary
+}
+
 download_binary() {
     REPO="HKTITAN/PeaToPea"
     BIN_NAME="pea-linux"
@@ -333,14 +344,7 @@ download_binary() {
     if [ -z "$DOWNLOAD_URL" ]; then
         warn "Pre-built binary is not available."
         if confirm "Would you like to build from source instead?"; then
-            BINARY_INSTALL=0
-            install_rust
-            install_build_deps
-            install_git_curl
-            clone_repo
-            trap cleanup EXIT
-            build_binary
-            install_binary
+            fallback_to_source_build
             return
         else
             error "Installation cancelled. You can also try: install.sh (without --binary) to build from source."
@@ -359,14 +363,7 @@ download_binary() {
         warn "Pre-built binary download failed."
         if confirm "Would you like to build from source instead?"; then
             rm -f "$DOWNLOAD_PATH"
-            BINARY_INSTALL=0
-            install_rust
-            install_build_deps
-            install_git_curl
-            clone_repo
-            trap cleanup EXIT
-            build_binary
-            install_binary
+            fallback_to_source_build
             return
         else
             error "Installation cancelled. You can also try: install.sh (without --binary) to build from source."
