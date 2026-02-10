@@ -169,27 +169,23 @@ install_git_curl() {
 }
 
 confirm() {
-    if [ "${PEAPOD_NO_CONFIRM:-0}" = "1" ]; then
-        return 0
-    fi
-    printf "  %s%s%s [y/N] " "$BOLD" "$1" "$RESET"
+    prompt="${1:-Continue? [y/N]: }"
+    default="${2:-N}"
+
+    # Prefer tty if interactive
     if [ -t 0 ] && [ -r /dev/tty ]; then
-        read -r answer < /dev/tty || {
-            warn "Unable to read from controlling TTY; declining by default."
-            return 1
-        }
+        read -r -p "$prompt" reply < /dev/tty
     else
-        read -r answer || {
-            warn "No controlling TTY and no stdin input available; declining by default."
-            return 1
-        }
+        read -r -p "$prompt" reply
     fi
-    case "$answer" in
-        [Yy]*) return 0 ;;
-        *)     return 1 ;;
+
+    reply=${reply:-$default}
+
+    case "$reply" in
+        y|Y|yes|YES) return 0 ;;
+        *)           return 1 ;;
     esac
 }
-
 detect_os() {
     OS="$(uname -s)"
     ARCH="$(uname -m)"
