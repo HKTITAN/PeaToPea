@@ -1,0 +1,139 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  pea-linux:
+    name: Build pea-linux (x86_64)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build release
+        run: cargo build -p pea-linux --release --verbose
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pea-linux-x86_64-unknown-linux-gnu
+          path: target/release/pea-linux
+
+  pea-windows:
+    name: Build pea-windows (x86_64)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build release
+        run: cargo build -p pea-windows --release --verbose
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pea-windows-x86_64-pc-windows-msvc
+          path: target/release/pea-windows.exe
+
+  pea-android:
+    name: Build pea-android (debug APK)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: >
+            platforms;android-34
+            build-tools;34.0.0
+            ndk;25.2.9519653
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 8.2
+
+      - name: Build pea-core for Android targets
+        run: |
+          rustup target add aarch64-linux-android x86_64-linux-android
+
+          NDK_HOME="${ANDROID_NDK_HOME:-$ANDROID_SDK_ROOT/ndk/25.2.9519653}"
+          TOOLCHAIN="$NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64"
+
+          export CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER="$TOOLCHAIN/bin/aarch64-linux-android24-clang"
+          export CARGO_TARGET_X86_64_LINUX_ANDROID_LINKER="$TOOLCHAIN/bin/x86_64-linux-android24-clang"
+          export CC_aarch64_linux_android="$TOOLCHAIN/bin/aarch64-linux-android24-clang"
+          export CC_x86_64_linux_android="$TOOLCHAIN/bin/x86_64-linux-android24-clang"
+          export AR_aarch64_linux_android="$TOOLCHAIN/bin/llvm-ar"
+          export AR_x86_64_linux_android="$TOOLCHAIN/bin/llvm-ar"
+
+          cargo build -p pea-core --target aarch64-linux-android --release
+          cargo build -p pea-core --target x86_64-linux-android --release
+
+      - name: Build debug APK
+        run: |
+          mkdir -p pea-android/rust-out/arm64-v8a pea-android/rust-out/x86_64
+          cp target/aarch64-linux-android/release/libpea_core.a pea-android/rust-out/arm64-v8a/
+          cp target/x86_64-linux-android/release/libpea_core.a pea-android/rust-out/x86_64/
+          cd pea-android
+          gradle assembleDebug --no-daemon
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pea-android-debug-apk
+          path: pea-android/app/build/outputs/apk/debug/*.apk
+
+  release:
+    name: Create GitHub Release
+    needs: [pea-linux, pea-windows, pea-android]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Prepare release assets
+        run: |
+          mkdir -p release-assets
+
+          # Linux binary
+          cp artifacts/pea-linux-x86_64-unknown-linux-gnu/pea-linux release-assets/pea-linux-x86_64
+          chmod +x release-assets/pea-linux-x86_64
+
+          # Windows binary
+          cp artifacts/pea-windows-x86_64-pc-windows-msvc/pea-windows.exe release-assets/pea-windows-x86_64.exe
+
+          # Android APK
+          for apk in artifacts/pea-android-debug-apk/*.apk; do
+            cp "$apk" release-assets/
+          done
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: release-assets/*

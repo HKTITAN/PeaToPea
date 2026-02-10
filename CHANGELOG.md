@@ -22,7 +22,7 @@ All notable changes to the PeaPod project are documented here. Format: version (
 
 (Ongoing work: see [.tasks/](.tasks/README.md).)
 
-## 0.1.0 (initial)
+## 0.1.0 (2026-02-10)
 
 - **pea-core:** Protocol logic: identity, wire encoding, chunking, scheduler, integrity, host-driven API; C FFI for Android/iOS.
 - **pea-windows:** Proxy, discovery, transport, system proxy, tray.
