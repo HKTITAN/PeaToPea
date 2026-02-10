@@ -801,7 +801,7 @@ main() {
     banner
     disclaimer
 
-    if ! confirm "Do you want to install PeaPod?"; then
+    if ! confirm "Do you want to install PeaPod? [y/N] "; then
         info "Installation cancelled."
         exit 0
     fi
