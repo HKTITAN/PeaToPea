@@ -110,16 +110,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 std::sync::Arc::new(tokio::sync::Mutex::new(std::collections::HashMap::new()));
             let (tray_tx, mut tray_rx) = tokio::sync::mpsc::unbounded_channel::<tray::TrayCommand>();
             let (state_tx, state_rx) = tokio::sync::mpsc::unbounded_channel::<tray::TrayStateUpdate>();
-            let (hwnd_tx, hwnd_rx) = tokio::sync::oneshot::channel();
+            let (hwnd_tx, hwnd_rx) = tokio::sync::oneshot::channel::<usize>();
             let proxy_enabled = std::sync::Arc::new(AtomicBool::new(true));
 
             std::thread::spawn(move || {
                 let _ = tray::run_tray(tray_tx, state_rx, hwnd_tx);
             });
-            let tray_hwnd = hwnd_rx.await.expect("tray failed to send hwnd");
+            let tray_hwnd_raw = hwnd_rx.await.expect("tray failed to send hwnd");
+            let tray_hwnd = HWND(tray_hwnd_raw as *mut _);
 
             let state_tx_updater = state_tx.clone();
-            let tray_hwnd_updater = tray_hwnd;
+            let tray_hwnd_raw_updater = tray_hwnd_raw;
             let proxy_enabled_updater = proxy_enabled.clone();
             let peer_senders_updater = peer_senders.clone();
             tokio::spawn(async move {
@@ -137,8 +138,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         peer_ids,
                         autostart_enabled,
                     });
+                    let hwnd = HWND(tray_hwnd_raw_updater as *mut _);
                     let _ = PostMessageW(
-                        tray_hwnd_updater,
+                        hwnd,
                         tray::WM_TRAY_UPDATE_STATE,
                         WPARAM(0),
                         LPARAM(0),
