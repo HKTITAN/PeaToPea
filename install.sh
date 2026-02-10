@@ -105,6 +105,10 @@ need_cmd() {
     fi
 }
 
+is_interactive() {
+    [ -t 0 ] && [ -r /dev/tty ]
+}
+
 # Install git and curl if not found (needed for cloning and downloading).
 install_git_curl() {
     MISSING=""
@@ -169,17 +173,23 @@ install_git_curl() {
 }
 
 confirm() {
-    if [ "${PEAPOD_NO_CONFIRM:-0}" = "1" ]; then
-        return 0
+    prompt="${1:-Continue? [y/N]: }"
+    default="${2:-N}"
+
+    # Prefer tty if interactive
+    if [ -t 0 ] && [ -r /dev/tty ]; then
+        read -r -p "$prompt" reply < /dev/tty
+    else
+        read -r -p "$prompt" reply
     fi
-    printf "  %s%s%s [y/N] " "$BOLD" "$1" "$RESET"
-    read -r answer
-    case "$answer" in
-        [Yy]*) return 0 ;;
-        *)     return 1 ;;
+
+    reply=${reply:-$default}
+
+    case "$reply" in
+        y|Y|yes|YES) return 0 ;;
+        *)           return 1 ;;
     esac
 }
-
 detect_os() {
     OS="$(uname -s)"
     ARCH="$(uname -m)"
@@ -759,6 +769,12 @@ LOCAL_BUILD=0
 BINARY_INSTALL=0
 
 main() {
+    if is_interactive; then
+        echo "Running interactively"
+    else
+        echo "Running non-interactively"
+    fi
+
     # Handle flags
     for arg in "$@"; do
         case "$arg" in
