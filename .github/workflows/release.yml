@@ -132,6 +132,10 @@ jobs:
             cp "$apk" release-assets/
           done
 
+          # Install scripts (for easy download)
+          cp install.sh release-assets/install.sh
+          cp install.ps1 release-assets/install.ps1
+
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:

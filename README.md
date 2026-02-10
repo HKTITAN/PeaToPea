@@ -37,7 +37,21 @@ Licensed under the [MIT License](LICENSE). For Rust dependency licenses: `cargo 
 
 ## Install
 
-**One-line install** — interactive, with disclaimers, tells you what it installs:
+**Pre-built binaries** — fastest, no build tools needed:
+
+Download the latest release for your platform from the [Releases page](https://github.com/HKTITAN/PeaToPea/releases), or use the one-line binary installer:
+
+```bash
+# Linux / macOS — download pre-built binary + set up service
+curl -sSf https://raw.githubusercontent.com/HKTITAN/PeaToPea/main/install.sh | sh -s -- --binary
+```
+
+```powershell
+# Windows (PowerShell) — download pre-built binary
+& ([scriptblock]::Create((iwr -useb https://raw.githubusercontent.com/HKTITAN/PeaToPea/main/install.ps1))) --binary
+```
+
+**Build from source** — interactive, with disclaimers, tells you what it installs:
 
 ```bash
 # Linux / macOS
@@ -49,7 +63,7 @@ curl -sSf https://raw.githubusercontent.com/HKTITAN/PeaToPea/main/install.sh | s
 iwr -useb https://raw.githubusercontent.com/HKTITAN/PeaToPea/main/install.ps1 | iex
 ```
 
-The installers handle everything automatically:
+The source installers handle everything automatically:
 - Show you exactly what PeaPod is and what it does
 - Ask for confirmation before each step (skip with `--yes`)
 - Install the Rust toolchain if needed (on Windows, automatically uses the GNU toolchain if Visual Studio Build Tools are not installed)
@@ -57,7 +71,7 @@ The installers handle everything automatically:
 - Build from source and install the binary
 - Set up the system service (systemd on Linux, launch agent on macOS, startup shortcut on Windows)
 
-**Prerequisites** (installed automatically by the scripts if missing):
+**Prerequisites for building from source** (installed automatically by the scripts if missing):
 
 | Platform | Requirement | Notes |
 |----------|-------------|-------|
@@ -78,6 +92,8 @@ The installers handle everything automatically:
 ```
 
 **Android / iOS / macOS native:** See the platform-specific READMEs: [Android](pea-android/README.md), [iOS](pea-ios/README.md), [macOS](pea-macos/README.md).
+
+**All installation options** (pre-built binaries, .deb, Windows installer, manual): See [INSTALL.md](INSTALL.md).
 
 **Update to latest version:**
 
@@ -150,6 +166,7 @@ rustup target add aarch64-apple-darwin x86_64-apple-darwin
 
 ## Documentation
 
+- **Install guide**: [INSTALL.md](INSTALL.md) — All installation options: pre-built binaries, packages, and building from source.
 - **Project and task breakdown**: [.tasks/](.tasks/README.md) — Checklists and recommended order for building PeaPod.
 - **Architecture**: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — Layer placement, components, and data flow.
 - **Protocol**: [docs/PROTOCOL.md](docs/PROTOCOL.md) — Wire format, discovery, handshake, and versioning (reference: pea-core).
