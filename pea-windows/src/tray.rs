@@ -66,7 +66,7 @@ static STATE_RX: Mutex<Option<UnboundedReceiver<TrayStateUpdate>>> = Mutex::new(
 static LATEST_STATE: Mutex<Option<TrayStateUpdate>> = Mutex::new(None);
 static mut NID_PTR: *mut NOTIFYICONDATAW = null_mut();
 // SAFETY: Only accessed from the tray/UI thread.
-static mut SETTINGS_HWND: HWND = HWND(0 as *mut _);
+static mut SETTINGS_HWND: HWND = HWND(std::ptr::null_mut());
 
 unsafe extern "system" fn wnd_proc(
     hwnd: HWND,
@@ -158,7 +158,7 @@ unsafe extern "system" fn wnd_proc(
 
 unsafe fn create_or_show_settings_window(tray_hwnd: HWND) {
     use windows::Win32::UI::WindowsAndMessaging::IsWindow;
-    if SETTINGS_HWND.0 != std::ptr::null_mut() && IsWindow(SETTINGS_HWND).as_bool() {
+    if !SETTINGS_HWND.0.is_null() && IsWindow(SETTINGS_HWND).as_bool() {
         let _ = ShowWindow(SETTINGS_HWND, SW_SHOW);
         SetForegroundWindow(SETTINGS_HWND);
         refresh_settings_peer_list();
@@ -192,7 +192,7 @@ unsafe fn create_or_show_settings_window(tray_hwnd: HWND) {
 }
 
 unsafe fn refresh_settings_peer_list() {
-    if SETTINGS_HWND.0 == std::ptr::null_mut() {
+    if SETTINGS_HWND.0.is_null() {
         return;
     }
     let list = match GetDlgItem(SETTINGS_HWND, IDC_LIST_PEERS) {
@@ -375,7 +375,7 @@ unsafe extern "system" fn settings_wnd_proc(
         return LRESULT(0);
     }
     if msg == WM_DESTROY {
-        SETTINGS_HWND = HWND(0 as *mut _);
+        SETTINGS_HWND = HWND(std::ptr::null_mut());
         return LRESULT(0);
     }
     DefWindowProcW(hwnd, msg, wparam, lparam)

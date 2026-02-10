@@ -126,6 +126,7 @@ jobs:
 
       - name: Build pea-core for Android targets
         run: |
+          # Build 64-bit targets only (arm64 for devices, x86_64 for emulator)
           rustup target add aarch64-linux-android x86_64-linux-android
 
           # Set up NDK linker for Rust cross-compilation

@@ -166,7 +166,38 @@ function Install-Git {
         Write-Ok "Git already installed."
         return
     }
-    Write-Err "Git is not installed."
+    Write-Warn "Git is not installed."
+
+    # Try winget first (built into Windows 10 1709+ and Windows 11)
+    if (Test-Command "winget") {
+        Write-Info "Installing Git via winget..."
+        if (Confirm-Action "Install Git for Windows via winget?") {
+            & winget install --id Git.Git -e --source winget --accept-package-agreements --accept-source-agreements
+            # Refresh PATH
+            $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("PATH", "User") + ";" + $env:PATH
+            if (Test-Command "git") {
+                Write-Ok "Git installed successfully."
+                return
+            }
+            Write-Warn "Git installed but not found in PATH. You may need to restart your terminal."
+        }
+    }
+
+    # Try chocolatey
+    if (Test-Command "choco") {
+        Write-Info "Installing Git via Chocolatey..."
+        if (Confirm-Action "Install Git for Windows via Chocolatey?") {
+            & choco install git -y
+            # Refresh PATH
+            $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("PATH", "User") + ";" + $env:PATH
+            if (Test-Command "git") {
+                Write-Ok "Git installed successfully."
+                return
+            }
+        }
+    }
+
+    Write-Err "Could not install Git automatically."
     Write-Info "Please install Git from: https://git-scm.com/download/win"
     Write-Info "Then re-run this installer."
     exit 1
