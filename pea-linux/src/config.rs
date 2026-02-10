@@ -73,12 +73,27 @@ fn config_paths() -> Vec<PathBuf> {
 fn load_file() -> Option<Config> {
     for p in config_paths() {
         if p.exists() {
-            if let Ok(s) = std::fs::read_to_string(&p) {
-                if let Ok(c) = toml::from_str::<Config>(&s) {
-                    return Some(c);
+            match std::fs::read_to_string(&p) {
+                Ok(s) => match toml::from_str::<Config>(&s) {
+                    Ok(c) => return Some(c),
+                    Err(e) => {
+                        eprintln!(
+                            "pea-linux: warning: failed to parse config {}: {}",
+                            p.display(),
+                            e
+                        );
+                        return None;
+                    }
+                },
+                Err(e) => {
+                    eprintln!(
+                        "pea-linux: warning: failed to read config {}: {}",
+                        p.display(),
+                        e
+                    );
+                    return None;
                 }
             }
-            break;
         }
     }
     None

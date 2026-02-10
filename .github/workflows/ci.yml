@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [main, develop]
 
+permissions:
+  contents: read
+
 jobs:
   pea-core:
     name: pea-core
@@ -72,14 +75,14 @@ jobs:
       - name: Build release
         run: cargo build -p pea-linux --release --verbose
 
-      - name: Upload x86_64 binary
+      - name: Upload Linux binary
         uses: actions/upload-artifact@v4
         with:
           name: pea-linux-x86_64-unknown-linux-gnu
           path: target/release/pea-linux
 
   pea-windows:
-    name: pea-windows
+    name: pea-windows (release binary)
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -87,11 +90,17 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Build
-        run: cargo build -p pea-windows --verbose
+      - name: Build release
+        run: cargo build -p pea-windows --release --verbose
+
+      - name: Upload Windows binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: pea-windows-x86_64-pc-windows-msvc
+          path: target/release/pea-windows.exe
 
   pea-android:
-    name: pea-android
+    name: pea-android (debug APK)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -120,7 +129,20 @@ jobs:
 
       - name: Build pea-core for Android targets
         run: |
-          rustup target add aarch64-linux-android armv7-linux-androideabi i686-linux-android x86_64-linux-android
+          # Build 64-bit targets only (arm64 for devices, x86_64 for emulator)
+          rustup target add aarch64-linux-android x86_64-linux-android
+
+          # Set up NDK linker for Rust cross-compilation
+          NDK_HOME="${ANDROID_NDK_HOME:-$ANDROID_SDK_ROOT/ndk/25.2.9519653}"
+          TOOLCHAIN="$NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64"
+
+          export CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER="$TOOLCHAIN/bin/aarch64-linux-android24-clang"
+          export CARGO_TARGET_X86_64_LINUX_ANDROID_LINKER="$TOOLCHAIN/bin/x86_64-linux-android24-clang"
+          export CC_aarch64_linux_android="$TOOLCHAIN/bin/aarch64-linux-android24-clang"
+          export CC_x86_64_linux_android="$TOOLCHAIN/bin/x86_64-linux-android24-clang"
+          export AR_aarch64_linux_android="$TOOLCHAIN/bin/llvm-ar"
+          export AR_x86_64_linux_android="$TOOLCHAIN/bin/llvm-ar"
+
           cargo build -p pea-core --target aarch64-linux-android --release
           cargo build -p pea-core --target x86_64-linux-android --release
 
@@ -131,6 +153,12 @@ jobs:
           cp target/x86_64-linux-android/release/libpea_core.a pea-android/rust-out/x86_64/
           cd pea-android
           gradle assembleDebug --no-daemon
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: pea-android-debug-apk
+          path: pea-android/app/build/outputs/apk/debug/*.apk
 
   pea-ios:
     name: pea-ios

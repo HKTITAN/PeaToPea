@@ -49,11 +49,13 @@ fn open_internet_settings_key() -> std::io::Result<RegKey> {
 pub fn get_system_proxy() -> std::io::Result<SystemProxyState> {
     let key = open_internet_settings_key()?;
     let enabled = key
-        .get_value::<u32>(PROXY_ENABLE)
+        .get_value::<u32, _>(PROXY_ENABLE)
         .map(|v| v != 0)
         .unwrap_or(false);
-    let server = key.get_value::<String>(PROXY_SERVER).unwrap_or_default();
-    let proxy_override = key.get_value::<String>(PROXY_OVERRIDE).unwrap_or_default();
+    let server = key.get_value::<String, _>(PROXY_SERVER).unwrap_or_default();
+    let proxy_override = key
+        .get_value::<String, _>(PROXY_OVERRIDE)
+        .unwrap_or_default();
     Ok(SystemProxyState {
         enabled,
         server,

@@ -104,6 +104,69 @@ need_cmd() {
     fi
 }
 
+# Install git and curl if not found (needed for cloning and downloading).
+install_git_curl() {
+    MISSING=""
+    command -v git  >/dev/null 2>&1 || MISSING="$MISSING git"
+    command -v curl >/dev/null 2>&1 || MISSING="$MISSING curl"
+    if [ -z "$MISSING" ]; then
+        return 0
+    fi
+    warn "Missing required tools:$MISSING"
+
+    if [ "$OS" = "macos" ]; then
+        # git and curl ship with Xcode Command Line Tools
+        info "Installing Xcode Command Line Tools (provides git and curl)..."
+        if confirm "Install Xcode Command Line Tools?"; then
+            xcode-select --install 2>/dev/null || true
+            info "If a dialog appeared, follow the prompts then re-run this installer."
+            exit 0
+        else
+            error "git and curl are required. Please install them and re-run."
+            exit 1
+        fi
+    fi
+
+    if [ "$OS" = "linux" ]; then
+        if command -v apt-get >/dev/null 2>&1; then
+            info "Installing$MISSING via apt..."
+            if confirm "Install$MISSING?"; then
+                sudo apt-get update -qq && sudo apt-get install -y $MISSING
+            fi
+        elif command -v dnf >/dev/null 2>&1; then
+            info "Installing$MISSING via dnf..."
+            if confirm "Install$MISSING?"; then
+                sudo dnf install -y $MISSING
+            fi
+        elif command -v yum >/dev/null 2>&1; then
+            info "Installing$MISSING via yum..."
+            if confirm "Install$MISSING?"; then
+                sudo yum install -y $MISSING
+            fi
+        elif command -v pacman >/dev/null 2>&1; then
+            info "Installing$MISSING via pacman..."
+            if confirm "Install$MISSING?"; then
+                sudo pacman -Sy --noconfirm $MISSING
+            fi
+        elif command -v zypper >/dev/null 2>&1; then
+            info "Installing$MISSING via zypper..."
+            if confirm "Install$MISSING?"; then
+                sudo zypper install -y $MISSING
+            fi
+        elif command -v apk >/dev/null 2>&1; then
+            info "Installing$MISSING via apk..."
+            if confirm "Install$MISSING?"; then
+                sudo apk add $MISSING
+            fi
+        fi
+    fi
+
+    # Verify
+    command -v git  >/dev/null 2>&1 || { error "git is required but could not be installed. Please install it manually."; exit 1; }
+    command -v curl >/dev/null 2>&1 || { error "curl is required but could not be installed. Please install it manually."; exit 1; }
+    ok "git and curl are available."
+}
+
 confirm() {
     if [ "${PEAPOD_NO_CONFIRM:-0}" = "1" ]; then
         return 0
@@ -497,8 +560,7 @@ update() {
 
     install_build_deps
 
-    need_cmd curl
-    need_cmd git
+    install_git_curl
     clone_repo
     trap cleanup EXIT
 
@@ -679,8 +741,7 @@ main() {
         BUILD_DIR="$(pwd)"
         ok "Building from local checkout: $BUILD_DIR"
     else
-        need_cmd curl
-        need_cmd git
+        install_git_curl
         clone_repo
         trap cleanup EXIT
     fi
