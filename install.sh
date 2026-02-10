@@ -105,6 +105,10 @@ need_cmd() {
     fi
 }
 
+is_interactive() {
+    [ -t 0 ] && [ -r /dev/tty ]
+}
+
 # Install git and curl if not found (needed for cloning and downloading).
 install_git_curl() {
     MISSING=""
@@ -765,6 +769,12 @@ LOCAL_BUILD=0
 BINARY_INSTALL=0
 
 main() {
+    if is_interactive; then
+        echo "Running interactively"
+    else
+        echo "Running non-interactively"
+    fi
+
     # Handle flags
     for arg in "$@"; do
         case "$arg" in
