@@ -5,7 +5,7 @@
 # This script:
 #   1. Detects your OS and architecture
 #   2. Asks for confirmation before installing
-#   3. Installs the Rust toolchain (if not present)
+#   3. Installs the Rust toolchain (if not present) — or downloads a pre-built binary (--binary)
 #   4. Builds and installs pea-linux (Linux) or pea-macos (macOS)
 #   5. Installs the systemd service (Linux) or launchd plist (macOS)
 #
@@ -68,6 +68,7 @@ disclaimer() {
 │  This installer will:                                            │
 │    • Install the Rust toolchain (if not already installed)       │
 │    • Clone and build the PeaPod daemon from source               │
+│    • Or download a pre-built binary (with --binary flag)         │
 │    • Install the binary to /usr/local/bin/pea-linux              │
 │    • Set up a systemd user service (Linux) so PeaPod starts     │
 │      automatically when you log in                               │
@@ -297,6 +298,66 @@ install_build_deps() {
             exit 1
         fi
     fi
+}
+
+download_binary() {
+    REPO="HKTITAN/PeaToPea"
+    BIN_NAME="pea-linux"
+
+    if [ "$ARCH" = "x86_64" ]; then
+        ASSET_NAME="pea-linux-x86_64"
+    elif [ "$ARCH" = "aarch64" ]; then
+        ASSET_NAME="pea-linux-aarch64"
+    else
+        error "No pre-built binary available for architecture: $ARCH"
+        error "Use the source install instead (without --binary)."
+        exit 1
+    fi
+
+    # Try the latest release download URL
+    DOWNLOAD_URL="https://github.com/$REPO/releases/latest/download/$ASSET_NAME"
+    info "Downloading pre-built binary from GitHub Releases..."
+    info "URL: $DOWNLOAD_URL"
+
+    TMPDIR="${TMPDIR:-/tmp}"
+    DOWNLOAD_PATH="$TMPDIR/$ASSET_NAME-$$"
+
+    if ! curl -fSL -o "$DOWNLOAD_PATH" "$DOWNLOAD_URL"; then
+        error "Failed to download binary from $DOWNLOAD_URL"
+        error "Check your internet connection or try the source install (without --binary)."
+        rm -f "$DOWNLOAD_PATH"
+        exit 1
+    fi
+
+    chmod +x "$DOWNLOAD_PATH"
+    ok "Binary downloaded: $DOWNLOAD_PATH"
+
+    PREFIX="${PEAPOD_PREFIX:-/usr/local}"
+    BIN_DIR="$PREFIX/bin"
+    INSTALL_PATH="$BIN_DIR/$BIN_NAME"
+
+    info "Installing $BIN_NAME to $INSTALL_PATH"
+
+    if [ ! -d "$BIN_DIR" ]; then
+        if mkdir -p "$BIN_DIR" 2>/dev/null; then
+            true
+        else
+            info "Need elevated permissions to create $BIN_DIR"
+            sudo mkdir -p "$BIN_DIR"
+        fi
+    fi
+
+    if [ -w "$BIN_DIR" ]; then
+        cp "$DOWNLOAD_PATH" "$INSTALL_PATH"
+        chmod 755 "$INSTALL_PATH"
+    else
+        info "Need elevated permissions to install to $BIN_DIR"
+        sudo cp "$DOWNLOAD_PATH" "$INSTALL_PATH"
+        sudo chmod 755 "$INSTALL_PATH"
+    fi
+
+    rm -f "$DOWNLOAD_PATH"
+    ok "Installed: $INSTALL_PATH"
 }
 
 clone_repo() {
@@ -695,6 +756,7 @@ modify() {
 # ── Main ────────────────────────────────────────────────────────────
 
 LOCAL_BUILD=0
+BINARY_INSTALL=0
 
 main() {
     # Handle flags
@@ -705,10 +767,12 @@ main() {
             --modify)    modify ;;
             --yes|-y)    PEAPOD_NO_CONFIRM=1 ;;
             --local)     LOCAL_BUILD=1 ;;
+            --binary)    BINARY_INSTALL=1 ;;
             --help|-h)
-                printf "Usage: install.sh [--yes] [--local] [--uninstall] [--update] [--modify] [--help]\n"
+                printf "Usage: install.sh [--yes] [--local] [--binary] [--uninstall] [--update] [--modify] [--help]\n"
                 printf "  --yes         Skip confirmation prompts\n"
                 printf "  --local       Build from the current directory (skip git clone)\n"
+                printf "  --binary      Download a pre-built binary from GitHub Releases (no Rust needed)\n"
                 printf "  --uninstall   Remove PeaPod from this system\n"
                 printf "  --update      Update PeaPod to the latest version\n"
                 printf "  --modify      Change PeaPod settings (auto-start, service, config)\n"
@@ -729,25 +793,30 @@ main() {
     printf "\n"
     detect_os
 
-    install_rust
-
-    install_build_deps
-
-    if [ "$LOCAL_BUILD" = "1" ]; then
+    if [ "$BINARY_INSTALL" = "1" ]; then
+        need_cmd curl
+        download_binary
+    elif [ "$LOCAL_BUILD" = "1" ]; then
+        install_rust
+        install_build_deps
         if [ ! -f "Cargo.toml" ]; then
             error "Not in the PeaPod repo root (Cargo.toml not found). Run from the repo root or remove --local."
             exit 1
         fi
         BUILD_DIR="$(pwd)"
         ok "Building from local checkout: $BUILD_DIR"
+        build_binary
+        install_binary
     else
+        install_rust
+        install_build_deps
         install_git_curl
         clone_repo
         trap cleanup EXIT
+        build_binary
+        install_binary
     fi
 
-    build_binary
-    install_binary
     create_config_dir
 
     if [ "$OS" = "linux" ]; then

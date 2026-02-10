@@ -5,7 +5,7 @@
 #   1. Checks for prerequisites (Git, Rust)
 #   2. Shows you exactly what will be installed
 #   3. Asks for confirmation before proceeding
-#   4. Builds and installs pea-windows from source
+#   4. Builds and installs pea-windows from source — or downloads a pre-built binary (--binary)
 #   5. Adds PeaPod to your PATH
 #   6. Optionally sets up auto-start
 #
@@ -52,6 +52,7 @@ function Show-Disclaimer {
     Write-Host "|  This installer will:                                            |" -ForegroundColor Yellow
     Write-Host "|    * Install the Rust toolchain (if not already installed)       |" -ForegroundColor Yellow
     Write-Host "|    * Clone and build the PeaPod Windows app from source          |" -ForegroundColor Yellow
+    Write-Host "|    * Or download a pre-built binary (with --binary flag)         |" -ForegroundColor Yellow
     Write-Host "|    * Install the binary to %LOCALAPPDATA%\PeaPod                |" -ForegroundColor Yellow
     Write-Host "|    * Add PeaPod to your user PATH                               |" -ForegroundColor Yellow
     Write-Host "|    * Optionally configure PeaPod as your system proxy            |" -ForegroundColor Yellow
@@ -291,6 +292,41 @@ function Cleanup {
     }
 }
 
+function Download-Binary {
+    $repo = "HKTITAN/PeaToPea"
+    $assetName = "pea-windows-x86_64.exe"
+    $downloadUrl = "https://github.com/$repo/releases/latest/download/$assetName"
+
+    $installDir = if ($env:PEAPOD_PREFIX) { $env:PEAPOD_PREFIX } else { Join-Path $env:LOCALAPPDATA "PeaPod" }
+    $script:InstallDir = $installDir
+    $binPath = Join-Path $installDir "pea-windows.exe"
+
+    if (-not (Test-Path $installDir)) {
+        New-Item -ItemType Directory -Path $installDir -Force | Out-Null
+    }
+
+    Write-Info "Downloading pre-built binary from GitHub Releases..."
+    Write-Info "URL: $downloadUrl"
+
+    try {
+        Invoke-WebRequest -Uri $downloadUrl -OutFile $binPath -UseBasicParsing
+    } catch {
+        Write-Err "Failed to download binary from $downloadUrl"
+        Write-Err "Check your internet connection or try the source install (without --binary)."
+        exit 1
+    }
+
+    Write-Ok "Installed: $binPath"
+
+    # Add to PATH if not already there
+    $userPath = [System.Environment]::GetEnvironmentVariable("PATH", "User")
+    if ($userPath -notlike "*$installDir*") {
+        [System.Environment]::SetEnvironmentVariable("PATH", "$userPath;$installDir", "User")
+        $env:PATH = "$env:PATH;$installDir"
+        Write-Ok "Added $installDir to your PATH."
+    }
+}
+
 # ── Uninstall ───────────────────────────────────────────────────────
 
 function Invoke-Uninstall {
@@ -489,6 +525,7 @@ function Invoke-Modify {
 
 $script:LocalBuild = $false
 $script:RustTarget = $null
+$script:BinaryInstall = $false
 
 function Main {
     # Handle flags
@@ -500,10 +537,12 @@ function Main {
             "--yes"       { $env:PEAPOD_NO_CONFIRM = "1" }
             "-y"          { $env:PEAPOD_NO_CONFIRM = "1" }
             "--local"     { $script:LocalBuild = $true }
+            "--binary"    { $script:BinaryInstall = $true }
             "--help"      {
-                Write-Host "Usage: install.ps1 [--yes] [--local] [--uninstall] [--update] [--modify] [--help]"
+                Write-Host "Usage: install.ps1 [--yes] [--local] [--binary] [--uninstall] [--update] [--modify] [--help]"
                 Write-Host "  --yes         Skip confirmation prompts"
                 Write-Host "  --local       Build from the current directory (skip git clone)"
+                Write-Host "  --binary      Download a pre-built binary from GitHub Releases (no Rust needed)"
                 Write-Host "  --uninstall   Remove PeaPod from this system"
                 Write-Host "  --update      Update PeaPod to the latest version"
                 Write-Host "  --modify      Change PeaPod settings (auto-start, proxy, PATH)"
@@ -524,26 +563,33 @@ function Main {
     Write-Host ""
     Write-Info "Detected: Windows $([System.Environment]::OSVersion.Version)"
 
-    Install-Rust
-
-    if ($script:LocalBuild) {
+    if ($script:BinaryInstall) {
+        Download-Binary
+        Setup-Autostart
+    } elseif ($script:LocalBuild) {
+        Install-Rust
         if (-not (Test-Path "Cargo.toml")) {
             Write-Err "Not in the PeaPod repo root (Cargo.toml not found). Run from the repo root or remove --local."
             exit 1
         }
         $script:BuildDir = (Get-Location).Path
         Write-Ok "Building from local checkout: $script:BuildDir"
+        try {
+            Build-Binary
+            Install-Binary
+            Setup-Autostart
+        } finally {
+            # no cleanup for local builds
+        }
     } else {
+        Install-Rust
         Install-Git
         Clone-Repo
-    }
-
-    try {
-        Build-Binary
-        Install-Binary
-        Setup-Autostart
-    } finally {
-        if (-not $script:LocalBuild) {
+        try {
+            Build-Binary
+            Install-Binary
+            Setup-Autostart
+        } finally {
             Cleanup
         }
     }
