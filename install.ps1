@@ -295,7 +295,6 @@ function Cleanup {
 function Download-Binary {
     $repo = "HKTITAN/PeaToPea"
     $assetName = "pea-windows-x86_64.exe"
-    $downloadUrl = "https://github.com/$repo/releases/latest/download/$assetName"
 
     $installDir = if ($env:PEAPOD_PREFIX) { $env:PEAPOD_PREFIX } else { Join-Path $env:LOCALAPPDATA "PeaPod" }
     $script:InstallDir = $installDir
@@ -305,6 +304,56 @@ function Download-Binary {
         New-Item -ItemType Directory -Path $installDir -Force | Out-Null
     }
 
+    # Check if a release exists via the GitHub API
+    $apiUrl = "https://api.github.com/repos/$repo/releases/latest"
+    $downloadUrl = $null
+
+    try {
+        $releaseInfo = Invoke-RestMethod -Uri $apiUrl -UseBasicParsing -ErrorAction Stop
+        # Look for the matching asset in the release
+        $asset = $releaseInfo.assets | Where-Object { $_.name -eq $assetName }
+        if ($asset) {
+            $downloadUrl = $asset.browser_download_url
+        } else {
+            $available = ($releaseInfo.assets | ForEach-Object { $_.name }) -join ", "
+            Write-Err "Release '$($releaseInfo.tag_name)' exists but does not contain '$assetName'."
+            if ($available) {
+                Write-Err "Available assets: $available"
+            }
+        }
+    } catch {
+        $statusCode = $null
+        if ($_.Exception.Response) {
+            $statusCode = [int]$_.Exception.Response.StatusCode
+        }
+        if ($statusCode -eq 404) {
+            Write-Err "No releases found for $repo."
+            Write-Err "The project has not published a release yet."
+        } else {
+            Write-Err "Failed to query GitHub API: $_"
+        }
+    }
+
+    if (-not $downloadUrl) {
+        Write-Warn "Pre-built binary is not available."
+        if (Confirm-Action "Would you like to build from source instead?") {
+            $script:BinaryInstall = $false
+            Install-Rust
+            Install-Git
+            Clone-Repo
+            try {
+                Build-Binary
+                Install-Binary
+            } finally {
+                Cleanup
+            }
+            return
+        } else {
+            Write-Err "Installation cancelled. You can also try: install.ps1 (without --binary) to build from source."
+            exit 1
+        }
+    }
+
     Write-Info "Downloading pre-built binary from GitHub Releases..."
     Write-Info "URL: $downloadUrl"
 
@@ -312,8 +361,23 @@ function Download-Binary {
         Invoke-WebRequest -Uri $downloadUrl -OutFile $binPath -UseBasicParsing
     } catch {
         Write-Err "Failed to download binary from $downloadUrl"
-        Write-Err "Check your internet connection or try the source install (without --binary)."
-        exit 1
+        Write-Warn "Pre-built binary download failed."
+        if (Confirm-Action "Would you like to build from source instead?") {
+            $script:BinaryInstall = $false
+            Install-Rust
+            Install-Git
+            Clone-Repo
+            try {
+                Build-Binary
+                Install-Binary
+            } finally {
+                Cleanup
+            }
+            return
+        } else {
+            Write-Err "Installation cancelled. You can also try: install.ps1 (without --binary) to build from source."
+            exit 1
+        }
     }
 
     Write-Ok "Installed: $binPath"

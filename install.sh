@@ -314,8 +314,40 @@ download_binary() {
         exit 1
     fi
 
-    # Try the latest release download URL
-    DOWNLOAD_URL="https://github.com/$REPO/releases/latest/download/$ASSET_NAME"
+    # Check if a release exists via the GitHub API
+    API_URL="https://api.github.com/repos/$REPO/releases/latest"
+    DOWNLOAD_URL=""
+
+    if API_RESPONSE=$(curl -fsSL "$API_URL" 2>/dev/null); then
+        # Extract the browser_download_url for the matching asset
+        DOWNLOAD_URL=$(printf '%s' "$API_RESPONSE" | grep -o "\"browser_download_url\"[[:space:]]*:[[:space:]]*\"[^\"]*${ASSET_NAME}\"" | head -1 | grep -o 'https://[^"]*')
+        if [ -z "$DOWNLOAD_URL" ]; then
+            TAG_NAME=$(printf '%s' "$API_RESPONSE" | grep -o '"tag_name"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 | grep -o '"[^"]*"$' | tr -d '"')
+            error "Release '${TAG_NAME}' exists but does not contain '${ASSET_NAME}'."
+        fi
+    else
+        error "No releases found for $REPO."
+        error "The project has not published a release yet."
+    fi
+
+    if [ -z "$DOWNLOAD_URL" ]; then
+        warn "Pre-built binary is not available."
+        if confirm "Would you like to build from source instead?"; then
+            BINARY_INSTALL=0
+            install_rust
+            install_build_deps
+            install_git_curl
+            clone_repo
+            trap cleanup EXIT
+            build_binary
+            install_binary
+            return
+        else
+            error "Installation cancelled. You can also try: install.sh (without --binary) to build from source."
+            exit 1
+        fi
+    fi
+
     info "Downloading pre-built binary from GitHub Releases..."
     info "URL: $DOWNLOAD_URL"
 
@@ -324,9 +356,23 @@ download_binary() {
 
     if ! curl -fSL -o "$DOWNLOAD_PATH" "$DOWNLOAD_URL"; then
         error "Failed to download binary from $DOWNLOAD_URL"
-        error "Check your internet connection or try the source install (without --binary)."
-        rm -f "$DOWNLOAD_PATH"
-        exit 1
+        warn "Pre-built binary download failed."
+        if confirm "Would you like to build from source instead?"; then
+            rm -f "$DOWNLOAD_PATH"
+            BINARY_INSTALL=0
+            install_rust
+            install_build_deps
+            install_git_curl
+            clone_repo
+            trap cleanup EXIT
+            build_binary
+            install_binary
+            return
+        else
+            error "Installation cancelled. You can also try: install.sh (without --binary) to build from source."
+            rm -f "$DOWNLOAD_PATH"
+            exit 1
+        fi
     fi
 
     chmod +x "$DOWNLOAD_PATH"
