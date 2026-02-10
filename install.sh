@@ -173,7 +173,17 @@ confirm() {
         return 0
     fi
     printf "  %s%s%s [y/N] " "$BOLD" "$1" "$RESET"
-    read -r answer < /dev/tty
+    if [ -t 0 ] && [ -r /dev/tty ]; then
+        read -r answer < /dev/tty || {
+            warn "Unable to read from controlling TTY; declining by default."
+            return 1
+        }
+    else
+        read -r answer || {
+            warn "No controlling TTY and no stdin input available; declining by default."
+            return 1
+        }
+    fi
     case "$answer" in
         [Yy]*) return 0 ;;
         *)     return 1 ;;
